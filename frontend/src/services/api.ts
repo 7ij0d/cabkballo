@@ -697,7 +697,7 @@ export const reportService = {
     const categoryArabicNames: Record<string, string> = {
       Cap: 'قبعة التخرج',
       Hat: 'كاب التخرج',
-      Sash: 'الوشاح',
+      Sash: 'الشال',
       Brooch: 'البروش المخصص',
       Accessory: 'إكسسوارات إضافية',
     };
@@ -782,7 +782,7 @@ export const reportService = {
     const categoryArabicNames: Record<string, string> = {
       Cap: 'قبعة التخرج',
       Hat: 'كاب التخرج',
-      Sash: 'الوشاح',
+      Sash: 'الشال',
       Brooch: 'البروش المخصص',
       Accessory: 'إكسسوارات إضافية',
     };
