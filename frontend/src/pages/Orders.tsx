@@ -234,16 +234,16 @@ export const Orders: React.FC<OrdersProps> = ({ onNavigate, activeEmployee, page
       graduationDate: '',
       notes: ''
     };
-    setItems([...items, defaultItem]);
+    setItems((prev) => [...prev, defaultItem]);
   };
 
   const handleRemoveItem = (id: string) => {
-    setItems(items.filter((item) => item.id !== id));
+    setItems((prev) => prev.filter((item) => item.id !== id));
   };
 
   const handleItemFieldChange = (id: string, field: string, value: string) => {
-    setItems(
-      items.map((item) => {
+    setItems((prevItems) =>
+      prevItems.map((item) => {
         if (item.id === id) {
           const updated = { ...item, [field]: value };
           
