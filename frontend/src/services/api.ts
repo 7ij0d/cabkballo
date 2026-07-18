@@ -624,6 +624,63 @@ export const paymentService = {
       employeeName: (p as any).Employee?.name || 'مجهول',
     })) || [];
   },
+
+  delete: async (id: string, employeeId: string) => {
+    // 1. Get the payment details first
+    const { data: payment } = await supabase
+      .from('Payment')
+      .select('*')
+      .eq('id', id)
+      .single();
+
+    if (!payment) throw new Error('الدفعة غير موجودة');
+
+    const orderId = payment.orderId;
+    const amount = payment.amount;
+
+    // 2. Delete the payment record
+    const { error: delErr } = await supabase
+      .from('Payment')
+      .delete()
+      .eq('id', id);
+
+    if (delErr) throw delErr;
+
+    // 3. Fetch the Order to update totals
+    const { data: order } = await supabase.from('Order').select('*').eq('id', orderId).single();
+    if (order) {
+      // Get all remaining payments for this order
+      const { data: remainingPayments } = await supabase
+        .from('Payment')
+        .select('amount')
+        .eq('orderId', orderId);
+
+      const totalPaid = remainingPayments?.reduce((sum, p) => sum + p.amount, 0) || 0;
+      const remainingBalance = Math.max(0, order.grandTotal - totalPaid);
+
+      let paymentStatus = 'Unpaid';
+      if (totalPaid >= order.grandTotal) {
+        paymentStatus = 'FullyPaid';
+      } else if (totalPaid > 0) {
+        const count = remainingPayments?.length || 0;
+        paymentStatus = count <= 1 ? 'DepositPaid' : 'PartiallyPaid';
+      }
+
+      await supabase
+        .from('Order')
+        .update({
+          totalPaid,
+          remainingBalance,
+          paymentStatus,
+        })
+        .eq('id', orderId);
+
+      // Audit action
+      await createAuditLog(employeeId, 'DELETE_PAYMENT', `حذف دفعة مالية بقيمة ${amount} د.ل للفاتورة ${order.invoiceNumber}`);
+    }
+
+    return payment;
+  },
 };
 
 export const returnService = {

@@ -215,6 +215,18 @@ export const OrderDetails: React.FC<OrderDetailsProps> = ({
     }
   };
 
+  const handleDeletePayment = async (id: string, amount: number) => {
+    if (window.confirm(`هل أنت متأكد من رغبتك في حذف دفعة العربون البالغة ${amount} د.ل؟`)) {
+      try {
+        await paymentService.delete(id, activeEmployee?.id || 'مجهول');
+        fetchOrderDetails();
+      } catch (err: any) {
+        console.error(err);
+        alert('حدث خطأ أثناء حذف الدفعة: ' + (err.message || 'خطأ غير معروف'));
+      }
+    }
+  };
+
   const triggerPrint = (type: 'invoice' | 'receipt' | 'rental' | 'return', data?: any) => {
     setPrintType(type);
     if (type === 'receipt') setPrintPaymentData(data);
@@ -520,13 +532,24 @@ export const OrderDetails: React.FC<OrderDetailsProps> = ({
                         <td className="py-3 px-3 font-semibold text-slate-400 dark:text-slate-500 font-tajawal">{p.notes || '---'}</td>
                         <td className="py-3 px-3 font-black text-emerald-650 dark:text-emerald-450 font-cairo">{formatCurrency(p.amount)}</td>
                         <td className="py-3 px-3">
-                          <button
-                            onClick={() => triggerPrint('receipt', p)}
-                            className="p-1 text-slate-400 hover:text-slate-650 hover:bg-slate-100 dark:hover:bg-slate-850 rounded"
-                            title="طباعة إيصال الدفعة"
-                          >
-                            <Printer className="w-3.5 h-3.5" />
-                          </button>
+                          <div className="flex items-center gap-1.5 justify-end">
+                            <button
+                              type="button"
+                              onClick={() => triggerPrint('receipt', p)}
+                              className="p-1 text-slate-400 hover:text-brand-600 hover:bg-slate-100 dark:hover:bg-slate-850 rounded transition-all"
+                              title="طباعة إيصال الدفعة"
+                            >
+                              <Printer className="w-3.5 h-3.5" />
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => handleDeletePayment(p.id, p.amount)}
+                              className="p-1 text-slate-400 hover:text-red-650 hover:bg-slate-100 dark:hover:bg-slate-850 rounded transition-all"
+                              title="حذف الدفعة"
+                            >
+                              <Trash2 className="w-3.5 h-3.5" />
+                            </button>
+                          </div>
                         </td>
                       </tr>
                     ))}
@@ -869,16 +892,32 @@ export const OrderDetails: React.FC<OrderDetailsProps> = ({
         title={`تسجيل دفعة عربون للفاتورة ${order.orderNumber}`}
       >
         <form onSubmit={handleAddPaymentSubmit} className="space-y-4">
-          <Input
-            label="قيمة دفعة العربون (د.ل)"
-            type="number"
-            min="0.01"
-            step="0.01"
-            value={payAmount}
-            onChange={(e) => setPayAmount(e.target.value)}
-            required
-            placeholder="مثال: 150"
-          />
+          <div className="flex flex-col gap-1.5 w-full">
+            <div className="flex justify-between items-center">
+              <label className="text-sm font-bold text-slate-800 dark:text-slate-200 font-tajawal">
+                قيمة دفعة العربون (د.ل) <span className="text-red-500 mr-1">*</span>
+              </label>
+              {order.remainingBalance > 0 && (
+                <button
+                  type="button"
+                  onClick={() => setPayAmount(order.remainingBalance.toString())}
+                  className="text-[11px] font-tajawal font-black text-brand-600 hover:text-brand-700 bg-brand-50 hover:bg-brand-100 dark:bg-brand-950/20 dark:hover:bg-brand-950/40 px-2.5 py-1 rounded-lg transition-all"
+                >
+                  إدخال المتبقي كاملاً ({order.remainingBalance} د.ل)
+                </button>
+              )}
+            </div>
+            <input
+              type="number"
+              min="0.01"
+              step="0.01"
+              value={payAmount}
+              onChange={(e) => setPayAmount(e.target.value)}
+              required
+              placeholder="مثال: 150"
+              className="w-full px-3.5 py-2.5 rounded-xl border-2 border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-950 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500 text-sm font-bold transition-all shadow-sm"
+            />
+          </div>
 
           <Input
             label="تاريخ الاستلام"
