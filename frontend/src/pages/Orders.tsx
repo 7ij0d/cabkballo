@@ -10,6 +10,17 @@ import Input from '../components/Input';
 import Select from '../components/Select';
 import { supabase } from '../utils/supabaseClient';
 
+const generateUUID = () => {
+  if (typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function') {
+    return crypto.randomUUID();
+  }
+  return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, (c) => {
+    const r = (Math.random() * 16) | 0;
+    const v = c === 'x' ? r : (r & 0x3) | 0x8;
+    return v.toString(16);
+  });
+};
+
 interface OrdersProps {
   onNavigate: (page: string, params?: any) => void;
   activeEmployee: { id: string; name: string } | null;
@@ -347,6 +358,7 @@ export const Orders: React.FC<OrdersProps> = ({ onNavigate, activeEmployee, page
           const unitPriceVal = parseFloat(item.unitPrice) || 0;
           const depositVal = parseFloat(item.depositAmount) || 0;
           const { error: editItemErr } = await supabase.from('OrderItem').insert({
+            id: generateUUID(),
             orderId: editOrderId,
             category: item.category,
             customCategory: item.customCategory || null,
@@ -378,18 +390,38 @@ export const Orders: React.FC<OrdersProps> = ({ onNavigate, activeEmployee, page
 
         // 4. Update order totals
         const { subtotal, grandTotal } = calculateTotals();
+        const advancePaidVal = parseFloat(advancePaid) || 0;
         await orderService.update(editOrderId, {
           employeeId: empId,
           orderDate,
           subtotal,
+          discount: parseFloat(discount) || 0,
           grandTotal,
-          remainingBalance: Math.max(0, grandTotal - ((orderObj as any)?.totalPaid || 0)),
+          totalPaid: advancePaidVal,
+          remainingBalance: Math.max(0, grandTotal - advancePaidVal),
+          paymentStatus: advancePaidVal >= grandTotal ? 'FullyPaid' : (advancePaidVal > 0 ? 'DepositPaid' : 'Unpaid'),
           notes: generalNotes,
         });
 
-        // 5. Log audit
+        // 5. Recreate payment record for edit order
+        await supabase.from('Payment').delete().eq('orderId', editOrderId);
+        if (advancePaidVal > 0) {
+          const { error: payErr } = await supabase.from('Payment').insert({
+            id: generateUUID(),
+            orderId: editOrderId,
+            employeeId: empId,
+            amount: advancePaidVal,
+            paymentMethod: 'Cash',
+            paymentDate: orderDate || new Date().toISOString().split('T')[0],
+            notes: 'دفعة مالية محددة عند تعديل الفاتورة',
+          });
+          if (payErr) throw payErr;
+        }
+
+        // 6. Log audit
         const { data: empObj } = await supabase.from('Employee').select('name').eq('id', empId).single();
         await supabase.from('AuditLog').insert({
+          id: generateUUID(),
           employeeId: empId,
           employeeName: empObj?.name || 'مجهول',
           action: 'UPDATE_ORDER',

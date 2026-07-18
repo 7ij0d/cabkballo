@@ -1,11 +1,23 @@
 import { supabase } from '../utils/supabaseClient';
 import bcrypt from 'bcryptjs';
 
+const generateUUID = () => {
+  if (typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function') {
+    return crypto.randomUUID();
+  }
+  return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, (c) => {
+    const r = (Math.random() * 16) | 0;
+    const v = c === 'x' ? r : (r & 0x3) | 0x8;
+    return v.toString(16);
+  });
+};
+
 // Helper to audit actions directly from the client side
 const createAuditLog = async (employeeId: string, action: string, details: string) => {
   try {
     const { data: emp } = await supabase.from('Employee').select('name').eq('id', employeeId).single();
     await supabase.from('AuditLog').insert({
+      id: generateUUID(),
       employeeId,
       employeeName: emp?.name || 'مجهول',
       action,
@@ -367,6 +379,7 @@ export const orderService = {
       const { data: newCust, error } = await supabase
         .from('Customer')
         .insert({
+          id: generateUUID(),
           name: data.customerName,
           phone: data.customerPhone,
           backupPhone: data.customerBackupPhone || null,
@@ -396,6 +409,7 @@ export const orderService = {
     const { data: order, error: orderErr } = await supabase
       .from('Order')
       .insert({
+        id: generateUUID(),
         orderNumber: invoiceNumber,
         customerId: customer.id,
         employeeId: data.employeeId,
@@ -417,6 +431,7 @@ export const orderService = {
     // Create payment record if deposit is registered
     if (advancePaid > 0) {
       const { error: payErr } = await supabase.from('Payment').insert({
+        id: generateUUID(),
         orderId: order.id,
         employeeId: data.employeeId,
         amount: advancePaid,
@@ -430,6 +445,7 @@ export const orderService = {
     // 5. Create Order Items
     for (const item of data.items) {
       const { error: itemErr } = await supabase.from('OrderItem').insert({
+        id: generateUUID(),
         orderId: order.id,
         category: item.category,
         customCategory: item.customCategory || null,
