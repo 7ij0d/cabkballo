@@ -252,6 +252,9 @@ export const orderService = {
       const oItems = items?.filter((i) => i.orderId === o.id) || [];
       return {
         ...o,
+        invoiceNumber: o.orderNumber,
+        customer: (o as any).Customer || null,
+        employee: (o as any).Employee || null,
         customerName: (o as any).Customer?.name || 'مجهول',
         customerPhone: (o as any).Customer?.phone || 'مجهول',
         employeeName: (o as any).Employee?.name || 'مجهول',
@@ -265,27 +268,27 @@ export const orderService = {
         filtered = filtered.filter((o) =>
           o.customerName.toLowerCase().includes(term) ||
           o.customerPhone.includes(term) ||
-          o.invoiceNumber.includes(term)
+          (o.invoiceNumber && o.invoiceNumber.toLowerCase().includes(term))
         );
       }
-      if (filters.employeeId) {
+      if (filters.employeeId && filters.employeeId !== 'all') {
         filtered = filtered.filter((o) => o.employeeId === filters.employeeId);
       }
-      if (filters.status) {
+      if (filters.status && filters.status !== 'all') {
         filtered = filtered.filter((o) => o.status === filters.status);
       }
-      if (filters.paymentStatus) {
+      if (filters.paymentStatus && filters.paymentStatus !== 'all') {
         filtered = filtered.filter((o) => o.paymentStatus === filters.paymentStatus);
       }
-      if (filters.deliveryStatus) {
+      if (filters.deliveryStatus && filters.deliveryStatus !== 'all') {
         filtered = filtered.filter((o) => o.deliveryStatus === filters.deliveryStatus);
       }
-      if (filters.operationType) {
+      if (filters.operationType && filters.operationType !== 'all') {
         filtered = filtered.filter((o) =>
-          o.items.some((i: any) => i.type === filters.operationType)
+          o.items.some((i: any) => i.operationType === filters.operationType)
         );
       }
-      if (filters.dateRange) {
+      if (filters.dateRange && filters.dateRange !== 'all') {
         const now = new Date();
         const start = new Date();
         if (filters.dateRange === 'today') {
