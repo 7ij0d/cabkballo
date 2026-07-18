@@ -1,0 +1,142 @@
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+model Employee {
+  id           String        @id @default(uuid())
+  username     String        @unique
+  passwordHash String
+  name         String        // "Anas" or "Taha"
+  orders       Order[]       @relation("OrderEmployee")
+  payments     Payment[]
+  returns      ReturnLog[]
+  auditLogs    AuditLog[]
+  createdAt    DateTime      @default(now())
+}
+
+model Customer {
+  id             String    @id @default(uuid())
+  name           String    @unique
+  phone          String
+  notes          String?
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+  orders         Order[]
+}
+
+model Order {
+  id               String        @id @default(uuid())
+  orderNumber      String        @unique // e.g. "ORD-2026-0001"
+  customerId       String
+  customer         Customer      @relation(fields: [customerId], references: [id])
+  employeeId       String
+  employee         Employee      @relation("OrderEmployee", fields: [employeeId], references: [id])
+  orderDate        DateTime      @default(now())
+  status           String        // "Pending", "Preparing", "Ready", "Delivered", "Completed", "Cancelled"
+  notes            String?
+  
+  // Financial Totals
+  subtotal         Float         @default(0.0)
+  discount         Float         @default(0.0)
+  grandTotal       Float         @default(0.0)
+  totalPaid        Float         @default(0.0)
+  remainingBalance Float         @default(0.0)
+  paymentStatus    String        // "Unpaid", "DepositPaid", "PartiallyPaid", "FullyPaid"
+  
+  items            OrderItem[]
+  payments         Payment[]
+  createdAt        DateTime      @default(now())
+  updatedAt        DateTime      @updatedAt
+}
+
+model OrderItem {
+  id               String      @id @default(uuid())
+  orderId          String
+  order            Order       @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  
+  category         String      // "Graduation Cap", "Graduation Hat", "Graduation Sash", "Graduation Brooch", "Graduation Accessories", "Other"
+  customCategory   String?     // Custom input when category is "Other"
+  
+  // Cap specifics
+  capType          String?     // "Long / Butterfly Cap", "TLC Cap", "American Cap", "Kuwaiti Cap", "Other"
+  customCapType    String?
+  capSize          String?     // "S", "1", "2", "3", "Other"
+  customCapSize    String?
+  capColor         String?     // "Silver", "Gold", "Plain", "Other"
+  customCapColor   String?
+  
+  // Hat/Sash/Other operation type
+  operationType    String?     // "Sale", "Rental", "Other"
+  customOperation  String?
+  
+  // Sale details (Hats, Sashes)
+  saleType         String?     // "Plain", "Embroidery", "Printing", "Other"
+  customSaleType   String?
+  
+  // Brooch specifics
+  broochType       String?     // "Graduation Year Brooch", "Name Brooch", "Other"
+  customBroochType String?
+  
+  // Accessories specifics
+  accessoryName       String?
+  customAccessoryName String?
+
+  // Shared Product Fields
+  quantity         Int         @default(1)
+  unitPrice        Float       @default(0.0) // Sales Price or Rental Price
+  depositAmount    Float       @default(0.0) // For Rental
+  deliveryDate     DateTime?
+  returnDate       DateTime?   // Expected return date for Rental
+  graduationDate   DateTime?   // For Sash specifically
+  notes            String?
+  
+  // Statuses
+  status           String      @default("Waiting") // "Waiting", "Ready", "Delivered", "Returned"
+  
+  // Returns tracking
+  returns          ReturnLog[]
+  createdAt        DateTime    @default(now())
+  updatedAt        DateTime    @updatedAt
+}
+
+model Payment {
+  id                 String    @id @default(uuid())
+  orderId            String
+  order              Order     @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  amount             Float
+  paymentDate        DateTime  @default(now())
+  paymentMethod      String    // "Cash", "Bank Transfer", "Card", "Other"
+  customMethodText   String?   // For Other payment method
+  notes              String?
+  employeeId         String
+  employee           Employee  @relation(fields: [employeeId], references: [id])
+  createdAt          DateTime  @default(now())
+}
+
+model ReturnLog {
+  id               String      @id @default(uuid())
+  orderItemId      String
+  orderItem        OrderItem   @relation(fields: [orderItemId], references: [id])
+  quantityReturned Int
+  returnDate       DateTime    @default(now())
+  condition        String      // "Excellent", "Good", "Damaged", "Other"
+  customCondition  String?
+  notes            String?
+  employeeId       String
+  employee         Employee    @relation(fields: [employeeId], references: [id])
+  createdAt        DateTime    @default(now())
+}
+
+model AuditLog {
+  id           String      @id @default(uuid())
+  employeeId   String
+  employee     Employee    @relation(fields: [employeeId], references: [id])
+  action       String      // e.g. "CREATE_ORDER", "ADD_PAYMENT", "RETURN_PRODUCT"
+  details      String      // Description of the action (JSON or text string)
+  createdAt    DateTime    @default(now())
+}
