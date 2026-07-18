@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { 
   ShoppingBag, Search, Plus, Trash2, Calendar, Phone, 
-  User, DollarSign, Filter, ArrowLeft, PlusCircle, Check, Eye, Edit 
+  User, DollarSign, Filter, ArrowLeft, PlusCircle, Check, Eye, Edit, MessageCircle 
 } from 'lucide-react';
 import { orderService, customerService } from '../services/api';
 import { formatCurrency, formatDate, translateStatus, translatePaymentStatus } from '../utils/arabic';
@@ -9,6 +9,18 @@ import Button from '../components/Button';
 import Input from '../components/Input';
 import Select from '../components/Select';
 import { supabase } from '../utils/supabaseClient';
+
+const getWhatsAppLink = (phone: string) => {
+  if (!phone) return '';
+  const cleanPhone = phone.replace(/\D/g, '');
+  if (cleanPhone.startsWith('0')) {
+    return `https://wa.me/218${cleanPhone.substring(1)}`;
+  }
+  if (cleanPhone.startsWith('218')) {
+    return `https://wa.me/${cleanPhone}`;
+  }
+  return `https://wa.me/218${cleanPhone}`;
+};
 
 const generateUUID = () => {
   if (typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function') {
@@ -711,7 +723,23 @@ export const Orders: React.FC<OrdersProps> = ({ onNavigate, activeEmployee, page
                       <tr key={o.id} className="hover:bg-slate-50/50 dark:hover:bg-slate-950/20 transition-all">
                         <td className="py-4.5 px-4 font-black text-brand-600 dark:text-brand-400 font-tajawal">{o.orderNumber}</td>
                         <td className="py-4.5 px-4 font-bold text-slate-800 dark:text-slate-200">{o.customer?.name}</td>
-                        <td className="py-4.5 px-4 font-semibold text-slate-600 dark:text-slate-455 font-tajawal">{o.customer?.phone}</td>
+                        <td className="py-4.5 px-4 font-semibold text-slate-600 dark:text-slate-455 font-tajawal">
+                          <div className="flex items-center gap-2">
+                            <span>{o.customer?.phone}</span>
+                            {o.customer?.phone && o.customer?.phone !== '/' && (
+                              <a
+                                href={getWhatsAppLink(o.customer.phone)}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="inline-flex items-center gap-1 px-2.5 py-1 bg-emerald-50 dark:bg-emerald-950/20 text-emerald-600 dark:text-emerald-400 rounded-lg text-xs font-bold transition-all hover:bg-emerald-100/60 dark:hover:bg-emerald-950/40 border border-emerald-100/30"
+                                title="تواصل واتساب"
+                              >
+                                <MessageCircle className="w-3.5 h-3.5" />
+                                <span>تواصل</span>
+                              </a>
+                            )}
+                          </div>
+                        </td>
                         <td className="py-4.5 px-4 font-semibold text-slate-500 font-tajawal">{formatDate(o.orderDate)}</td>
                         <td className="py-4.5 px-4 font-bold text-slate-655 dark:text-slate-350">{o.employee?.name}</td>
                         <td className="py-4.5 px-4 font-black text-slate-850 dark:text-slate-100 font-cairo">{formatCurrency(o.grandTotal)}</td>

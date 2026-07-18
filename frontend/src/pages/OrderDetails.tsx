@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { 
   FileText, Coins, ArrowLeftRight, User, Printer, Trash2, 
-  Plus, RotateCcw, AlertCircle, Calendar, Phone, Check, RefreshCw, EyeOff, Edit 
+  Plus, RotateCcw, AlertCircle, Calendar, Phone, Check, RefreshCw, EyeOff, Edit, MessageCircle 
 } from 'lucide-react';
 import { orderService, paymentService, returnService } from '../services/api';
 import { formatCurrency, formatDate, translateStatus, translatePaymentStatus, translateDeliveryStatus, translateCondition } from '../utils/arabic';
@@ -10,6 +10,18 @@ import Input from '../components/Input';
 import Select from '../components/Select';
 import Modal from '../components/Modal';
 import { supabase } from '../utils/supabaseClient';
+
+const getWhatsAppLink = (phone: string) => {
+  if (!phone) return '';
+  const cleanPhone = phone.replace(/\D/g, '');
+  if (cleanPhone.startsWith('0')) {
+    return `https://wa.me/218${cleanPhone.substring(1)}`;
+  }
+  if (cleanPhone.startsWith('218')) {
+    return `https://wa.me/${cleanPhone}`;
+  }
+  return `https://wa.me/218${cleanPhone}`;
+};
 
 interface OrderDetailsProps {
   orderId: string;
@@ -583,9 +595,23 @@ export const OrderDetails: React.FC<OrderDetailsProps> = ({
                 >
                   {order.customer.name}
                 </h4>
-                <div className="flex items-center gap-1.5 text-sm text-slate-550 dark:text-slate-400 font-tajawal">
-                  <Phone className="w-4 h-4 text-slate-400" />
-                  <span>{order.customer.phone}</span>
+                <div className="flex items-center justify-between gap-1.5 bg-slate-50 dark:bg-slate-950/40 p-2.5 rounded-xl border border-slate-100 dark:border-slate-850 text-sm text-slate-550 dark:text-slate-400 font-tajawal">
+                  <div className="flex items-center gap-1.5">
+                    <Phone className="w-4 h-4 text-slate-400" />
+                    <span>{order.customer.phone}</span>
+                  </div>
+                  {order.customer.phone && order.customer.phone !== '/' && (
+                    <a
+                      href={getWhatsAppLink(order.customer.phone)}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="inline-flex items-center gap-1 px-3 py-1 bg-emerald-50 dark:bg-emerald-950/20 text-emerald-600 dark:text-emerald-400 rounded-lg text-xs font-bold transition-all hover:bg-emerald-100/60 border border-emerald-100/30"
+                      title="تواصل عبر الواتساب"
+                    >
+                      <MessageCircle className="w-3.5 h-3.5" />
+                      <span>تواصل</span>
+                    </a>
+                  )}
                 </div>
                 {order.customer.notes && (
                   <div className="bg-slate-50 dark:bg-slate-955/20 p-3 rounded-xl border border-slate-100 text-sm text-slate-550 font-tajawal mt-2">

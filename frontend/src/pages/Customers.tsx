@@ -1,13 +1,25 @@
 import React, { useEffect, useState } from 'react';
 import { 
   Users, Search, Plus, UserPlus, Phone, Edit, Calendar, 
-  DollarSign, FileText, History, RotateCcw, ArrowLeft, ArrowLeftRight, Save, ClipboardList, Trash2 
+  DollarSign, FileText, History, RotateCcw, ArrowLeft, ArrowLeftRight, Save, ClipboardList, Trash2, MessageCircle 
 } from 'lucide-react';
 import { customerService } from '../services/api';
 import { formatCurrency, formatDate, translateStatus, translatePaymentStatus, translateCondition } from '../utils/arabic';
 import Button from '../components/Button';
 import Input from '../components/Input';
 import Modal from '../components/Modal';
+
+const getWhatsAppLink = (phone: string) => {
+  if (!phone) return '';
+  const cleanPhone = phone.replace(/\D/g, '');
+  if (cleanPhone.startsWith('0')) {
+    return `https://wa.me/218${cleanPhone.substring(1)}`;
+  }
+  if (cleanPhone.startsWith('218')) {
+    return `https://wa.me/${cleanPhone}`;
+  }
+  return `https://wa.me/218${cleanPhone}`;
+};
 
 interface CustomerListItem {
   id: string;
@@ -289,9 +301,37 @@ export const Customers: React.FC<CustomersProps> = ({ onNavigate, selectedId }) 
                     <tr key={c.id} className="hover:bg-slate-50/50 dark:hover:bg-slate-950/20 transition-all">
                       <td className="py-4.5 px-4 font-bold text-slate-800 dark:text-slate-200">{c.name}</td>
                       <td className="py-4.5 px-4 font-semibold text-slate-600 dark:text-slate-400 font-tajawal">
-                        <div>{c.phone}</div>
+                        <div className="flex items-center gap-2">
+                          <span>{c.phone}</span>
+                          {c.phone && c.phone !== '/' && (
+                            <a
+                              href={getWhatsAppLink(c.phone)}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="inline-flex items-center gap-1 px-2.5 py-1 bg-emerald-50 dark:bg-emerald-950/20 text-emerald-600 dark:text-emerald-400 rounded-lg text-xs font-bold transition-all hover:bg-emerald-100/60 dark:hover:bg-emerald-950/40 border border-emerald-100/30"
+                              title="تواصل واتساب"
+                            >
+                              <MessageCircle className="w-3.5 h-3.5" />
+                              <span>تواصل</span>
+                            </a>
+                          )}
+                        </div>
                         {c.backupPhone && (
-                          <div className="text-xs text-slate-400 dark:text-slate-550 mt-0.5">احتياطي: {c.backupPhone}</div>
+                          <div className="flex items-center gap-2 text-xs text-slate-450 dark:text-slate-550 mt-1.5">
+                            <span>احتياطي: {c.backupPhone}</span>
+                            {c.backupPhone && c.backupPhone !== '/' && (
+                              <a
+                                href={getWhatsAppLink(c.backupPhone)}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="inline-flex items-center gap-1 px-1.5 py-0.5 bg-emerald-50 dark:bg-emerald-950/20 text-emerald-600 dark:text-emerald-400 rounded-md text-[10px] font-bold transition-all hover:bg-emerald-100/60 border border-emerald-100/20"
+                                title="تواصل واتساب (احتياطي)"
+                              >
+                                <MessageCircle className="w-3 h-3" />
+                                <span>تواصل</span>
+                              </a>
+                            )}
+                          </div>
                         )}
                       </td>
                       <td className="py-4.5 px-4 font-semibold text-slate-500 dark:text-slate-455 font-tajawal">{formatDate(c.createdAt)}</td>
@@ -372,15 +412,43 @@ export const Customers: React.FC<CustomersProps> = ({ onNavigate, selectedId }) 
 
               <div className="mt-4 space-y-1">
                 <h3 className="text-xl font-black text-slate-800 dark:text-slate-100">{profile.name}</h3>
-                <div className="flex flex-col gap-1.5 mt-2 text-sm text-slate-550 dark:text-slate-400 font-tajawal">
-                  <div className="flex items-center gap-1.5">
-                    <Phone className="w-4 h-4 text-slate-400" />
-                    <span>الهاتف الأساسي: {profile.phone}</span>
+                <div className="flex flex-col gap-2 mt-2.5 text-sm text-slate-550 dark:text-slate-400 font-tajawal">
+                  <div className="flex items-center justify-between gap-1.5 bg-slate-50 dark:bg-slate-950/40 p-2 rounded-xl border border-slate-100 dark:border-slate-850">
+                    <div className="flex items-center gap-1.5">
+                      <Phone className="w-4 h-4 text-slate-400" />
+                      <span>الهاتف الأساسي: {profile.phone}</span>
+                    </div>
+                    {profile.phone && profile.phone !== '/' && (
+                      <a
+                        href={getWhatsAppLink(profile.phone)}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="inline-flex items-center gap-1 px-3 py-1 bg-emerald-50 dark:bg-emerald-950/20 text-emerald-600 dark:text-emerald-400 rounded-lg text-xs font-bold transition-all hover:bg-emerald-100/60 border border-emerald-100/30"
+                        title="تواصل عبر الواتساب"
+                      >
+                        <MessageCircle className="w-3.5 h-3.5" />
+                        <span>تواصل</span>
+                      </a>
+                    )}
                   </div>
                   {profile.backupPhone && (
-                    <div className="flex items-center gap-1.5 text-slate-400 dark:text-slate-500">
-                      <Phone className="w-4 h-4" />
-                      <span>الهاتف الاحتياطي: {profile.backupPhone}</span>
+                    <div className="flex items-center justify-between gap-1.5 bg-slate-50 dark:bg-slate-955/40 p-2 rounded-xl border border-slate-100 dark:border-slate-850">
+                      <div className="flex items-center gap-1.5 text-slate-400 dark:text-slate-500">
+                        <Phone className="w-4 h-4" />
+                        <span>الهاتف الاحتياطي: {profile.backupPhone}</span>
+                      </div>
+                      {profile.backupPhone && profile.backupPhone !== '/' && (
+                        <a
+                          href={getWhatsAppLink(profile.backupPhone)}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="inline-flex items-center gap-1 px-3 py-1 bg-emerald-50 dark:bg-emerald-950/20 text-emerald-600 dark:text-emerald-400 rounded-lg text-xs font-bold transition-all hover:bg-emerald-100/60 border border-emerald-100/30"
+                          title="تواصل عبر الواتساب"
+                        >
+                          <MessageCircle className="w-3.5 h-3.5" />
+                          <span>تواصل</span>
+                        </a>
+                      )}
                     </div>
                   )}
                 </div>
