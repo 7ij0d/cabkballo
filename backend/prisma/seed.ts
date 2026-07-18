@@ -16,8 +16,8 @@ async function main() {
   await prisma.employee.deleteMany({});
 
   // 2. Create Employees: Anas and Taha
-  const passwordHashAnas = await bcrypt.hash('anas2026', 10);
-  const passwordHashTaha = await bcrypt.hash('taha2026', 10);
+  const passwordHashAnas = await bcrypt.hash('anas1234', 10);
+  const passwordHashTaha = await bcrypt.hash('taha1234', 10);
 
   const anas = await prisma.employee.create({
     data: {
