@@ -8,6 +8,7 @@ import { formatCurrency, formatDate, translateStatus, translatePaymentStatus } f
 import Button from '../components/Button';
 import Input from '../components/Input';
 import Select from '../components/Select';
+import { supabase } from '../utils/supabaseClient';
 
 interface OrdersProps {
   onNavigate: (page: string, params?: any) => void;
@@ -43,6 +44,21 @@ export const Orders: React.FC<OrdersProps> = ({ onNavigate, activeEmployee }) =>
   const [items, setItems] = useState<any[]>([]);
   const [formError, setFormError] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [employees, setEmployees] = useState<any[]>([]);
+
+  useEffect(() => {
+    const loadEmployees = async () => {
+      try {
+        const { data } = await supabase.from('Employee').select('id, name');
+        if (data) {
+          setEmployees(data.map(e => ({ value: e.id, label: e.name })));
+        }
+      } catch (err) {
+        console.error('Failed to load employees:', err);
+      }
+    };
+    loadEmployees();
+  }, []);
 
   const fetchOrders = async () => {
     try {
@@ -232,11 +248,7 @@ export const Orders: React.FC<OrdersProps> = ({ onNavigate, activeEmployee }) =>
 
   const { subtotal, grandTotal } = calculateTotals();
 
-  // Employee lookup names
-  const employeeNames = [
-    { value: 'f3a479b1-e221-4f19-a1b7-d15764d2d46e', label: 'أنس' }, // seeded ids will resolve
-    { value: 'a98f5c9e-5b12-4c28-98e3-f8a183d2d2a4', label: 'طه' }
-  ];
+  // Employee lookup names is loaded dynamically in employees state
 
   return (
     <div className="space-y-6">
@@ -507,7 +519,7 @@ export const Orders: React.FC<OrdersProps> = ({ onNavigate, activeEmployee }) =>
               
               <Select
                 label="الموظف المسؤول"
-                options={employeeNames}
+                options={employees}
                 value={empId}
                 onChange={(val) => setEmpId(val)}
                 customValue={customEmpName}
@@ -526,24 +538,24 @@ export const Orders: React.FC<OrdersProps> = ({ onNavigate, activeEmployee }) =>
 
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
               <div className="flex flex-col gap-1.5">
-                <label className="text-sm font-semibold text-slate-700 dark:text-slate-350">ملاحظات عامة عن الفاتورة</label>
+                <label className="text-sm font-bold text-slate-800 dark:text-slate-200">ملاحظات عامة عن الفاتورة</label>
                 <textarea
                   value={generalNotes}
                   onChange={(e) => setGeneralNotes(e.target.value)}
                   rows={2}
                   placeholder="ملاحظات التسليم، الحفل، تغليف خاص..."
-                  className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 text-slate-850 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-brand-500/20 text-sm transition-all"
+                  className="w-full px-3.5 py-2.5 rounded-xl border-2 border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-950 text-slate-900 dark:text-white font-bold focus:outline-none focus:ring-2 focus:ring-brand-500/20 text-sm transition-all shadow-sm"
                 />
               </div>
 
               <div className="flex flex-col gap-1.5">
-                <label className="text-sm font-semibold text-slate-700 dark:text-slate-350">ملاحظات الزبون (تحفظ في حسابه)</label>
+                <label className="text-sm font-bold text-slate-800 dark:text-slate-200">ملاحظات الزبون (تحفظ في حسابه)</label>
                 <textarea
                   value={custNotes}
                   onChange={(e) => setCustNotes(e.target.value)}
                   rows={2}
                   placeholder="ملاحظات تحفظ بملف الزبون الدائم لمراجعتها لاحقاً..."
-                  className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 text-slate-850 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-brand-500/20 text-sm transition-all"
+                  className="w-full px-3.5 py-2.5 rounded-xl border-2 border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-955 text-slate-900 dark:text-white font-bold focus:outline-none focus:ring-2 focus:ring-brand-500/20 text-sm transition-all shadow-sm"
                 />
               </div>
             </div>
@@ -611,7 +623,12 @@ export const Orders: React.FC<OrdersProps> = ({ onNavigate, activeEmployee }) =>
                       <>
                         <Select
                           label="نوع الكاب"
-                          options={['Long / Butterfly Cap', 'TLC Cap', 'American Cap', 'Kuwaiti Cap']}
+                          options={[
+                            { value: 'Long / Butterfly Cap', label: 'كاب فراشة طويل' },
+                            { value: 'TLC Cap', label: 'كاب TLC' },
+                            { value: 'American Cap', label: 'كاب أمريكي' },
+                            { value: 'Kuwaiti Cap', label: 'كاب كويتي' }
+                          ]}
                           value={item.capType}
                           onChange={(val) => handleItemFieldChange(item.id, 'capType', val)}
                           customValue={item.customCapType}
@@ -622,7 +639,12 @@ export const Orders: React.FC<OrdersProps> = ({ onNavigate, activeEmployee }) =>
                         {item.capType === 'TLC Cap' && (
                           <Select
                             label="قياس كاب TLC"
-                            options={['S', '1', '2', '3']}
+                            options={[
+                              { value: 'S', label: 'صغير (S)' },
+                              { value: '1', label: 'قياس 1' },
+                              { value: '2', label: 'قياس 2' },
+                              { value: '3', label: 'قياس 3' }
+                            ]}
                             value={item.capSize}
                             onChange={(val) => handleItemFieldChange(item.id, 'capSize', val)}
                             customValue={item.customCapSize}
@@ -634,7 +656,11 @@ export const Orders: React.FC<OrdersProps> = ({ onNavigate, activeEmployee }) =>
                         {item.capType === 'Kuwaiti Cap' && (
                           <Select
                             label="لون كاب كويتي"
-                            options={['Silver', 'Gold', 'Plain']}
+                            options={[
+                              { value: 'Silver', label: 'فضي' },
+                              { value: 'Gold', label: 'ذهبي' },
+                              { value: 'Plain', label: 'سادة' }
+                            ]}
                             value={item.capColor}
                             onChange={(val) => handleItemFieldChange(item.id, 'capColor', val)}
                             customValue={item.customCapColor}
@@ -664,7 +690,11 @@ export const Orders: React.FC<OrdersProps> = ({ onNavigate, activeEmployee }) =>
                         {item.operationType === 'Sale' && (
                           <Select
                             label="نوع البيع"
-                            options={['Plain', 'Embroidery', 'Printing']}
+                            options={[
+                              { value: 'Plain', label: 'سادة' },
+                              { value: 'Embroidery', label: 'تطريز' },
+                              { value: 'Printing', label: 'طباعة' }
+                            ]}
                             value={item.saleType}
                             onChange={(val) => handleItemFieldChange(item.id, 'saleType', val)}
                             customValue={item.customSaleType}
@@ -679,7 +709,10 @@ export const Orders: React.FC<OrdersProps> = ({ onNavigate, activeEmployee }) =>
                     {item.category === 'Graduation Brooch' && (
                       <Select
                         label="نوع البروش"
-                        options={['Graduation Year Brooch', 'Name Brooch']}
+                        options={[
+                          { value: 'Graduation Year Brooch', label: 'بروش سنة التخرج' },
+                          { value: 'Name Brooch', label: 'بروش بالاسم' }
+                        ]}
                         value={item.broochType}
                         onChange={(val) => handleItemFieldChange(item.id, 'broochType', val)}
                         customValue={item.customBroochType}
@@ -690,17 +723,13 @@ export const Orders: React.FC<OrdersProps> = ({ onNavigate, activeEmployee }) =>
 
                     {/* 4. Accessories input */}
                     {item.category === 'Graduation Accessories' && (
-                      <div className="flex flex-col gap-1.5 w-full">
-                        <label className="text-sm font-semibold text-slate-700">اسم الإكسسوار</label>
-                        <input
-                          type="text"
-                          value={item.accessoryName}
-                          onChange={(e) => handleItemFieldChange(item.id, 'accessoryName', e.target.value)}
-                          placeholder="مثال: شارة التخرج، مسبحة التخرج..."
-                          className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 bg-white text-slate-800 text-sm"
-                          required
-                        />
-                      </div>
+                      <Input
+                        label="اسم الإكسسوار"
+                        value={item.accessoryName}
+                        onChange={(e) => handleItemFieldChange(item.id, 'accessoryName', e.target.value)}
+                        placeholder="مثال: شارة التخرج، مسبحة التخرج..."
+                        required
+                      />
                     )}
 
                     {/* Shared Fields: Quantity */}
