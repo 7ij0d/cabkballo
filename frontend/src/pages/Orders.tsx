@@ -346,22 +346,34 @@ export const Orders: React.FC<OrdersProps> = ({ onNavigate, activeEmployee, page
         for (const item of items) {
           const unitPriceVal = parseFloat(item.unitPrice) || 0;
           const depositVal = parseFloat(item.depositAmount) || 0;
-          await supabase.from('OrderItem').insert({
+          const { error: editItemErr } = await supabase.from('OrderItem').insert({
             orderId: editOrderId,
             category: item.category,
-            name: item.accessoryName || item.category,
-            type: item.operationType,
+            customCategory: item.customCategory || null,
+            capType: item.capType || null,
+            customCapType: item.customCapType || null,
+            capSize: item.capSize || null,
+            customCapSize: item.customCapSize || null,
+            capColor: item.capColor || null,
+            customCapColor: item.customCapColor || null,
+            operationType: item.operationType || 'Sale',
+            customOperation: item.customOperation || null,
+            saleType: item.saleType || null,
+            customSaleType: item.customSaleType || null,
+            broochType: item.broochType || null,
+            customBroochType: item.customBroochType || null,
+            accessoryName: item.accessoryName || null,
+            customAccessoryName: item.customAccessoryName || null,
             quantity: parseInt(item.quantity) || 1,
-            salePrice: item.operationType === 'Sale' ? unitPriceVal : null,
-            rentalPrice: item.operationType === 'Rental' ? unitPriceVal : null,
-            depositAmount: item.operationType === 'Rental' ? depositVal : null,
-            size: item.capSize || null,
-            color: item.capColor || null,
-            customOptions: item.customCategory || item.customCapType || item.customCapSize || item.customCapColor || item.customSaleType || item.customBroochType || item.customAccessoryName || null,
-            deliveryDate: item.deliveryDate || null,
-            expectedReturnDate: item.returnDate || null,
-            status: item.operationType === 'Rental' ? 'Rented' : 'Sold',
+            unitPrice: unitPriceVal,
+            depositAmount: item.operationType === 'Rental' ? depositVal : 0,
+            deliveryDate: globalDeliveryDate || null,
+            returnDate: globalReturnDate || null,
+            graduationDate: globalGraduationDate || null,
+            notes: item.notes || null,
+            status: 'Waiting'
           });
+          if (editItemErr) throw editItemErr;
         }
 
         // 4. Update order totals

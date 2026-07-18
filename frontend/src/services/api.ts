@@ -352,6 +352,17 @@ export const orderService = {
       .eq('phone', data.customerPhone)
       .maybeSingle();
 
+    if (!customer && data.customerName !== '/') {
+      const { data: nameCust } = await supabase
+        .from('Customer')
+        .select('*')
+        .eq('name', data.customerName)
+        .maybeSingle();
+      if (nameCust) {
+        customer = nameCust;
+      }
+    }
+
     if (!customer) {
       const { data: newCust, error } = await supabase
         .from('Customer')
@@ -385,7 +396,7 @@ export const orderService = {
     const { data: order, error: orderErr } = await supabase
       .from('Order')
       .insert({
-        invoiceNumber,
+        orderNumber: invoiceNumber,
         customerId: customer.id,
         employeeId: data.employeeId,
         orderDate: data.orderDate || new Date().toISOString().split('T')[0],
@@ -396,7 +407,6 @@ export const orderService = {
         remainingBalance: Math.max(0, grandTotal - advancePaid),
         status: 'Pending',
         paymentStatus: advancePaid >= grandTotal ? 'FullyPaid' : (advancePaid > 0 ? 'DepositPaid' : 'Unpaid'),
-        deliveryStatus: 'Pending',
         notes: data.notes || null,
       })
       .select()
@@ -406,7 +416,7 @@ export const orderService = {
 
     // Create payment record if deposit is registered
     if (advancePaid > 0) {
-      await supabase.from('Payment').insert({
+      const { error: payErr } = await supabase.from('Payment').insert({
         orderId: order.id,
         employeeId: data.employeeId,
         amount: advancePaid,
@@ -414,26 +424,39 @@ export const orderService = {
         paymentDate: data.orderDate || new Date().toISOString().split('T')[0],
         notes: 'دفعة عربون مقدم عند إنشاء الفاتورة',
       });
+      if (payErr) throw payErr;
     }
 
     // 5. Create Order Items
     for (const item of data.items) {
-      await supabase.from('OrderItem').insert({
+      const { error: itemErr } = await supabase.from('OrderItem').insert({
         orderId: order.id,
         category: item.category,
-        name: item.name,
-        type: item.type,
-        quantity: item.quantity,
-        salePrice: item.type === 'Sale' ? item.salePrice : null,
-        rentalPrice: item.type === 'Rental' ? item.rentalPrice : null,
-        depositAmount: item.type === 'Rental' ? item.depositAmount : null,
-        size: item.size || null,
-        color: item.color || null,
-        customOptions: item.customOptions || null,
+        customCategory: item.customCategory || null,
+        capType: item.capType || null,
+        customCapType: item.customCapType || null,
+        capSize: item.capSize || null,
+        customCapSize: item.customCapSize || null,
+        capColor: item.capColor || null,
+        customCapColor: item.customCapColor || null,
+        operationType: item.type || 'Sale',
+        customOperation: item.customOperation || null,
+        saleType: item.saleType || null,
+        customSaleType: item.customSaleType || null,
+        broochType: item.broochType || null,
+        customBroochType: item.customBroochType || null,
+        accessoryName: item.accessoryName || null,
+        customAccessoryName: item.customAccessoryName || null,
+        quantity: parseInt(item.quantity) || 1,
+        unitPrice: item.type === 'Rental' ? (parseFloat(item.rentalPrice) || 0) : (parseFloat(item.salePrice) || 0),
+        depositAmount: item.type === 'Rental' ? (parseFloat(item.depositAmount) || 0) : 0,
         deliveryDate: item.deliveryDate || null,
-        expectedReturnDate: item.expectedReturnDate || null,
-        status: item.type === 'Rental' ? 'Rented' : 'Sold',
+        returnDate: item.expectedReturnDate || null,
+        graduationDate: item.graduationDate || null,
+        notes: item.notes || null,
+        status: 'Waiting'
       });
+      if (itemErr) throw itemErr;
     }
 
     // 6. Audit action
