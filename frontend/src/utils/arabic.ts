@@ -59,7 +59,7 @@ export function translateDeliveryStatus(status: string): string {
 export function translateCategory(cat: string, custom?: string | null): string {
   const map: Record<string, string> = {
     'Graduation Cap': 'قبعة تخرج',
-    'Graduation Hat': 'طاقية تخرج',
+    'Graduation Hat': 'كاب تخرج',
     'Graduation Sash': 'وشاح تخرج',
     'Graduation Brooch': 'بروش تخرج',
     'Graduation Accessories': 'إكسسوارات تخرج',

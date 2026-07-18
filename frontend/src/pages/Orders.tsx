@@ -605,7 +605,7 @@ export const Orders: React.FC<OrdersProps> = ({ onNavigate, activeEmployee }) =>
                       label="تصنيف المنتج"
                       options={[
                         { value: 'Graduation Cap', label: 'قبعة تخرج' },
-                        { value: 'Graduation Hat', label: 'طاقية تخرج' },
+                        { value: 'Graduation Hat', label: 'كاب تخرج' },
                         { value: 'Graduation Sash', label: 'وشاح تخرج' },
                         { value: 'Graduation Brooch', label: 'بروش تخرج' },
                         { value: 'Graduation Accessories', label: 'إكسسوارات تخرج' }

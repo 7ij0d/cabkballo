@@ -695,8 +695,8 @@ export const reportService = {
 
     // Calculate mostSoldProducts
     const categoryArabicNames: Record<string, string> = {
-      Cap: 'كاب التخرج',
-      Hat: 'طاقية التخرج',
+      Cap: 'قبعة التخرج',
+      Hat: 'كاب التخرج',
       Sash: 'الوشاح',
       Brooch: 'البروش المخصص',
       Accessory: 'إكسسوارات إضافية',
@@ -780,8 +780,8 @@ export const reportService = {
     // 2. Product breakdown
     const categories = ['Cap', 'Hat', 'Sash', 'Brooch', 'Accessory'];
     const categoryArabicNames: Record<string, string> = {
-      Cap: 'كاب التخرج',
-      Hat: 'طاقية التخرج',
+      Cap: 'قبعة التخرج',
+      Hat: 'كاب التخرج',
       Sash: 'الوشاح',
       Brooch: 'البروش المخصص',
       Accessory: 'إكسسوارات إضافية',

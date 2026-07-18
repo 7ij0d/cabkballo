@@ -18,8 +18,7 @@ export const App: React.FC = () => {
   const [pageParams, setPageParams] = useState<any>({});
   
   const [darkMode, setDarkMode] = useState<boolean>(
-    localStorage.getItem('theme') === 'dark' || 
-    (!('theme' in localStorage) && window.matchMedia('(prefers-color-scheme: dark)').matches)
+    localStorage.getItem('theme') === 'dark'
   );
 
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
@@ -30,6 +29,11 @@ export const App: React.FC = () => {
     const storedEmp = localStorage.getItem('employee');
     if (token && storedEmp) {
       setEmployee(JSON.parse(storedEmp));
+    }
+    // Force light theme by default if no theme is set
+    if (!localStorage.getItem('theme')) {
+      localStorage.setItem('theme', 'light');
+      setDarkMode(false);
     }
   }, []);
 
