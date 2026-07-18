@@ -937,47 +937,18 @@ export const Orders: React.FC<OrdersProps> = ({ onNavigate, activeEmployee, page
                       required
                     />
 
-                    {/* Rental Details: Deposit and Return Date */}
+                    {/* Rental Details: Deposit */}
                     {item.operationType === 'Rental' && (
-                      <>
-                        <Input
-                          label="مبلغ تأمين القطعة"
-                          type="number"
-                          min="0"
-                          step="0.01"
-                          value={item.depositAmount}
-                          onChange={(e) => handleItemFieldChange(item.id, 'depositAmount', e.target.value)}
-                          required
-                        />
-                        <Input
-                          label="تاريخ الإرجاع المتوقع"
-                          type="date"
-                          value={item.returnDate}
-                          onChange={(e) => handleItemFieldChange(item.id, 'returnDate', e.target.value)}
-                          required
-                        />
-                      </>
-                    )}
-
-                    {/* Sash spec details: Graduation Date */}
-                    {item.category === 'Graduation Sash' && (
                       <Input
-                        label="تاريخ التخرج"
-                        type="date"
-                        value={item.graduationDate}
-                        onChange={(e) => handleItemFieldChange(item.id, 'graduationDate', e.target.value)}
+                        label="مبلغ تأمين القطعة"
+                        type="number"
+                        min="0"
+                        step="0.01"
+                        value={item.depositAmount}
+                        onChange={(e) => handleItemFieldChange(item.id, 'depositAmount', e.target.value)}
                         required
                       />
                     )}
-
-                    {/* Delivery Date */}
-                    <Input
-                      label="تاريخ تسليم المنتج"
-                      type="date"
-                      value={item.deliveryDate}
-                      onChange={(e) => handleItemFieldChange(item.id, 'deliveryDate', e.target.value)}
-                      required
-                    />
                   </div>
 
                   {/* Notes line */}

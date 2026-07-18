@@ -342,6 +342,7 @@ export const orderService = {
     orderDate?: string;
     notes?: string;
     discount?: number;
+    advancePaid?: number;
     items: any[];
   }) => {
     // 1. Find or create customer
@@ -380,6 +381,7 @@ export const orderService = {
     const invoiceNumber = `INV-${String((count || 0) + 1).padStart(5, '0')}`;
 
     // 4. Create Order
+    const advancePaid = data.advancePaid || 0;
     const { data: order, error: orderErr } = await supabase
       .from('Order')
       .insert({
@@ -390,10 +392,10 @@ export const orderService = {
         subtotal,
         discount,
         grandTotal,
-        totalPaid: 0,
-        remainingBalance: grandTotal,
+        totalPaid: advancePaid,
+        remainingBalance: Math.max(0, grandTotal - advancePaid),
         status: 'Pending',
-        paymentStatus: 'Unpaid',
+        paymentStatus: advancePaid >= grandTotal ? 'FullyPaid' : (advancePaid > 0 ? 'DepositPaid' : 'Unpaid'),
         deliveryStatus: 'Pending',
         notes: data.notes || null,
       })
@@ -401,6 +403,18 @@ export const orderService = {
       .single();
 
     if (orderErr) throw orderErr;
+
+    // Create payment record if deposit is registered
+    if (advancePaid > 0) {
+      await supabase.from('Payment').insert({
+        orderId: order.id,
+        employeeId: data.employeeId,
+        amount: advancePaid,
+        paymentMethod: 'Cash',
+        paymentDate: data.orderDate || new Date().toISOString().split('T')[0],
+        notes: 'دفعة عربون مقدم عند إنشاء الفاتورة',
+      });
+    }
 
     // 5. Create Order Items
     for (const item of data.items) {
