@@ -37,11 +37,7 @@ export const Select: React.FC<SelectProps> = ({
     return opt;
   });
 
-  // Ensure "Other" is always at the end
-  const hasOther = normalizedOptions.some((opt) => opt.value === 'Other');
-  const finalOptions = hasOther
-    ? normalizedOptions
-    : [...normalizedOptions, { value: 'Other', label: 'أخرى (كتابة يدوي)...' }];
+  const finalOptions = normalizedOptions;
 
   const handleSelectChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
     const val = e.target.value;
