@@ -29,11 +29,10 @@ export const AuditLogs: React.FC = () => {
 
   const filteredLogs = logs.filter((log) => {
     const term = search.toLowerCase();
-    return (
-      log.employeeName.toLowerCase().includes(term) ||
-      log.action.toLowerCase().includes(term) ||
-      log.details.toLowerCase().includes(term)
-    );
+    const empName = (log.employeeName || '').toLowerCase();
+    const act = (log.action || '').toLowerCase();
+    const det = (log.details || '').toLowerCase();
+    return empName.includes(term) || act.includes(term) || det.includes(term);
   });
 
   return (
