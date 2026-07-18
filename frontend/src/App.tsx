@@ -87,31 +87,31 @@ export const App: React.FC = () => {
       
       {/* 1. SIDEBAR PANEL (RTL - Right Side) */}
       <aside className={`
-        fixed inset-y-0 right-0 z-40 w-64 bg-slate-900 text-slate-100 border-l border-slate-800 shadow-xl flex flex-col justify-between transition-transform duration-300 no-print
+        fixed inset-y-0 right-0 z-40 w-64 bg-slate-950/95 dark:bg-slate-900/95 backdrop-blur-md text-slate-100 border-l border-slate-800/80 shadow-2xl flex flex-col justify-between transition-transform duration-300 no-print
         lg:translate-x-0 lg:static
         ${mobileMenuOpen ? 'translate-x-0' : 'translate-x-full lg:translate-x-0'}
       `}>
         {/* Sidebar Brand Header */}
-        <div className="p-6 border-b border-slate-850 flex items-center justify-between">
+        <div className="p-6 border-b border-slate-850/80 flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 bg-brand-500/10 rounded-xl border border-brand-500/25 flex items-center justify-center text-brand-400">
+            <div className="w-11 h-11 bg-gradient-to-tr from-brand-600 to-brand-500 rounded-2xl flex items-center justify-center text-white shadow-lg shadow-brand-500/25 transform hover:rotate-6 transition-all duration-300">
               <GraduationCap className="w-6 h-6" />
             </div>
             <div>
-              <h2 className="text-sm font-black font-cairo text-white tracking-wide">متجر التخرج</h2>
-              <span className="text-[10px] text-slate-500 font-bold block font-tajawal">لوحة إدارة المعرض</span>
+              <h2 className="text-base font-black font-cairo text-white tracking-wide">متجر التخرج</h2>
+              <span className="text-xs text-slate-500 font-bold block font-tajawal">لوحة إدارة المعرض</span>
             </div>
           </div>
           <button 
             onClick={() => setMobileMenuOpen(false)}
-            className="p-1 lg:hidden text-slate-400 hover:text-white"
+            className="p-2 lg:hidden text-slate-400 hover:text-white rounded-xl hover:bg-slate-800"
           >
             <X className="w-5 h-5" />
           </button>
         </div>
 
         {/* Navigation items list */}
-        <nav className="flex-1 px-4 py-6 space-y-1.5 overflow-y-auto">
+        <nav className="flex-1 px-4 py-6 space-y-2 overflow-y-auto">
           {navItems.map((item) => {
             const isActive = page === item.id || (item.id === 'orders' && page === 'order-details');
             return (
@@ -119,14 +119,16 @@ export const App: React.FC = () => {
                 key={item.id}
                 onClick={() => navigateTo(item.id)}
                 className={`
-                  w-full flex items-center gap-3 px-4 py-3 rounded-xl text-xs font-bold font-cairo transition-all
+                  w-full flex items-center gap-3.5 px-4.5 py-3 rounded-2xl text-sm font-bold font-cairo transition-all duration-200 transform
                   ${isActive 
-                    ? 'bg-brand-600 text-white shadow-lg shadow-brand-600/15' 
-                    : 'text-slate-400 hover:bg-slate-800 hover:text-white'
+                    ? 'bg-gradient-to-l from-brand-600 to-brand-500 text-white shadow-lg shadow-brand-600/20 scale-[1.02]' 
+                    : 'text-slate-400 hover:bg-slate-850 hover:text-white hover:translate-x-[-4px]'
                   }
                 `}
               >
-                {item.icon}
+                <span className={`transition-transform duration-200 ${isActive ? 'scale-110' : 'text-slate-400'}`}>
+                  {item.icon}
+                </span>
                 <span>{item.label}</span>
               </button>
             );
@@ -134,36 +136,36 @@ export const App: React.FC = () => {
         </nav>
 
         {/* Sidebar Footer Controls */}
-        <div className="p-4 border-t border-slate-850 space-y-4">
+        <div className="p-4 border-t border-slate-850/80 space-y-4">
           
           {/* Theme & Profile Panel */}
-          <div className="bg-slate-950/40 p-3 rounded-xl space-y-3.5 border border-slate-850/50">
-            <div className="flex items-center justify-between text-xs">
+          <div className="bg-slate-950/40 p-3.5 rounded-2xl space-y-4 border border-slate-850/50">
+            <div className="flex items-center justify-between text-sm">
               <div className="flex items-center gap-2">
-                <div className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
-                <span className="font-bold text-slate-300 font-cairo">الموظف: {employee.name}</span>
+                <div className="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse" />
+                <span className="font-bold text-slate-200 font-cairo">الموظف: {employee.name}</span>
               </div>
               
               <button
                 onClick={() => setDarkMode(!darkMode)}
-                className="p-1.5 bg-slate-800 hover:bg-slate-700 text-slate-400 hover:text-white rounded-lg transition-all"
+                className="p-2 bg-slate-850 hover:bg-slate-850 text-slate-400 hover:text-white rounded-xl transition-all border border-slate-800"
                 title="تبديل المظهر"
               >
-                {darkMode ? <Sun className="w-3.5 h-3.5 text-amber-400" /> : <Moon className="w-3.5 h-3.5" />}
+                {darkMode ? <Sun className="w-4 h-4 text-amber-400" /> : <Moon className="w-4 h-4" />}
               </button>
             </div>
             
             <button
               onClick={handleLogout}
-              className="w-full py-2 bg-slate-800 hover:bg-red-950/40 hover:text-red-400 text-slate-400 text-[10px] font-bold rounded-lg transition-all border border-slate-750 flex items-center justify-center gap-1.5"
+              className="w-full py-2.5 bg-slate-850 hover:bg-red-950/40 hover:text-red-400 text-slate-400 text-xs font-bold rounded-xl transition-all border border-slate-800 flex items-center justify-center gap-2"
             >
-              <LogOut className="w-3.5 h-3.5" />
+              <LogOut className="w-4 h-4" />
               تسجيل الخروج
             </button>
           </div>
 
           <div className="text-center">
-            <span className="text-[9px] text-slate-600 font-bold block font-tajawal select-none">
+            <span className="text-[10px] text-slate-655 font-bold block font-tajawal select-none">
               المطور: طه | نظام تجاري معتمد © 2026
             </span>
           </div>

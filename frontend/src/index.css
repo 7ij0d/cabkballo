@@ -5,13 +5,58 @@
 @layer base {
   body {
     @apply font-cairo bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 transition-colors duration-200;
+    position: relative;
+    background-image: 
+      radial-gradient(at 5% 5%, rgba(49, 176, 129, 0.05) 0px, transparent 50%),
+      radial-gradient(at 95% 95%, rgba(212, 175, 55, 0.04) 0px, transparent 50%),
+      radial-gradient(at 95% 5%, rgba(59, 130, 246, 0.03) 0px, transparent 40%);
+    background-attachment: fixed;
   }
+  
+  .dark body {
+    background-image: 
+      radial-gradient(at 5% 5%, rgba(49, 176, 129, 0.08) 0px, transparent 50%),
+      radial-gradient(at 95% 95%, rgba(212, 175, 55, 0.05) 0px, transparent 50%),
+      radial-gradient(at 95% 5%, rgba(59, 130, 246, 0.04) 0px, transparent 40%);
+  }
+}
+
+/* Glassmorphism card utilities */
+.glass-panel {
+  @apply bg-white/80 dark:bg-slate-900/70 backdrop-blur-md border border-slate-200/50 dark:border-slate-800/40;
+}
+
+.glass-panel-heavy {
+  @apply bg-white/95 dark:bg-slate-900/90 backdrop-blur-xl border border-slate-200/60 dark:border-slate-800/60;
+}
+
+/* Legendary floating orbs */
+.glow-orb {
+  position: absolute;
+  border-radius: 50%;
+  filter: blur(100px);
+  opacity: 0.12;
+  pointer-events: none;
+  z-index: 0;
+}
+
+.glow-orb-primary {
+  background: radial-gradient(circle, #31b081 0%, transparent 70%);
+}
+
+.glow-orb-secondary {
+  background: radial-gradient(circle, #d4af37 0%, transparent 70%);
+}
+
+/* Custom premium hover effects */
+.hover-premium-glow {
+  @apply transition-all duration-300 hover:shadow-lg hover:shadow-brand-500/5 hover:border-brand-500/30;
 }
 
 /* Custom scrollbars */
 ::-webkit-scrollbar {
-  width: 6px;
-  height: 6px;
+  width: 8px;
+  height: 8px;
 }
 ::-webkit-scrollbar-track {
   @apply bg-transparent;
@@ -25,7 +70,7 @@
   body {
     background: white !important;
     color: black !important;
-    font-size: 12pt;
+    font-size: 11pt;
     direction: rtl !important;
   }
   .no-print {

@@ -20,11 +20,11 @@ export const Button: React.FC<ButtonProps> = ({
   const baseStyle = 'inline-flex items-center justify-center font-semibold rounded-xl transition-all focus:outline-none focus:ring-2 focus:ring-offset-2 active:scale-95 disabled:opacity-50 disabled:pointer-events-none gap-2 font-cairo shadow-sm';
   
   const variants = {
-    primary: 'bg-brand-600 hover:bg-brand-700 text-white focus:ring-brand-500 focus:ring-offset-white dark:focus:ring-offset-slate-900',
-    secondary: 'bg-slate-100 hover:bg-slate-200 text-slate-800 dark:bg-slate-800 dark:hover:bg-slate-700 dark:text-slate-100 focus:ring-slate-500 focus:ring-offset-white dark:focus:ring-offset-slate-900 border border-slate-200/50 dark:border-slate-700/50',
-    danger: 'bg-red-600 hover:bg-red-700 text-white focus:ring-red-500 focus:ring-offset-white dark:focus:ring-offset-slate-900',
-    warning: 'bg-amber-500 hover:bg-amber-600 text-white focus:ring-amber-500 focus:ring-offset-white dark:focus:ring-offset-slate-900',
-    success: 'bg-emerald-600 hover:bg-emerald-700 text-white focus:ring-emerald-500 focus:ring-offset-white dark:focus:ring-offset-slate-900',
+    primary: 'bg-brand-600 hover:bg-brand-700 text-white focus:ring-brand-500 focus:ring-offset-white dark:focus:ring-offset-slate-900 hover:shadow-lg hover:shadow-brand-600/25',
+    secondary: 'bg-slate-100 hover:bg-slate-200 text-slate-800 dark:bg-slate-800 dark:hover:bg-slate-700 dark:text-slate-100 focus:ring-slate-500 focus:ring-offset-white dark:focus:ring-offset-slate-900 border border-slate-200/50 dark:border-slate-700/50 hover:shadow-md',
+    danger: 'bg-red-600 hover:bg-red-700 text-white focus:ring-red-500 focus:ring-offset-white dark:focus:ring-offset-slate-900 hover:shadow-lg hover:shadow-red-600/25',
+    warning: 'bg-amber-500 hover:bg-amber-600 text-white focus:ring-amber-500 focus:ring-offset-white dark:focus:ring-offset-slate-900 hover:shadow-lg hover:shadow-amber-500/25',
+    success: 'bg-emerald-600 hover:bg-emerald-700 text-white focus:ring-emerald-500 focus:ring-offset-white dark:focus:ring-offset-slate-900 hover:shadow-lg hover:shadow-emerald-600/25',
   };
 
   const sizes = {
