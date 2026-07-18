@@ -174,10 +174,12 @@ export const customerService = {
     const { data: newCust, error } = await supabase
       .from('Customer')
       .insert({
+        id: generateUUID(),
         name: data.name,
         phone: data.phone,
         backupPhone: data.backupPhone || null,
         notes: data.notes || null,
+        updatedAt: new Date().toISOString(),
       })
       .select()
       .single();
@@ -194,6 +196,7 @@ export const customerService = {
         phone: data.phone,
         backupPhone: data.backupPhone || null,
         notes: data.notes || null,
+        updatedAt: new Date().toISOString(),
       })
       .eq('id', id)
       .select()
@@ -384,6 +387,7 @@ export const orderService = {
           phone: data.customerPhone,
           backupPhone: data.customerBackupPhone || null,
           notes: data.customerNotes || null,
+          updatedAt: new Date().toISOString(),
         })
         .select()
         .single();
@@ -422,6 +426,7 @@ export const orderService = {
         status: 'Pending',
         paymentStatus: advancePaid >= grandTotal ? 'FullyPaid' : (advancePaid > 0 ? 'DepositPaid' : 'Unpaid'),
         notes: data.notes || null,
+        updatedAt: new Date().toISOString(),
       })
       .select()
       .single();
@@ -470,7 +475,8 @@ export const orderService = {
         returnDate: item.expectedReturnDate || null,
         graduationDate: item.graduationDate || null,
         notes: item.notes || null,
-        status: 'Waiting'
+        status: 'Waiting',
+        updatedAt: new Date().toISOString(),
       });
       if (itemErr) throw itemErr;
     }
@@ -484,7 +490,10 @@ export const orderService = {
   update: async (id: string, data: any) => {
     const { data: updatedOrder, error } = await supabase
       .from('Order')
-      .update(data)
+      .update({
+        ...data,
+        updatedAt: new Date().toISOString()
+      })
       .eq('id', id)
       .select()
       .single();
@@ -536,6 +545,7 @@ export const paymentService = {
     const { data: newPayment, error: payErr } = await supabase
       .from('Payment')
       .insert({
+        id: generateUUID(),
         orderId: data.orderId,
         employeeId: data.employeeId,
         amount: data.amount,
@@ -629,6 +639,7 @@ export const returnService = {
     const { data: newReturn, error } = await supabase
       .from('ReturnLog')
       .insert({
+        id: generateUUID(),
         orderItemId: data.orderItemId,
         employeeId: data.employeeId,
         quantityReturned: data.quantityReturned,

@@ -383,7 +383,8 @@ export const Orders: React.FC<OrdersProps> = ({ onNavigate, activeEmployee, page
             returnDate: globalReturnDate || null,
             graduationDate: globalGraduationDate || null,
             notes: item.notes || null,
-            status: 'Waiting'
+            status: 'Waiting',
+            updatedAt: new Date().toISOString(),
           });
           if (editItemErr) throw editItemErr;
         }
