@@ -506,10 +506,29 @@ export const orderService = {
   },
 
   delete: async (id: string) => {
-    // Delete related items first
-    await supabase.from('OrderItem').delete().eq('orderId', id);
-    await supabase.from('Payment').delete().eq('orderId', id);
+    // 1. Get all OrderItem IDs for this order
+    const { data: items } = await supabase
+      .from('OrderItem')
+      .select('id')
+      .eq('orderId', id);
     
+    const itemIds = items?.map((item) => item.id) || [];
+
+    // 2. Delete related ReturnLog records first
+    if (itemIds.length > 0) {
+      const { error: retErr } = await supabase.from('ReturnLog').delete().in('orderItemId', itemIds);
+      if (retErr) throw retErr;
+    }
+
+    // 3. Delete related OrderItem records
+    const { error: itemsErr } = await supabase.from('OrderItem').delete().eq('orderId', id);
+    if (itemsErr) throw itemsErr;
+
+    // 4. Delete related Payment records
+    const { error: payErr } = await supabase.from('Payment').delete().eq('orderId', id);
+    if (payErr) throw payErr;
+    
+    // 5. Delete Order
     const { data: deletedOrder, error } = await supabase
       .from('Order')
       .delete()

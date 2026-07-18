@@ -191,9 +191,9 @@ export const OrderDetails: React.FC<OrderDetailsProps> = ({
       try {
         await orderService.delete(orderId);
         onBack();
-      } catch (err) {
+      } catch (err: any) {
         console.error(err);
-        alert('حدث خطأ أثناء حذف الفاتورة.');
+        alert('حدث خطأ أثناء حذف الفاتورة: ' + (err.message || 'خطأ غير معروف'));
       }
     }
   };

@@ -226,9 +226,9 @@ export const Orders: React.FC<OrdersProps> = ({ onNavigate, activeEmployee, page
         }
         
         await fetchOrders();
-      } catch (err) {
+      } catch (err: any) {
         console.error(err);
-        alert('حدث خطأ أثناء حذف الفاتورة.');
+        alert('حدث خطأ أثناء حذف الفاتورة: ' + (err.message || 'خطأ غير معروف'));
       } finally {
         setIsLoading(false);
       }
