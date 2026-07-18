@@ -53,10 +53,10 @@ export const Orders: React.FC<OrdersProps> = ({ onNavigate, activeEmployee, page
   const handleWalkInChange = (checked: boolean) => {
     setIsWalkIn(checked);
     if (checked) {
-      setCustName('زبون سفري');
-      setCustPhone('0000000000');
+      setCustName('/');
+      setCustPhone('/');
       setCustBackupPhone('');
-      setCustNotes('زبون سفري عابر');
+      setCustNotes('/');
     } else {
       setCustName('');
       setCustPhone('');
@@ -671,7 +671,7 @@ export const Orders: React.FC<OrdersProps> = ({ onNavigate, activeEmployee, page
                   htmlFor="walkInCustomer" 
                   className="text-xs font-bold text-slate-750 dark:text-slate-200 cursor-pointer select-none font-tajawal"
                 >
-                  زبون سفري / عابر (لا يوجد اسم أو هاتف)
+                  لا يوجد
                 </label>
               </div>
             </div>

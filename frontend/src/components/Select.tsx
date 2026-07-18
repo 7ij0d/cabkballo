@@ -63,12 +63,11 @@ export const Select: React.FC<SelectProps> = ({
         required={required}
         {...props}
       >
-        <option value="" disabled className="bg-white dark:bg-slate-900 text-slate-400">--- اختر من القائمة ---</option>
+        <option value="" disabled>--- اختر من القائمة ---</option>
         {finalOptions.map((opt) => (
           <option 
             key={opt.value} 
-            value={opt.value} 
-            className="bg-white dark:bg-slate-900 text-slate-900 dark:text-white font-bold py-2"
+            value={opt.value}
           >
             {opt.label}
           </option>
