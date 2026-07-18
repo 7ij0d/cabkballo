@@ -9,6 +9,7 @@ import Button from '../components/Button';
 import Input from '../components/Input';
 import Select from '../components/Select';
 import Modal from '../components/Modal';
+import { supabase } from '../utils/supabaseClient';
 
 interface OrderDetailsProps {
   orderId: string;
@@ -26,6 +27,22 @@ export const OrderDetails: React.FC<OrderDetailsProps> = ({
   const [order, setOrder] = useState<any | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState('');
+  const [employees, setEmployees] = useState<any[]>([]);
+
+  // Load employees list from database
+  useEffect(() => {
+    const loadEmployees = async () => {
+      try {
+        const { data } = await supabase.from('Employee').select('id, name');
+        if (data) {
+          setEmployees(data.map(e => ({ value: e.id, label: e.name })));
+        }
+      } catch (err) {
+        console.error('Failed to load employees:', err);
+      }
+    };
+    loadEmployees();
+  }, []);
 
   // Modal control
   const [isPaymentModalOpen, setIsPaymentModalOpen] = useState(false);
@@ -237,11 +254,7 @@ export const OrderDetails: React.FC<OrderDetailsProps> = ({
     );
   }
 
-  // Employee option mapping
-  const employeeNames = [
-    { value: 'f3a479b1-e221-4f19-a1b7-d15764d2d46e', label: 'أنس' },
-    { value: 'a98f5c9e-5b12-4c28-98e3-f8a183d2d2a4', label: 'طه' }
-  ];
+
 
   return (
     <div className="space-y-6">
@@ -483,7 +496,7 @@ export const OrderDetails: React.FC<OrderDetailsProps> = ({
             {/* Payments Ledger Sub-table */}
             <div className="bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800/80 p-5 rounded-2xl shadow-sm space-y-4">
               <h3 className="text-sm font-bold text-slate-800 dark:text-slate-100 pb-2 border-b border-slate-100 dark:border-slate-800/60">
-                سجل الدفعات المقبوضة
+                سجل دفعات العربون والمدفوعات
               </h3>
 
               <div className="overflow-x-auto">
@@ -520,7 +533,7 @@ export const OrderDetails: React.FC<OrderDetailsProps> = ({
                     {order.payments.length === 0 && (
                       <tr>
                         <td colSpan={6} className="py-6 text-center text-slate-450 dark:text-slate-600 font-tajawal">
-                          لا يوجد حركات قبض مسجلة لهذه الفاتورة حتى الآن.
+                          لا يوجد دفعات عربون مسجلة لهذه الفاتورة حتى الآن.
                         </td>
                       </tr>
                     )}
@@ -797,13 +810,13 @@ export const OrderDetails: React.FC<OrderDetailsProps> = ({
           // C. PAYMENT RECEIPT PRINT
           <div className="p-8 space-y-6 max-w-md mx-auto text-slate-900 leading-relaxed font-cairo select-text border border-slate-200 rounded-2xl shadow-inner mt-12">
             <div className="text-center border-b-2 border-slate-900 pb-3">
-              <h2 className="text-lg font-black">وصل قبض دفعة مالية</h2>
+              <h2 className="text-lg font-black">وصل استلام دفعة عربون</h2>
               <p className="text-[10px] text-slate-500 font-bold">متجر التخرج للمستلزمات | هاتف: 0912345678</p>
             </div>
 
             <div className="space-y-2 text-xs">
               <div className="flex justify-between">
-                <span>تاريخ القبض:</span>
+                <span>تاريخ استلام العربون:</span>
                 <span className="font-bold">{formatDate(printPaymentData.paymentDate)}</span>
               </div>
               <div className="flex justify-between">
@@ -831,7 +844,7 @@ export const OrderDetails: React.FC<OrderDetailsProps> = ({
             </div>
 
             <div className="bg-emerald-50 dark:bg-emerald-950/20 border border-emerald-250 p-4 rounded-xl text-center">
-              <span className="text-[10px] font-bold text-emerald-600 block">القيمة المقبوضة المستلمة</span>
+              <span className="text-[10px] font-bold text-emerald-600 block">قيمة العربون المستلم</span>
               <h2 className="text-2xl font-black text-emerald-800 dark:text-emerald-350 mt-1">
                 {formatCurrency(printPaymentData.amount)}
               </h2>
@@ -853,11 +866,11 @@ export const OrderDetails: React.FC<OrderDetailsProps> = ({
       <Modal
         isOpen={isPaymentModalOpen}
         onClose={() => setIsPaymentModalOpen(false)}
-        title={`تسجيل دفعة قبض للفاتورة ${order.orderNumber}`}
+        title={`تسجيل دفعة عربون للفاتورة ${order.orderNumber}`}
       >
         <form onSubmit={handleAddPaymentSubmit} className="space-y-4">
           <Input
-            label="قيمة المبلغ المقبوض (د.ل)"
+            label="قيمة دفعة العربون (د.ل)"
             type="number"
             min="0.01"
             step="0.01"
@@ -876,7 +889,7 @@ export const OrderDetails: React.FC<OrderDetailsProps> = ({
           />
 
           <Select
-            label="طريقة القبض"
+            label="طريقة الدفع"
             options={['Cash', 'Bank Transfer', 'Card']}
             value={payMethod}
             onChange={(val) => setPayMethod(val)}
@@ -887,7 +900,7 @@ export const OrderDetails: React.FC<OrderDetailsProps> = ({
 
           <Select
             label="الموظف المستلم للمبلغ"
-            options={employeeNames}
+            options={employees}
             value={payEmpId}
             onChange={(val) => setPayEmpId(val)}
             customValue={customPayEmp}
@@ -921,7 +934,7 @@ export const OrderDetails: React.FC<OrderDetailsProps> = ({
               type="submit"
               isLoading={isPaymentSubmitting}
             >
-              تسجيل القبض وحفظ
+              تسجيل العربون وحفظ
             </Button>
           </div>
         </form>
@@ -983,7 +996,7 @@ export const OrderDetails: React.FC<OrderDetailsProps> = ({
 
             <Select
               label="الموظف المستلم للمرتجع"
-              options={employeeNames}
+              options={employees}
               value={retEmpId}
               onChange={(val) => setRetEmpId(val)}
               customValue={customRetEmp}
