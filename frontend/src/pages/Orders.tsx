@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { 
   ShoppingBag, Search, Plus, Trash2, Calendar, Phone, 
-  User, DollarSign, Filter, ArrowLeft, PlusCircle, Check, Eye 
+  User, DollarSign, Filter, ArrowLeft, PlusCircle, Check, Eye, Edit 
 } from 'lucide-react';
 import { orderService, customerService } from '../services/api';
 import { formatCurrency, formatDate, translateStatus, translatePaymentStatus } from '../utils/arabic';
@@ -204,6 +204,34 @@ export const Orders: React.FC<OrdersProps> = ({ onNavigate, activeEmployee, page
       setError('فشل تحميل قائمة الطلبات.');
     } finally {
       setIsLoading(false);
+    }
+  };
+
+  const handleDeleteOrder = async (id: string, orderNumber: string) => {
+    if (window.confirm(`هل أنت متأكد من رغبتك في حذف الفاتورة رقم ${orderNumber} بالكامل؟ لا يمكن التراجع عن هذا الإجراء.`)) {
+      try {
+        setIsLoading(true);
+        await orderService.delete(id);
+        
+        // Log audit log
+        if (activeEmployee) {
+          const { data: empObj } = await supabase.from('Employee').select('name').eq('id', activeEmployee.id).single();
+          await supabase.from('AuditLog').insert({
+            id: generateUUID(),
+            employeeId: activeEmployee.id,
+            employeeName: empObj?.name || 'مجهول',
+            action: 'DELETE_ORDER',
+            details: `حذف الفاتورة رقم ${orderNumber}`
+          });
+        }
+        
+        await fetchOrders();
+      } catch (err) {
+        console.error(err);
+        alert('حدث خطأ أثناء حذف الفاتورة.');
+      } finally {
+        setIsLoading(false);
+      }
     }
   };
 
@@ -710,12 +738,31 @@ export const Orders: React.FC<OrdersProps> = ({ onNavigate, activeEmployee, page
                           </span>
                         </td>
                         <td className="py-3.5 px-4">
-                          <button 
-                            onClick={() => onNavigate('order-details', { id: o.id })}
-                            className="p-1 text-brand-600 hover:text-brand-700 dark:hover:text-brand-400 bg-brand-50 dark:bg-brand-950/20 rounded-lg transition-all"
-                          >
-                            <Eye className="w-4 h-4" />
-                          </button>
+                          <div className="flex items-center gap-1.5">
+                            <button 
+                              onClick={() => onNavigate('order-details', { id: o.id })}
+                              className="p-1 text-brand-600 hover:text-brand-700 dark:hover:text-brand-400 bg-brand-50 dark:bg-brand-950/20 rounded-lg transition-all"
+                              title="عرض التفاصيل"
+                            >
+                              <Eye className="w-4 h-4" />
+                            </button>
+                            <button 
+                              type="button"
+                              onClick={() => onNavigate('orders', { editId: o.id })}
+                              className="p-1 text-blue-650 hover:text-blue-700 dark:hover:text-blue-400 bg-blue-50 dark:bg-blue-950/20 rounded-lg transition-all"
+                              title="تعديل الفاتورة"
+                            >
+                              <Edit className="w-4 h-4" />
+                            </button>
+                            <button 
+                              type="button"
+                              onClick={() => handleDeleteOrder(o.id, o.orderNumber)}
+                              className="p-1 text-red-650 hover:text-red-700 dark:hover:text-red-400 bg-red-50 dark:bg-red-950/20 rounded-lg transition-all"
+                              title="حذف الفاتورة"
+                            >
+                              <Trash2 className="w-4 h-4" />
+                            </button>
+                          </div>
                         </td>
                       </tr>
                     ))}
