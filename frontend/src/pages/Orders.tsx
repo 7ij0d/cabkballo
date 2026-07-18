@@ -399,7 +399,22 @@ export const Orders: React.FC<OrdersProps> = ({ onNavigate, activeEmployee, page
         orderDate,
         notes: generalNotes,
         discount: parseFloat(discount) || 0,
-        items: items
+        advancePaid: parseFloat(advancePaid) || 0,
+        items: items.map(item => ({
+          ...item,
+          name: item.accessoryName || item.category,
+          type: item.operationType || 'Sale',
+          quantity: parseInt(item.quantity) || 1,
+          salePrice: item.operationType === 'Sale' ? (parseFloat(item.unitPrice) || 0) : null,
+          rentalPrice: item.operationType === 'Rental' ? (parseFloat(item.unitPrice) || 0) : null,
+          depositAmount: item.operationType === 'Rental' ? (parseFloat(item.depositAmount) || 0) : 0,
+          size: item.capSize || null,
+          color: item.capColor || null,
+          customOptions: item.customCategory || item.customCapType || item.customCapSize || item.customCapColor || item.customSaleType || item.customBroochType || item.customAccessoryName || null,
+          deliveryDate: globalDeliveryDate || null,
+          expectedReturnDate: globalReturnDate || null,
+          graduationDate: globalGraduationDate || null,
+        }))
       });
 
       setIsCreating(false);
@@ -410,11 +425,15 @@ export const Orders: React.FC<OrdersProps> = ({ onNavigate, activeEmployee, page
       setCustNotes('');
       setGeneralNotes('');
       setDiscount('0');
+      setAdvancePaid('0');
+      setGlobalDeliveryDate('');
+      setGlobalReturnDate('');
+      setGlobalGraduationDate('');
       setItems([]);
       fetchOrders();
     } catch (err: any) {
       console.error(err);
-      setFormError(err.response?.data?.error || 'حدث خطأ أثناء حفظ الفاتورة.');
+      setFormError(err.message || err.response?.data?.error || 'حدث خطأ أثناء حفظ الفاتورة.');
     } finally {
       setIsSubmitting(false);
     }
