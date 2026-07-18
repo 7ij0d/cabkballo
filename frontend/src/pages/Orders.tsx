@@ -42,6 +42,12 @@ export const Orders: React.FC<OrdersProps> = ({ onNavigate, activeEmployee, page
   const [orderDate, setOrderDate] = useState(new Date().toISOString().split('T')[0]);
   const [generalNotes, setGeneralNotes] = useState('');
   const [discount, setDiscount] = useState('0');
+  const [advancePaid, setAdvancePaid] = useState('0');
+
+  // Global Dates managed at customer level
+  const [globalDeliveryDate, setGlobalDeliveryDate] = useState('');
+  const [globalReturnDate, setGlobalReturnDate] = useState('');
+  const [globalGraduationDate, setGlobalGraduationDate] = useState('');
   
   // Order items array
   const [items, setItems] = useState<any[]>([]);
@@ -63,6 +69,12 @@ export const Orders: React.FC<OrdersProps> = ({ onNavigate, activeEmployee, page
       setCustBackupPhone('');
       setCustNotes('');
     }
+  };
+
+  const handleGlobalDeliveryDateChange = (val: string) => {
+    setGlobalDeliveryDate(val);
+    const autoReturn = calculateAutoReturnDate(val);
+    setGlobalReturnDate(autoReturn);
   };
 
   const calculateAutoReturnDate = (deliveryDateStr: string): string => {
@@ -101,8 +113,15 @@ export const Orders: React.FC<OrdersProps> = ({ onNavigate, activeEmployee, page
           setOrderDate(orderToEdit.orderDate.split('T')[0]);
           setGeneralNotes(orderToEdit.notes || '');
           setDiscount(String(orderToEdit.discount));
-          setIsWalkIn(orderToEdit.customerName === 'زبون سفري' && orderToEdit.customerPhone === '0000000000');
+          setAdvancePaid(String(orderToEdit.totalPaid || 0));
+          setIsWalkIn(orderToEdit.customerName === '/' && orderToEdit.customerPhone === '/');
           
+          // Extract global dates from the first item
+          const firstItem = orderToEdit.items[0];
+          setGlobalDeliveryDate(firstItem?.deliveryDate?.split('T')[0] || '');
+          setGlobalReturnDate(firstItem?.returnDate?.split('T')[0] || '');
+          setGlobalGraduationDate(firstItem?.graduationDate?.split('T')[0] || '');
+
           setItems(
             orderToEdit.items.map((item: any) => ({
               id: item.id,
@@ -114,19 +133,19 @@ export const Orders: React.FC<OrdersProps> = ({ onNavigate, activeEmployee, page
               customCapSize: item.customCapSize || '',
               capColor: item.capColor || '',
               customCapColor: item.customCapColor || '',
-              operationType: item.type || 'Sale',
+              operationType: item.operationType || 'Sale',
               customOperation: item.customOperation || '',
               saleType: item.saleType || '',
               customSaleType: item.customSaleType || '',
               broochType: item.broochType || '',
               customBroochType: item.customBroochType || '',
-              accessoryName: item.name || '',
-              customAccessoryName: item.customOptions || '',
+              accessoryName: item.accessoryName || '',
+              customAccessoryName: item.customAccessoryName || '',
               quantity: String(item.quantity),
-              unitPrice: String(item.type === 'Rental' ? (item.rentalPrice || '') : (item.salePrice || '')),
+              unitPrice: String(item.unitPrice || ''),
               depositAmount: String(item.depositAmount || ''),
               deliveryDate: item.deliveryDate || '',
-              returnDate: item.expectedReturnDate || '',
+              returnDate: item.returnDate || '',
               graduationDate: item.graduationDate || '',
               notes: item.notes || ''
             }))
@@ -676,7 +695,7 @@ export const Orders: React.FC<OrdersProps> = ({ onNavigate, activeEmployee, page
               </div>
             </div>
             
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
               <Input
                 label="اسم الزبون بالكامل"
                 value={custName}
@@ -710,7 +729,9 @@ export const Orders: React.FC<OrdersProps> = ({ onNavigate, activeEmployee, page
                 onCustomChange={setCustomEmpName}
                 required
               />
+            </div>
 
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 pt-3 border-t border-slate-100 dark:border-slate-800/60">
               <Input
                 label="تاريخ الطلب"
                 type="date"
@@ -718,6 +739,29 @@ export const Orders: React.FC<OrdersProps> = ({ onNavigate, activeEmployee, page
                 onChange={(e) => setOrderDate(e.target.value)}
                 required
               />
+              <Input
+                label="تاريخ التخرج"
+                type="date"
+                value={globalGraduationDate}
+                onChange={(e) => setGlobalGraduationDate(e.target.value)}
+                required
+              />
+              <Input
+                label="تاريخ تسليم الطلب (موعد الاستلام)"
+                type="date"
+                value={globalDeliveryDate}
+                onChange={(e) => handleGlobalDeliveryDateChange(e.target.value)}
+                required
+              />
+              {items.some((item) => item.operationType === 'Rental') && (
+                <Input
+                  label="تاريخ الإرجاع (اليوم التالي)"
+                  type="date"
+                  value={globalReturnDate}
+                  onChange={(e) => setGlobalReturnDate(e.target.value)}
+                  required
+                />
+              )}
             </div>
 
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
