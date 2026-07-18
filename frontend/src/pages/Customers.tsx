@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { 
   Users, Search, Plus, UserPlus, Phone, Edit, Calendar, 
-  DollarSign, FileText, History, RotateCcw, ArrowLeft, ArrowLeftRight, Save, ClipboardList 
+  DollarSign, FileText, History, RotateCcw, ArrowLeft, ArrowLeftRight, Save, ClipboardList, Trash2 
 } from 'lucide-react';
 import { customerService } from '../services/api';
 import { formatCurrency, formatDate, translateStatus, translatePaymentStatus, translateCondition } from '../utils/arabic';
@@ -13,6 +13,7 @@ interface CustomerListItem {
   id: string;
   name: string;
   phone: string;
+  backupPhone?: string | null;
   notes: string | null;
   createdAt: string;
   lastOrderDate: string | null;
@@ -55,6 +56,7 @@ export const Customers: React.FC<CustomersProps> = ({ onNavigate, selectedId }) 
   // Form fields
   const [custName, setCustName] = useState('');
   const [custPhone, setCustPhone] = useState('');
+  const [custBackupPhone, setCustBackupPhone] = useState('');
   const [custNotes, setCustNotes] = useState('');
   const [formError, setFormError] = useState('');
   const [isFormSubmitting, setIsFormSubmitting] = useState(false);
@@ -109,12 +111,14 @@ export const Customers: React.FC<CustomersProps> = ({ onNavigate, selectedId }) 
       await customerService.create({
         name: custName,
         phone: custPhone,
+        backupPhone: custBackupPhone,
         notes: custNotes
       });
       setIsAddModalOpen(false);
       // Reset
       setCustName('');
       setCustPhone('');
+      setCustBackupPhone('');
       setCustNotes('');
       fetchCustomers();
     } catch (err: any) {
@@ -137,6 +141,7 @@ export const Customers: React.FC<CustomersProps> = ({ onNavigate, selectedId }) 
       await customerService.update(selectedCustomerId, {
         name: custName,
         phone: custPhone,
+        backupPhone: custBackupPhone,
         notes: custNotes
       });
       setIsEditModalOpen(false);
@@ -156,9 +161,26 @@ export const Customers: React.FC<CustomersProps> = ({ onNavigate, selectedId }) 
     if (profile) {
       setCustName(profile.name);
       setCustPhone(profile.phone);
+      setCustBackupPhone(profile.backupPhone || '');
       setCustNotes(profile.notes || '');
       setFormError('');
       setIsEditModalOpen(true);
+    }
+  };
+
+  const handleDeleteCustomer = async () => {
+    if (!profile || !selectedCustomerId) return;
+    const confirmDelete = window.confirm(`هل أنت متأكد من حذف الزبون "${profile.name}"؟ سيؤدي ذلك لحذف كافة فواتيره ومدفوعاته وعمليات الإيجار الخاصة به نهائياً!`);
+    if (!confirmDelete) return;
+
+    try {
+      setError('');
+      await customerService.delete(selectedCustomerId);
+      setSelectedCustomerId(null);
+      fetchCustomers();
+    } catch (err: any) {
+      console.error(err);
+      setError('فشل حذف الزبون. قد يكون مرتبطاً بعمليات أخرى.');
     }
   };
 
@@ -248,7 +270,12 @@ export const Customers: React.FC<CustomersProps> = ({ onNavigate, selectedId }) 
                   {customers.map((c) => (
                     <tr key={c.id} className="hover:bg-slate-50/50 dark:hover:bg-slate-950/20 transition-all">
                       <td className="py-3.5 px-4 font-bold text-slate-800 dark:text-slate-200">{c.name}</td>
-                      <td className="py-3.5 px-4 font-semibold text-slate-600 dark:text-slate-400 font-tajawal">{c.phone}</td>
+                      <td className="py-3.5 px-4 font-semibold text-slate-600 dark:text-slate-400 font-tajawal">
+                        <div>{c.phone}</div>
+                        {c.backupPhone && (
+                          <div className="text-[10px] text-slate-400 dark:text-slate-550 mt-0.5">احتياطي: {c.backupPhone}</div>
+                        )}
+                      </td>
                       <td className="py-3.5 px-4 font-semibold text-slate-400 dark:text-slate-500 font-tajawal">{formatDate(c.createdAt)}</td>
                       <td className="py-3.5 px-4 font-semibold text-slate-400 dark:text-slate-500 font-tajawal">{formatDate(c.lastOrderDate)}</td>
                       <td className="py-3.5 px-4 font-bold text-slate-700 dark:text-slate-350">{c.orderCount} طلبات</td>
@@ -300,19 +327,37 @@ export const Customers: React.FC<CustomersProps> = ({ onNavigate, selectedId }) 
                 <div className="p-3 bg-brand-50 dark:bg-brand-950/30 text-brand-600 dark:text-brand-400 rounded-2xl">
                   <Users className="w-8 h-8" />
                 </div>
-                <button 
-                  onClick={openEditModal}
-                  className="p-1.5 text-slate-400 hover:text-brand-600 dark:hover:text-brand-400 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg transition-all"
-                >
-                  <Edit className="w-4 h-4" />
-                </button>
+                <div className="flex items-center gap-1.5">
+                  <button 
+                    onClick={openEditModal}
+                    className="p-1.5 text-slate-400 hover:text-brand-600 dark:hover:text-brand-400 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg transition-all"
+                    title="تعديل بيانات الزبون"
+                  >
+                    <Edit className="w-4 h-4" />
+                  </button>
+                  <button 
+                    onClick={handleDeleteCustomer}
+                    className="p-1.5 text-slate-400 hover:text-red-650 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg transition-all"
+                    title="حذف الزبون"
+                  >
+                    <Trash2 className="w-4 h-4" />
+                  </button>
+                </div>
               </div>
 
               <div className="mt-4 space-y-1">
                 <h3 className="text-lg font-black text-slate-800 dark:text-slate-100">{profile.name}</h3>
-                <div className="flex items-center gap-1 text-xs text-slate-500 dark:text-slate-400 font-tajawal">
-                  <Phone className="w-3.5 h-3.5" />
-                  <span>{profile.phone}</span>
+                <div className="flex flex-col gap-1 mt-1 text-xs text-slate-550 dark:text-slate-400 font-tajawal">
+                  <div className="flex items-center gap-1">
+                    <Phone className="w-3.5 h-3.5" />
+                    <span>الهاتف الأساسي: {profile.phone}</span>
+                  </div>
+                  {profile.backupPhone && (
+                    <div className="flex items-center gap-1 text-slate-400 dark:text-slate-500">
+                      <Phone className="w-3.5 h-3.5" />
+                      <span>الهاتف الاحتياطي: {profile.backupPhone}</span>
+                    </div>
+                  )}
                 </div>
               </div>
 
@@ -563,6 +608,12 @@ export const Customers: React.FC<CustomersProps> = ({ onNavigate, selectedId }) 
             required
             placeholder="مثال: 0912345678"
           />
+          <Input
+            label="رقم الهاتف الاحتياطي (اختياري)"
+            value={custBackupPhone}
+            onChange={(e) => setCustBackupPhone(e.target.value)}
+            placeholder="مثال: 0921234567"
+          />
           <div className="flex flex-col gap-1.5">
             <label className="text-sm font-semibold text-slate-700 dark:text-slate-350">ملاحظات عامة</label>
             <textarea
@@ -613,6 +664,11 @@ export const Customers: React.FC<CustomersProps> = ({ onNavigate, selectedId }) 
             value={custPhone}
             onChange={(e) => setCustPhone(e.target.value)}
             required
+          />
+          <Input
+            label="رقم الهاتف الاحتياطي (اختياري)"
+            value={custBackupPhone}
+            onChange={(e) => setCustBackupPhone(e.target.value)}
           />
           <div className="flex flex-col gap-1.5">
             <label className="text-sm font-semibold text-slate-700 dark:text-slate-350">ملاحظات عامة</label>

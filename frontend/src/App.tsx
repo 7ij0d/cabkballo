@@ -201,7 +201,7 @@ export const App: React.FC = () => {
             <Customers onNavigate={navigateTo} selectedId={pageParams.id} />
           )}
           {page === 'orders' && (
-            <Orders onNavigate={navigateTo} activeEmployee={employee} />
+            <Orders onNavigate={navigateTo} activeEmployee={employee} pageParams={pageParams} />
           )}
           {page === 'order-details' && (
             <OrderDetails 

@@ -3,7 +3,7 @@ import {
   ShoppingBag, Search, Plus, Trash2, Calendar, Phone, 
   User, DollarSign, Filter, ArrowLeft, PlusCircle, Check, Eye 
 } from 'lucide-react';
-import { orderService } from '../services/api';
+import { orderService, customerService } from '../services/api';
 import { formatCurrency, formatDate, translateStatus, translatePaymentStatus } from '../utils/arabic';
 import Button from '../components/Button';
 import Input from '../components/Input';
@@ -13,9 +13,11 @@ import { supabase } from '../utils/supabaseClient';
 interface OrdersProps {
   onNavigate: (page: string, params?: any) => void;
   activeEmployee: { id: string; name: string } | null;
+  pageParams?: any;
 }
 
-export const Orders: React.FC<OrdersProps> = ({ onNavigate, activeEmployee }) => {
+export const Orders: React.FC<OrdersProps> = ({ onNavigate, activeEmployee, pageParams }) => {
+  const editOrderId = pageParams?.editId;
   const [orders, setOrders] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isCreating, setIsCreating] = useState(false);
@@ -33,6 +35,7 @@ export const Orders: React.FC<OrdersProps> = ({ onNavigate, activeEmployee }) =>
   // Form State for Create Order
   const [custName, setCustName] = useState('');
   const [custPhone, setCustPhone] = useState('');
+  const [custBackupPhone, setCustBackupPhone] = useState('');
   const [custNotes, setCustNotes] = useState('');
   const [empId, setEmpId] = useState('');
   const [customEmpName, setCustomEmpName] = useState(''); // dropdown Other support
@@ -52,13 +55,92 @@ export const Orders: React.FC<OrdersProps> = ({ onNavigate, activeEmployee }) =>
     if (checked) {
       setCustName('زبون سفري');
       setCustPhone('0000000000');
+      setCustBackupPhone('');
       setCustNotes('زبون سفري عابر');
     } else {
       setCustName('');
       setCustPhone('');
+      setCustBackupPhone('');
       setCustNotes('');
     }
   };
+
+  const calculateAutoReturnDate = (deliveryDateStr: string): string => {
+    if (!deliveryDateStr) return '';
+    const date = new Date(deliveryDateStr);
+    if (isNaN(date.getTime())) return '';
+    
+    // Add 1 day
+    date.setDate(date.getDate() + 1);
+    
+    // 5 = Friday. If next day is Friday, add one more day to return on Saturday.
+    if (date.getDay() === 5) {
+      date.setDate(date.getDate() + 1);
+    }
+    
+    const yyyy = date.getFullYear();
+    const mm = String(date.getMonth() + 1).padStart(2, '0');
+    const dd = String(date.getDate()).padStart(2, '0');
+    return `${yyyy}-${mm}-${dd}`;
+  };
+
+  // Load order data if in edit mode
+  useEffect(() => {
+    const loadOrderToEdit = async () => {
+      if (!editOrderId) return;
+      try {
+        setIsLoading(true);
+        const orderToEdit = await orderService.getById(editOrderId);
+        if (orderToEdit) {
+          setIsCreating(true);
+          setCustName(orderToEdit.customerName);
+          setCustPhone(orderToEdit.customerPhone);
+          setCustBackupPhone(orderToEdit.customer?.backupPhone || '');
+          setCustNotes(orderToEdit.customer?.notes || '');
+          setEmpId(orderToEdit.employeeId);
+          setOrderDate(orderToEdit.orderDate.split('T')[0]);
+          setGeneralNotes(orderToEdit.notes || '');
+          setDiscount(String(orderToEdit.discount));
+          setIsWalkIn(orderToEdit.customerName === 'زبون سفري' && orderToEdit.customerPhone === '0000000000');
+          
+          setItems(
+            orderToEdit.items.map((item: any) => ({
+              id: item.id,
+              category: item.category,
+              customCategory: item.customCategory || '',
+              capType: item.capType || '',
+              customCapType: item.customCapType || '',
+              capSize: item.capSize || '',
+              customCapSize: item.customCapSize || '',
+              capColor: item.capColor || '',
+              customCapColor: item.customCapColor || '',
+              operationType: item.type || 'Sale',
+              customOperation: item.customOperation || '',
+              saleType: item.saleType || '',
+              customSaleType: item.customSaleType || '',
+              broochType: item.broochType || '',
+              customBroochType: item.customBroochType || '',
+              accessoryName: item.name || '',
+              customAccessoryName: item.customOptions || '',
+              quantity: String(item.quantity),
+              unitPrice: String(item.type === 'Rental' ? (item.rentalPrice || '') : (item.salePrice || '')),
+              depositAmount: String(item.depositAmount || ''),
+              deliveryDate: item.deliveryDate || '',
+              returnDate: item.expectedReturnDate || '',
+              graduationDate: item.graduationDate || '',
+              notes: item.notes || ''
+            }))
+          );
+        }
+      } catch (err) {
+        console.error('Failed to load order for editing:', err);
+        setError('فشل تحميل الفاتورة للتعديل.');
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    loadOrderToEdit();
+  }, [editOrderId]);
 
   useEffect(() => {
     const loadEmployees = async () => {
@@ -166,7 +248,7 @@ export const Orders: React.FC<OrdersProps> = ({ onNavigate, activeEmployee }) =>
           const updated = { ...item, [field]: value };
           
           if (field === 'category') {
-            if (value === 'Graduation Cap' || value === 'Graduation Brooch' || value === 'Graduation Accessories') {
+            if (value === 'Graduation Brooch' || value === 'Graduation Accessories') {
               updated.operationType = 'Sale';
             }
             updated.unitPrice = '';
@@ -178,6 +260,14 @@ export const Orders: React.FC<OrdersProps> = ({ onNavigate, activeEmployee }) =>
             updated.depositAmount = '';
             if (value === 'Sale') {
               updated.returnDate = '';
+            } else if (value === 'Rental' && item.deliveryDate) {
+              updated.returnDate = calculateAutoReturnDate(item.deliveryDate);
+            }
+          }
+
+          if (field === 'deliveryDate') {
+            if (item.operationType === 'Rental') {
+              updated.returnDate = calculateAutoReturnDate(value);
             }
           }
 
@@ -218,10 +308,73 @@ export const Orders: React.FC<OrdersProps> = ({ onNavigate, activeEmployee }) =>
     try {
       setIsSubmitting(true);
       
+      if (editOrderId) {
+        // 1. Find the customer for this order to update details
+        const { data: orderObj } = await supabase.from('Order').select('customerId, totalPaid').eq('id', editOrderId).single();
+        if (orderObj) {
+          await customerService.update((orderObj as any).customerId, {
+            name: custName,
+            phone: custPhone,
+            backupPhone: custBackupPhone,
+            notes: custNotes
+          });
+        }
+
+        // 2. Clear old order items
+        await supabase.from('OrderItem').delete().eq('orderId', editOrderId);
+
+        // 3. Create new order items
+        for (const item of items) {
+          const unitPriceVal = parseFloat(item.unitPrice) || 0;
+          const depositVal = parseFloat(item.depositAmount) || 0;
+          await supabase.from('OrderItem').insert({
+            orderId: editOrderId,
+            category: item.category,
+            name: item.accessoryName || item.category,
+            type: item.operationType,
+            quantity: parseInt(item.quantity) || 1,
+            salePrice: item.operationType === 'Sale' ? unitPriceVal : null,
+            rentalPrice: item.operationType === 'Rental' ? unitPriceVal : null,
+            depositAmount: item.operationType === 'Rental' ? depositVal : null,
+            size: item.capSize || null,
+            color: item.capColor || null,
+            customOptions: item.customCategory || item.customCapType || item.customCapSize || item.customCapColor || item.customSaleType || item.customBroochType || item.customAccessoryName || null,
+            deliveryDate: item.deliveryDate || null,
+            expectedReturnDate: item.returnDate || null,
+            status: item.operationType === 'Rental' ? 'Rented' : 'Sold',
+          });
+        }
+
+        // 4. Update order totals
+        const { subtotal, grandTotal } = calculateTotals();
+        await orderService.update(editOrderId, {
+          employeeId: empId,
+          orderDate,
+          subtotal,
+          grandTotal,
+          remainingBalance: Math.max(0, grandTotal - ((orderObj as any)?.totalPaid || 0)),
+          notes: generalNotes,
+        });
+
+        // 5. Log audit
+        const { data: empObj } = await supabase.from('Employee').select('name').eq('id', empId).single();
+        await supabase.from('AuditLog').insert({
+          employeeId: empId,
+          employeeName: empObj?.name || 'مجهول',
+          action: 'UPDATE_ORDER',
+          details: `تعديل الفاتورة رقم ${editOrderId} للزبون ${custName}`
+        });
+
+        setIsCreating(false);
+        onNavigate('order-details', { id: editOrderId });
+        return;
+      }
+
       // Call creation API
       await orderService.create({
         customerName: custName,
         customerPhone: custPhone,
+        customerBackupPhone: custBackupPhone,
         customerNotes: custNotes,
         employeeId: empId,
         orderDate,
@@ -234,6 +387,7 @@ export const Orders: React.FC<OrdersProps> = ({ onNavigate, activeEmployee }) =>
       // Reset form
       setCustName('');
       setCustPhone('');
+      setCustBackupPhone('');
       setCustNotes('');
       setGeneralNotes('');
       setDiscount('0');
@@ -241,7 +395,7 @@ export const Orders: React.FC<OrdersProps> = ({ onNavigate, activeEmployee }) =>
       fetchOrders();
     } catch (err: any) {
       console.error(err);
-      setFormError(err.response?.data?.error || 'حدث خطأ أثناء إنشاء الفاتورة في النظام.');
+      setFormError(err.response?.data?.error || 'حدث خطأ أثناء حفظ الفاتورة.');
     } finally {
       setIsSubmitting(false);
     }
@@ -255,19 +409,22 @@ export const Orders: React.FC<OrdersProps> = ({ onNavigate, activeEmployee }) =>
     <div className="space-y-6">
       {/* Header */}
       {isCreating ? (
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-3 animate-slide-down">
           <button 
-            onClick={() => setIsCreating(false)}
+            onClick={() => {
+              setIsCreating(false);
+              onNavigate('orders');
+            }}
             className="p-2 bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-655 dark:text-slate-200 rounded-xl transition-all shadow-sm flex items-center"
           >
             <ArrowLeft className="w-5 h-5 rotate-180" />
           </button>
           <div>
             <h1 className="text-xl font-black text-slate-800 dark:text-slate-100 font-cairo">
-              إنشاء فاتورة / طلبية تخرج جديدة
+              {editOrderId ? 'تعديل وتحديث فاتورة التخرج' : 'إنشاء فاتورة / طلبية تخرج جديدة'}
             </h1>
-            <p className="text-xs text-slate-400 dark:text-slate-555 font-bold font-tajawal mt-0.5">
-              أدخل بيانات الزبون ثم أضف المنتجات المطلوبة بالتفصيل مع الحساب الآلي للقيم
+            <p className="text-xs text-slate-450 dark:text-slate-555 font-bold font-tajawal mt-0.5">
+              {editOrderId ? 'تعديل بيانات الفاتورة الحالية والقطع والمبالغ والمدفوعات' : 'أدخل بيانات الزبون ثم أضف المنتجات المطلوبة بالتفصيل مع الحساب الآلي للقيم'}
             </p>
           </div>
         </div>
@@ -519,7 +676,7 @@ export const Orders: React.FC<OrdersProps> = ({ onNavigate, activeEmployee }) =>
               </div>
             </div>
             
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
               <Input
                 label="اسم الزبون بالكامل"
                 value={custName}
@@ -534,6 +691,13 @@ export const Orders: React.FC<OrdersProps> = ({ onNavigate, activeEmployee }) =>
                 onChange={(e) => setCustPhone(e.target.value)}
                 required
                 placeholder="0912345678"
+                disabled={isWalkIn}
+              />
+              <Input
+                label="رقم الهاتف الاحتياطي (اختياري)"
+                value={custBackupPhone}
+                onChange={(e) => setCustBackupPhone(e.target.value)}
+                placeholder="0921234567"
                 disabled={isWalkIn}
               />
               
@@ -624,8 +788,8 @@ export const Orders: React.FC<OrdersProps> = ({ onNavigate, activeEmployee }) =>
                     <Select
                       label="تصنيف المنتج"
                       options={[
-                        { value: 'Graduation Cap', label: 'قبعة تخرج' },
-                        { value: 'Graduation Hat', label: 'كاب تخرج' },
+                        { value: 'Graduation Cap', label: 'كاب تخرج' },
+                        { value: 'Graduation Hat', label: 'قبعة تخرج' },
                         { value: 'Graduation Sash', label: 'شال تخرج' },
                         { value: 'Graduation Brooch', label: 'بروش تخرج' },
                         { value: 'Graduation Accessories', label: 'إكسسوارات تخرج' }
@@ -691,8 +855,8 @@ export const Orders: React.FC<OrdersProps> = ({ onNavigate, activeEmployee }) =>
                       </>
                     )}
 
-                    {/* 2. Graduation Hat / Sash (Sale vs Rental) */}
-                    {(item.category === 'Graduation Hat' || item.category === 'Graduation Sash') && (
+                    {/* 2. Graduation Cap / Hat / Sash (Sale vs Rental) */}
+                    {(item.category === 'Graduation Cap' || item.category === 'Graduation Hat' || item.category === 'Graduation Sash') && (
                       <>
                         <Select
                           label="نوع المعاملة"

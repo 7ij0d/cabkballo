@@ -67,7 +67,7 @@ export const customerService = {
     // 1. Fetch all customers
     let query = supabase.from('Customer').select('*');
     if (search) {
-      query = query.or(`name.ilike.%${search}%,phone.ilike.%${search}%`);
+      query = query.or(`name.ilike.%${search}%,phone.ilike.%${search}%,backupPhone.ilike.%${search}%`);
     }
     const { data: customers } = await query;
     if (!customers) return [];
@@ -92,6 +92,7 @@ export const customerService = {
         id: c.id,
         name: c.name,
         phone: c.phone,
+        backupPhone: c.backupPhone,
         notes: c.notes,
         createdAt: c.createdAt,
         orderCount: cOrders.length,
@@ -144,6 +145,7 @@ export const customerService = {
       id: customer.id,
       name: customer.name,
       phone: customer.phone,
+      backupPhone: customer.backupPhone,
       notes: customer.notes,
       createdAt: customer.createdAt,
       orderCount: orders?.length || 0,
@@ -156,12 +158,13 @@ export const customerService = {
     };
   },
 
-  create: async (data: { name: string; phone: string; notes?: string }) => {
+  create: async (data: { name: string; phone: string; backupPhone?: string; notes?: string }) => {
     const { data: newCust, error } = await supabase
       .from('Customer')
       .insert({
         name: data.name,
         phone: data.phone,
+        backupPhone: data.backupPhone || null,
         notes: data.notes || null,
       })
       .select()
@@ -171,12 +174,13 @@ export const customerService = {
     return newCust;
   },
 
-  update: async (id: string, data: { name: string; phone: string; notes?: string }) => {
+  update: async (id: string, data: { name: string; phone: string; backupPhone?: string; notes?: string }) => {
     const { data: updatedCust, error } = await supabase
       .from('Customer')
       .update({
         name: data.name,
         phone: data.phone,
+        backupPhone: data.backupPhone || null,
         notes: data.notes || null,
       })
       .eq('id', id)
@@ -185,6 +189,25 @@ export const customerService = {
 
     if (error) throw error;
     return updatedCust;
+  },
+
+  delete: async (id: string) => {
+    const { data: customerOrders } = await supabase.from('Order').select('id').eq('customerId', id);
+    if (customerOrders && customerOrders.length > 0) {
+      const orderIds = customerOrders.map((o) => o.id);
+      await supabase.from('OrderItem').delete().in('orderId', orderIds);
+      await supabase.from('Payment').delete().in('orderId', orderIds);
+      await supabase.from('Order').delete().eq('customerId', id);
+    }
+    const { data: deletedCust, error } = await supabase
+      .from('Customer')
+      .delete()
+      .eq('id', id)
+      .select()
+      .single();
+
+    if (error) throw error;
+    return deletedCust;
   },
 };
 
@@ -313,6 +336,7 @@ export const orderService = {
   create: async (data: {
     customerName: string;
     customerPhone: string;
+    customerBackupPhone?: string;
     customerNotes?: string;
     employeeId: string;
     orderDate?: string;
@@ -333,6 +357,7 @@ export const orderService = {
         .insert({
           name: data.customerName,
           phone: data.customerPhone,
+          backupPhone: data.customerBackupPhone || null,
           notes: data.customerNotes || null,
         })
         .select()
@@ -695,8 +720,8 @@ export const reportService = {
 
     // Calculate mostSoldProducts
     const categoryArabicNames: Record<string, string> = {
-      Cap: 'قبعة التخرج',
-      Hat: 'كاب التخرج',
+      Cap: 'كاب التخرج',
+      Hat: 'قبعة التخرج',
       Sash: 'الشال',
       Brooch: 'البروش المخصص',
       Accessory: 'إكسسوارات إضافية',
@@ -780,8 +805,8 @@ export const reportService = {
     // 2. Product breakdown
     const categories = ['Cap', 'Hat', 'Sash', 'Brooch', 'Accessory'];
     const categoryArabicNames: Record<string, string> = {
-      Cap: 'قبعة التخرج',
-      Hat: 'كاب التخرج',
+      Cap: 'كاب التخرج',
+      Hat: 'قبعة التخرج',
       Sash: 'الشال',
       Brooch: 'البروش المخصص',
       Accessory: 'إكسسوارات إضافية',

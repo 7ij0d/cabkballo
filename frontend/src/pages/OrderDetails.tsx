@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { 
   FileText, Coins, ArrowLeftRight, User, Printer, Trash2, 
-  Plus, RotateCcw, AlertCircle, Calendar, Phone, Check, RefreshCw, EyeOff 
+  Plus, RotateCcw, AlertCircle, Calendar, Phone, Check, RefreshCw, EyeOff, Edit 
 } from 'lucide-react';
 import { orderService, paymentService, returnService } from '../services/api';
 import { formatCurrency, formatDate, translateStatus, translatePaymentStatus, translateDeliveryStatus, translateCondition } from '../utils/arabic';
@@ -294,6 +294,14 @@ export const OrderDetails: React.FC<OrderDetailsProps> = ({
               onClick={() => triggerPrint('rental')}
             >
               طباعة عقد الإيجار
+            </Button>
+            <Button
+              variant="secondary"
+              size="sm"
+              icon={<Edit className="w-3.5 h-3.5" />}
+              onClick={() => onNavigate('orders', { editId: order.id })}
+            >
+              تعديل الفاتورة
             </Button>
             <Button
               variant="success"
