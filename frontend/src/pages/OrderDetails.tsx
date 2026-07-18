@@ -255,18 +255,16 @@ export const OrderDetails: React.FC<OrderDetailsProps> = ({
       <div className="bg-red-50 dark:bg-red-950/20 border border-red-200 dark:border-red-900/40 p-6 rounded-2xl text-center max-w-xl mx-auto space-y-3 mt-12">
         <AlertCircle className="w-12 h-12 text-red-500 mx-auto" />
         <h3 className="text-lg font-bold text-red-800 dark:text-red-400">حدث خطأ</h3>
-        <p className="text-sm text-red-650 dark:text-red-300 font-semibold">{error}</p>
+        <p className="text-sm text-red-655 dark:text-red-300 font-semibold">{error}</p>
         <button 
           onClick={onBack}
-          className="px-4 py-2 bg-slate-200 hover:bg-slate-300 text-slate-800 rounded-xl text-xs font-bold transition-all"
+          className="px-6 py-3 bg-slate-200 hover:bg-slate-300 text-slate-800 rounded-xl text-sm font-bold transition-all"
         >
           رجوع
         </button>
       </div>
     );
   }
-
-
 
   return (
     <div className="space-y-6">
@@ -279,16 +277,16 @@ export const OrderDetails: React.FC<OrderDetailsProps> = ({
           <div className="flex items-center gap-3">
             <button 
               onClick={onBack}
-              className="p-2 bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-655 dark:text-slate-200 rounded-xl transition-all shadow-sm flex items-center"
+              className="p-3 bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-655 dark:text-slate-200 rounded-xl transition-all shadow-sm flex items-center"
             >
               <ArrowLeftRight className="w-5 h-5 rotate-180" />
             </button>
             <div>
               <div className="flex items-center gap-2">
-                <h1 className="text-xl font-black text-slate-800 dark:text-slate-100 font-cairo">
+                <h1 className="text-2xl font-black text-slate-800 dark:text-slate-100 font-cairo">
                   فاتورة تخرج: {order.orderNumber}
                 </h1>
-                <span className={`px-2 py-0.5 rounded-md text-[10px] font-bold ${
+                <span className={`px-3 py-1 rounded-lg text-xs font-bold ${
                   order.paymentStatus === 'FullyPaid' ? 'bg-emerald-50 text-emerald-600' :
                   order.paymentStatus === 'PartiallyPaid' ? 'bg-blue-50 text-blue-650' :
                   'bg-orange-50 text-orange-655'
@@ -296,52 +294,52 @@ export const OrderDetails: React.FC<OrderDetailsProps> = ({
                   {translatePaymentStatus(order.paymentStatus)}
                 </span>
               </div>
-              <p className="text-xs text-slate-450 dark:text-slate-555 font-bold font-tajawal mt-0.5">
+              <p className="text-sm text-slate-500 dark:text-slate-400 font-bold font-tajawal mt-1">
                 تاريخ الطلب: {formatDate(order.orderDate)} | الموظف المسؤول: {order.employee.name}
               </p>
             </div>
           </div>
 
           {/* Quick Actions Panel */}
-          <div className="flex flex-wrap gap-2">
+          <div className="flex flex-wrap gap-2.5">
             <Button
               variant="secondary"
-              size="sm"
-              icon={<Printer className="w-3.5 h-3.5" />}
+              icon={<Printer className="w-4 h-4" />}
               onClick={() => triggerPrint('invoice')}
+              className="px-5 py-2.5 text-sm"
             >
               طباعة الفاتورة
             </Button>
             <Button
               variant="secondary"
-              size="sm"
-              icon={<Printer className="w-3.5 h-3.5" />}
+              icon={<Printer className="w-4 h-4" />}
               onClick={() => triggerPrint('rental')}
+              className="px-5 py-2.5 text-sm"
             >
               طباعة عقد الإيجار
             </Button>
             <Button
               variant="secondary"
-              size="sm"
-              icon={<Edit className="w-3.5 h-3.5" />}
+              icon={<Edit className="w-4 h-4" />}
               onClick={() => onNavigate('orders', { editId: order.id })}
+              className="px-5 py-2.5 text-sm"
             >
               تعديل الفاتورة
             </Button>
             <Button
               variant="success"
-              size="sm"
-              icon={<Plus className="w-3.5 h-3.5" />}
+              icon={<Plus className="w-4 h-4" />}
               onClick={() => {
                 setPaymentFormError('');
                 setIsPaymentModalOpen(true);
               }}
+              className="px-5 py-2.5 text-sm"
             >
               تسجيل دفعة جديدة
             </Button>
             <button
               onClick={handleDeleteOrder}
-              className="p-2 text-slate-400 hover:text-red-650 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-xl transition-all"
+              className="p-3.5 text-slate-400 hover:text-red-650 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-xl transition-all border border-slate-200/20"
               title="حذف الفاتورة بالكامل"
             >
               <Trash2 className="w-5 h-5" />
@@ -357,24 +355,24 @@ export const OrderDetails: React.FC<OrderDetailsProps> = ({
             
             {/* Products Table Card */}
             <div className="bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800/80 p-5 rounded-2xl shadow-sm space-y-4">
-              <h3 className="text-sm font-bold text-slate-800 dark:text-slate-100 pb-2 border-b border-slate-100 dark:border-slate-800/60 flex items-center justify-between">
+              <h3 className="text-base font-bold text-slate-800 dark:text-slate-100 pb-2 border-b border-slate-100 dark:border-slate-800/60 flex items-center justify-between">
                 <span>قائمة المنتجات والقطع الفردية</span>
-                <span className="text-[10px] text-slate-400 font-bold font-tajawal">عدد العناصر: {order.items.length}</span>
+                <span className="text-xs text-slate-450 font-bold font-tajawal">عدد العناصر: {order.items.length}</span>
               </h3>
 
               <div className="divide-y divide-slate-100 dark:divide-slate-850">
                 {order.items.map((item: any) => (
-                  <div key={item.id} className="py-4 space-y-3">
+                  <div key={item.id} className="py-4.5 space-y-3.5">
                     
                     {/* Item header */}
                     <div className="flex items-start justify-between">
                       <div>
-                        <h4 className="text-xs font-black text-slate-800 dark:text-slate-200">
+                        <h4 className="text-base font-black text-slate-850 dark:text-slate-100">
                           {item.category === 'Other' ? (item.customCategory || 'أخرى') : item.category}
                         </h4>
                         
                         {/* Sub attributes descriptions */}
-                        <div className="flex flex-wrap gap-x-3 gap-y-1 mt-1 text-[11px] text-slate-500 dark:text-slate-400 font-tajawal font-medium">
+                        <div className="flex flex-wrap gap-x-4 gap-y-1.5 mt-2 text-sm text-slate-550 dark:text-slate-400 font-tajawal font-medium">
                           {item.capType && (
                             <span>النوع: {item.capType === 'Other' ? (item.customCapType || 'أخرى') : item.capType}</span>
                           )}
@@ -412,10 +410,10 @@ export const OrderDetails: React.FC<OrderDetailsProps> = ({
 
                       {/* Prices & Subtotals */}
                       <div className="text-left font-cairo">
-                        <span className="text-xs font-bold text-slate-700 dark:text-slate-350">
+                        <span className="text-sm font-bold text-slate-750 dark:text-slate-350">
                           {item.quantity} × {formatCurrency(item.unitPrice)}
                         </span>
-                        <div className="text-sm font-black text-slate-850 dark:text-slate-100 mt-0.5">
+                        <div className="text-base font-black text-slate-850 dark:text-slate-100 mt-0.5">
                           {formatCurrency(item.quantity * item.unitPrice)}
                         </div>
                       </div>
@@ -423,8 +421,8 @@ export const OrderDetails: React.FC<OrderDetailsProps> = ({
 
                     {/* Rented deposit & Return buttons */}
                     {item.operationType === 'Rental' && (
-                      <div className="flex flex-wrap items-center justify-between gap-3 bg-slate-50 dark:bg-slate-950/40 p-2.5 rounded-xl border border-slate-150/40 dark:border-slate-850/50">
-                        <span className="text-[10px] font-bold text-slate-550 dark:text-slate-400 font-tajawal">
+                      <div className="flex flex-wrap items-center justify-between gap-3 bg-slate-50 dark:bg-slate-950/40 p-3.5 rounded-xl border border-slate-150/40 dark:border-slate-850/50">
+                        <span className="text-xs font-bold text-slate-655 dark:text-slate-400 font-tajawal">
                           تأمين الإيجار: {formatCurrency(item.depositAmount * item.quantity)} (مسترد بالكامل عند الإرجاع السليم)
                         </span>
                         
@@ -436,13 +434,13 @@ export const OrderDetails: React.FC<OrderDetailsProps> = ({
                               setRetQty(item.quantity.toString());
                               setIsReturnModalOpen(true);
                             }}
-                            className="px-2.5 py-1 bg-amber-500 hover:bg-amber-600 text-white rounded-lg text-[10px] font-bold transition-all shadow-sm"
+                            className="px-4 py-2 bg-amber-500 hover:bg-amber-600 text-white rounded-xl text-xs font-bold transition-all shadow-sm"
                           >
                             تسجيل إرجاع المنتج (Return Product)
                           </button>
                         ) : (
-                          <span className="text-[10px] font-black text-emerald-600 dark:text-emerald-500 flex items-center gap-1">
-                            <Check className="w-3.5 h-3.5" />
+                          <span className="text-xs font-black text-emerald-600 dark:text-emerald-500 flex items-center gap-1">
+                            <Check className="w-4 h-4" />
                             تم إرجاع المنتج بالكامل
                           </span>
                         )}
@@ -451,9 +449,9 @@ export const OrderDetails: React.FC<OrderDetailsProps> = ({
 
                     {/* Delivery Status Controllers */}
                     <div className="flex items-center justify-between pt-2">
-                      <div className="flex items-center gap-1.5 text-xs">
-                        <span className="text-slate-400 font-bold font-tajawal">حالة تسليم القطعة:</span>
-                        <span className={`px-2.5 py-0.5 rounded-full text-[10px] font-bold ${
+                      <div className="flex items-center gap-1.5 text-sm">
+                        <span className="text-slate-550 dark:text-slate-400 font-bold font-tajawal">حالة تسليم القطعة:</span>
+                        <span className={`px-3 py-1 rounded-lg text-xs font-bold ${
                           item.status === 'Delivered' ? 'bg-emerald-50 text-emerald-600' :
                           item.status === 'Ready' ? 'bg-blue-50 text-blue-650' :
                           item.status === 'Returned' ? 'bg-purple-50 text-purple-650' :
@@ -465,10 +463,10 @@ export const OrderDetails: React.FC<OrderDetailsProps> = ({
 
                       {/* Dropdown status update for employee convenience */}
                       {item.status !== 'Returned' && (
-                        <div className="flex items-center gap-1 bg-slate-50 dark:bg-slate-800 p-1 rounded-lg">
+                        <div className="flex items-center gap-1.5 bg-slate-50 dark:bg-slate-800 p-1 rounded-xl">
                           <button
                             onClick={() => handleUpdateItemDeliveryStatus(item.id, 'Waiting')}
-                            className={`px-2 py-0.5 rounded-md text-[9px] font-bold transition-all ${
+                            className={`px-3 py-1 rounded-lg text-xs font-bold transition-all ${
                               item.status === 'Waiting' ? 'bg-white dark:bg-slate-700 text-slate-800 dark:text-white shadow-sm' : 'text-slate-400 hover:text-slate-650'
                             }`}
                           >
@@ -476,7 +474,7 @@ export const OrderDetails: React.FC<OrderDetailsProps> = ({
                           </button>
                           <button
                             onClick={() => handleUpdateItemDeliveryStatus(item.id, 'Ready')}
-                            className={`px-2 py-0.5 rounded-md text-[9px] font-bold transition-all ${
+                            className={`px-3 py-1 rounded-lg text-xs font-bold transition-all ${
                               item.status === 'Ready' ? 'bg-white dark:bg-slate-700 text-slate-800 dark:text-white shadow-sm' : 'text-slate-400 hover:text-slate-655'
                             }`}
                           >
@@ -484,7 +482,7 @@ export const OrderDetails: React.FC<OrderDetailsProps> = ({
                           </button>
                           <button
                             onClick={() => handleUpdateItemDeliveryStatus(item.id, 'Delivered')}
-                            className={`px-2 py-0.5 rounded-md text-[9px] font-bold transition-all ${
+                            className={`px-3 py-1 rounded-lg text-xs font-bold transition-all ${
                               item.status === 'Delivered' ? 'bg-white dark:bg-slate-700 text-slate-800 dark:text-white shadow-sm' : 'text-slate-400 hover:text-emerald-600'
                             }`}
                           >
@@ -495,7 +493,7 @@ export const OrderDetails: React.FC<OrderDetailsProps> = ({
                     </div>
 
                     {item.notes && (
-                      <p className="text-[11px] text-slate-400 bg-slate-50/40 p-2 rounded border border-dashed border-slate-200 mt-2 font-tajawal">
+                      <p className="text-xs text-slate-450 bg-slate-50/40 p-2.5 rounded-lg border border-dashed border-slate-200 mt-2 font-tajawal">
                         ملاحظات السطر: {item.notes}
                       </p>
                     )}
@@ -507,47 +505,47 @@ export const OrderDetails: React.FC<OrderDetailsProps> = ({
 
             {/* Payments Ledger Sub-table */}
             <div className="bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800/80 p-5 rounded-2xl shadow-sm space-y-4">
-              <h3 className="text-sm font-bold text-slate-800 dark:text-slate-100 pb-2 border-b border-slate-100 dark:border-slate-800/60">
+              <h3 className="text-base font-bold text-slate-800 dark:text-slate-100 pb-2 border-b border-slate-100 dark:border-slate-800/60">
                 سجل دفعات العربون والمدفوعات
               </h3>
 
               <div className="overflow-x-auto">
-                <table className="w-full text-right border-collapse text-xs">
+                <table className="w-full text-right border-collapse text-sm">
                   <thead>
                     <tr className="border-b border-slate-100 dark:border-slate-800/80 text-slate-400">
-                      <th className="py-2.5 px-3 font-bold font-tajawal">التاريخ</th>
-                      <th className="py-2.5 px-3 font-bold font-tajawal">الموظف المستلم</th>
-                      <th className="py-2.5 px-3 font-bold font-tajawal">طريقة الدفع</th>
-                      <th className="py-2.5 px-3 font-bold font-tajawal">ملاحظات</th>
-                      <th className="py-2.5 px-3 font-bold font-tajawal">القيمة</th>
-                      <th className="py-2.5 px-3 font-bold font-tajawal">وصل</th>
+                      <th className="py-3 px-4 font-bold font-tajawal">التاريخ</th>
+                      <th className="py-3 px-4 font-bold font-tajawal">الموظف المستلم</th>
+                      <th className="py-3 px-4 font-bold font-tajawal">طريقة الدفع</th>
+                      <th className="py-3 px-4 font-bold font-tajawal">ملاحظات</th>
+                      <th className="py-3 px-4 font-bold font-tajawal">القيمة</th>
+                      <th className="py-3 px-4 font-bold font-tajawal">الإجراءات</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-slate-50 dark:divide-slate-850">
                     {order.payments.map((p: any) => (
                       <tr key={p.id} className="hover:bg-slate-50/50 dark:hover:bg-slate-950/20 transition-all">
-                        <td className="py-3 px-3 font-semibold text-slate-500 font-tajawal">{formatDate(p.paymentDate)}</td>
-                        <td className="py-3 px-3 font-semibold text-slate-655 dark:text-slate-400">{p.employee?.name || '---'}</td>
-                        <td className="py-3 px-3 font-semibold text-slate-600 dark:text-slate-350 font-tajawal">{p.paymentMethod}</td>
-                        <td className="py-3 px-3 font-semibold text-slate-400 dark:text-slate-500 font-tajawal">{p.notes || '---'}</td>
-                        <td className="py-3 px-3 font-black text-emerald-650 dark:text-emerald-450 font-cairo">{formatCurrency(p.amount)}</td>
-                        <td className="py-3 px-3">
+                        <td className="py-4.5 px-4 font-semibold text-slate-500 font-tajawal">{formatDate(p.paymentDate)}</td>
+                        <td className="py-4.5 px-4 font-semibold text-slate-655 dark:text-slate-400">{p.employee?.name || '---'}</td>
+                        <td className="py-4.5 px-4 font-semibold text-slate-600 dark:text-slate-350 font-tajawal">{p.paymentMethod}</td>
+                        <td className="py-4.5 px-4 font-semibold text-slate-400 dark:text-slate-500 font-tajawal">{p.notes || '---'}</td>
+                        <td className="py-4.5 px-4 font-black text-emerald-650 dark:text-emerald-450 font-cairo">{formatCurrency(p.amount)}</td>
+                        <td className="py-4.5 px-4">
                           <div className="flex items-center gap-1.5 justify-end">
                             <button
                               type="button"
                               onClick={() => triggerPrint('receipt', p)}
-                              className="p-1 text-slate-400 hover:text-brand-600 hover:bg-slate-100 dark:hover:bg-slate-850 rounded transition-all"
+                              className="p-2 text-slate-400 hover:text-brand-600 hover:bg-slate-100 dark:hover:bg-slate-850 rounded-lg transition-all"
                               title="طباعة إيصال الدفعة"
                             >
-                              <Printer className="w-3.5 h-3.5" />
+                              <Printer className="w-4.5 h-4.5" />
                             </button>
                             <button
                               type="button"
                               onClick={() => handleDeletePayment(p.id, p.amount)}
-                              className="p-1 text-slate-400 hover:text-red-650 hover:bg-slate-100 dark:hover:bg-slate-850 rounded transition-all"
+                              className="p-2 text-slate-400 hover:text-red-655 hover:bg-slate-100 dark:hover:bg-slate-850 rounded-lg transition-all"
                               title="حذف الدفعة"
                             >
-                              <Trash2 className="w-3.5 h-3.5" />
+                              <Trash2 className="w-4.5 h-4.5" />
                             </button>
                           </div>
                         </td>
@@ -573,26 +571,26 @@ export const OrderDetails: React.FC<OrderDetailsProps> = ({
             {/* Customer Personal profile */}
             <div className="bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800/80 p-5 rounded-2xl shadow-sm relative overflow-hidden">
               <div className="absolute top-0 right-0 w-12 h-12 bg-gradient-to-bl from-luxury-gold/10 to-transparent rounded-full" />
-              <h3 className="text-sm font-bold text-slate-800 dark:text-slate-100 border-b border-slate-100 dark:border-slate-800/60 pb-2 flex items-center gap-1.5">
-                <User className="w-4 h-4 text-brand-600" />
+              <h3 className="text-base font-bold text-slate-800 dark:text-slate-100 border-b border-slate-100 dark:border-slate-800/60 pb-2 flex items-center gap-1.5">
+                <User className="w-5 h-5 text-brand-600" />
                 ملف الزبون
               </h3>
 
               <div className="mt-3.5 space-y-2">
                 <h4 
-                  className="text-sm font-black text-brand-600 dark:text-brand-400 hover:underline cursor-pointer flex items-center gap-1"
+                  className="text-base font-black text-brand-600 dark:text-brand-400 hover:underline cursor-pointer flex items-center gap-1"
                   onClick={() => onNavigate('customer-profile', { id: order.customerId })}
                 >
                   {order.customer.name}
                 </h4>
-                <div className="flex items-center gap-1.5 text-xs text-slate-500 dark:text-slate-400 font-tajawal">
-                  <Phone className="w-3.5 h-3.5" />
+                <div className="flex items-center gap-1.5 text-sm text-slate-550 dark:text-slate-400 font-tajawal">
+                  <Phone className="w-4 h-4 text-slate-400" />
                   <span>{order.customer.phone}</span>
                 </div>
                 {order.customer.notes && (
-                  <div className="bg-slate-50 dark:bg-slate-950/20 p-2.5 rounded-xl border border-slate-100 text-xs text-slate-500 font-tajawal mt-2">
+                  <div className="bg-slate-50 dark:bg-slate-955/20 p-3 rounded-xl border border-slate-100 text-sm text-slate-550 font-tajawal mt-2">
                     <span className="font-bold text-slate-455 block">عن الزبون:</span>
-                    <p className="mt-0.5 leading-relaxed">{order.customer.notes}</p>
+                    <p className="mt-1 leading-relaxed">{order.customer.notes}</p>
                   </div>
                 )}
               </div>
@@ -600,11 +598,11 @@ export const OrderDetails: React.FC<OrderDetailsProps> = ({
 
             {/* Financial Ledger totals details */}
             <div className="bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800/80 p-5 rounded-2xl shadow-sm space-y-4">
-              <h3 className="text-sm font-bold text-slate-800 dark:text-slate-100 pb-2 border-b border-slate-100 dark:border-slate-800/60">
+              <h3 className="text-base font-bold text-slate-800 dark:text-slate-100 pb-2 border-b border-slate-100 dark:border-slate-800/60">
                 الحسابات التفصيلية
               </h3>
 
-              <div className="space-y-2.5 text-xs font-bold text-slate-600 dark:text-slate-400 font-tajawal">
+              <div className="space-y-3 text-sm font-bold text-slate-600 dark:text-slate-400 font-tajawal">
                 <div className="flex justify-between">
                   <span>المجموع الفرعي:</span>
                   <span className="font-black text-slate-850 dark:text-slate-100 font-cairo">{formatCurrency(order.subtotal)}</span>
@@ -614,15 +612,15 @@ export const OrderDetails: React.FC<OrderDetailsProps> = ({
                   <span className="font-black font-cairo">-{formatCurrency(order.discount)}</span>
                 </div>
                 <div className="flex justify-between pt-2.5 border-t border-slate-100 dark:border-slate-850 text-slate-800 dark:text-slate-200">
-                  <span>المجموع المستحق الإجمالي:</span>
-                  <span className="font-black text-sm font-cairo">{formatCurrency(order.grandTotal)}</span>
+                  <span>المجموع الإجمالي المستحق:</span>
+                  <span className="font-black text-base font-cairo">{formatCurrency(order.grandTotal)}</span>
                 </div>
                 <div className="flex justify-between text-emerald-600">
-                  <span>المقبووض (المدفوع):</span>
+                  <span>العربون / المدفوع:</span>
                   <span className="font-black font-cairo">+{formatCurrency(order.totalPaid)}</span>
                 </div>
-                <div className={`flex justify-between pt-2 border-t border-slate-100 dark:border-slate-850 ${
-                  order.remainingBalance > 0 ? 'text-red-655 font-black text-sm' : 'text-slate-400'
+                <div className={`flex justify-between pt-2.5 border-t border-slate-100 dark:border-slate-850 ${
+                  order.remainingBalance > 0 ? 'text-red-655 font-black text-base' : 'text-slate-400'
                 }`}>
                   <span>المتبقي المطلوب:</span>
                   <span className="font-black font-cairo">{formatCurrency(order.remainingBalance)}</span>
@@ -632,7 +630,7 @@ export const OrderDetails: React.FC<OrderDetailsProps> = ({
 
             {/* Status updates router */}
             <div className="bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800/80 p-5 rounded-2xl shadow-sm space-y-3.5">
-              <h3 className="text-sm font-bold text-slate-800 dark:text-slate-100 pb-2 border-b border-slate-100 dark:border-slate-800/60">
+              <h3 className="text-base font-bold text-slate-800 dark:text-slate-100 pb-2 border-b border-slate-100 dark:border-slate-800/60">
                 إدارة حالة الفاتورة العامة
               </h3>
 
@@ -641,7 +639,7 @@ export const OrderDetails: React.FC<OrderDetailsProps> = ({
                   <button
                     key={st}
                     onClick={() => handleUpdateOrderStatus(st)}
-                    className={`px-2.5 py-1.5 rounded-lg text-[10px] font-bold transition-all border ${
+                    className={`px-3 py-2 rounded-xl text-xs font-bold transition-all border ${
                       order.status === st 
                         ? 'bg-brand-600 border-brand-600 text-white shadow-sm' 
                         : 'bg-slate-50 border-slate-200/60 text-slate-600 hover:bg-slate-100 dark:bg-slate-800 dark:border-slate-700 dark:text-slate-300 dark:hover:bg-slate-700'
@@ -734,7 +732,7 @@ export const OrderDetails: React.FC<OrderDetailsProps> = ({
                 <span>{formatCurrency(order.grandTotal)}</span>
               </div>
               <div className="flex justify-between text-emerald-600 font-bold">
-                <span>المدفوع (المحصل):</span>
+                <span>العربون (المحصل):</span>
                 <span>+{formatCurrency(order.totalPaid)}</span>
               </div>
               <div className="flex justify-between border-t border-slate-300 pt-1.5 font-black text-red-600">
@@ -901,7 +899,7 @@ export const OrderDetails: React.FC<OrderDetailsProps> = ({
                 <button
                   type="button"
                   onClick={() => setPayAmount(order.remainingBalance.toString())}
-                  className="text-[11px] font-tajawal font-black text-brand-600 hover:text-brand-700 bg-brand-50 hover:bg-brand-100 dark:bg-brand-950/20 dark:hover:bg-brand-950/40 px-2.5 py-1 rounded-lg transition-all"
+                  className="text-xs font-tajawal font-black text-brand-600 hover:text-brand-700 bg-brand-50 hover:bg-brand-100 dark:bg-brand-950/20 dark:hover:bg-brand-950/40 px-3 py-1.5 rounded-xl transition-all shadow-sm"
                 >
                   إدخال المتبقي كاملاً ({order.remainingBalance} د.ل)
                 </button>
@@ -915,7 +913,7 @@ export const OrderDetails: React.FC<OrderDetailsProps> = ({
               onChange={(e) => setPayAmount(e.target.value)}
               required
               placeholder="مثال: 150"
-              className="w-full px-3.5 py-2.5 rounded-xl border-2 border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-950 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500 text-sm font-bold transition-all shadow-sm"
+              className="w-full px-3.5 py-2.5 rounded-xl border-2 border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-955 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500 text-sm font-bold transition-all shadow-sm"
             />
           </div>
 
@@ -925,6 +923,7 @@ export const OrderDetails: React.FC<OrderDetailsProps> = ({
             value={payDate}
             onChange={(e) => setPayDate(e.target.value)}
             required
+            className="text-sm py-2.5"
           />
 
           <Select
@@ -948,13 +947,13 @@ export const OrderDetails: React.FC<OrderDetailsProps> = ({
           />
 
           <div className="flex flex-col gap-1.5">
-            <label className="text-sm font-semibold text-slate-700">ملاحظات الدفعة</label>
+            <label className="text-sm font-semibold text-slate-700 dark:text-slate-300">ملاحظات الدفعة</label>
             <textarea
               value={payNotes}
               onChange={(e) => setPayNotes(e.target.value)}
               rows={2}
               placeholder="مثال: عربون الحفل، باقي الحساب نقداً، إلخ..."
-              className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 bg-white text-slate-800 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500/20"
+              className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 text-slate-850 dark:text-slate-100 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500/20 shadow-sm"
             />
           </div>
 
@@ -966,12 +965,14 @@ export const OrderDetails: React.FC<OrderDetailsProps> = ({
               variant="secondary"
               onClick={() => setIsPaymentModalOpen(false)}
               disabled={isPaymentSubmitting}
+              className="px-6 py-2.5 text-sm"
             >
               إلغاء
             </Button>
             <Button
               type="submit"
               isLoading={isPaymentSubmitting}
+              className="px-6 py-2.5 text-sm"
             >
               تسجيل العربون وحفظ
             </Button>
@@ -990,18 +991,18 @@ export const OrderDetails: React.FC<OrderDetailsProps> = ({
       >
         {selectedReturnItem && (
           <form onSubmit={handleReturnSubmit} className="space-y-4">
-            <div className="bg-slate-50 p-4 rounded-xl text-xs space-y-1.5">
+            <div className="bg-slate-50 dark:bg-slate-950/40 p-4 rounded-xl text-xs space-y-1.5 border border-slate-200/50 dark:border-slate-800/40">
               <div>
-                <span className="font-bold text-slate-455">المنتج: </span>
-                <span className="font-black">{selectedReturnItem.category}</span>
+                <span className="font-bold text-slate-500 dark:text-slate-455">المنتج: </span>
+                <span className="font-black text-sm">{selectedReturnItem.category}</span>
               </div>
               <div>
-                <span className="font-bold text-slate-455">الكمية المؤجرة الأصلية: </span>
-                <span className="font-black">{selectedReturnItem.quantity} قطع</span>
+                <span className="font-bold text-slate-500 dark:text-slate-455">الكمية المؤجرة الأصلية: </span>
+                <span className="font-black text-sm">{selectedReturnItem.quantity} قطع</span>
               </div>
               <div>
-                <span className="font-bold text-slate-455">مبلغ تأمين القطعة: </span>
-                <span className="font-black">{formatCurrency(selectedReturnItem.depositAmount)}</span>
+                <span className="font-bold text-slate-500 dark:text-slate-455">مبلغ تأمين القطعة: </span>
+                <span className="font-black text-sm">{formatCurrency(selectedReturnItem.depositAmount)}</span>
               </div>
             </div>
 
@@ -1013,6 +1014,7 @@ export const OrderDetails: React.FC<OrderDetailsProps> = ({
               value={retQty}
               onChange={(e) => setRetQty(e.target.value)}
               required
+              className="text-sm py-2.5"
             />
 
             <Input
@@ -1021,6 +1023,7 @@ export const OrderDetails: React.FC<OrderDetailsProps> = ({
               value={retDate}
               onChange={(e) => setRetDate(e.target.value)}
               required
+              className="text-sm py-2.5"
             />
 
             <Select
@@ -1044,13 +1047,13 @@ export const OrderDetails: React.FC<OrderDetailsProps> = ({
             />
 
             <div className="flex flex-col gap-1.5">
-              <label className="text-sm font-semibold text-slate-700">ملاحظات الإرجاع</label>
+              <label className="text-sm font-semibold text-slate-700 dark:text-slate-350">ملاحظات الإرجاع</label>
               <textarea
                 value={retNotes}
                 onChange={(e) => setRetNotes(e.target.value)}
                 rows={2}
                 placeholder="تفاصيل التلف إن وجد، استرداد التأمين للزبون..."
-                className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 bg-white text-slate-800 text-sm"
+                className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 text-slate-800 dark:text-slate-100 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500/20"
               />
             </div>
 
@@ -1065,12 +1068,14 @@ export const OrderDetails: React.FC<OrderDetailsProps> = ({
                   setSelectedReturnItem(null);
                 }}
                 disabled={isReturnSubmitting}
+                className="px-6 py-2.5 text-sm"
               >
                 إلغاء
               </Button>
               <Button
                 type="submit"
                 isLoading={isReturnSubmitting}
+                className="px-6 py-2.5 text-sm"
               >
                 حفظ وإرجاع القطعة
               </Button>

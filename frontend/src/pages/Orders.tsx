@@ -358,7 +358,7 @@ export const Orders: React.FC<OrdersProps> = ({ onNavigate, activeEmployee, page
         return;
       }
       if (item.category === 'Other' && !item.customCategory) {
-        setFormError(`يرجى إدخال اسم التصنيف المخصص في السطر رقم ${i + 1}`);
+        setFormError(`يرجى إدخل اسم التصنيف المخصص في السطر رقم ${i + 1}`);
         return;
       }
     }
@@ -514,8 +514,6 @@ export const Orders: React.FC<OrdersProps> = ({ onNavigate, activeEmployee, page
 
   const { subtotal, grandTotal } = calculateTotals();
 
-  // Employee lookup names is loaded dynamically in employees state
-
   return (
     <div className="space-y-6">
       {/* Header */}
@@ -526,15 +524,15 @@ export const Orders: React.FC<OrdersProps> = ({ onNavigate, activeEmployee, page
               setIsCreating(false);
               onNavigate('orders');
             }}
-            className="p-2 bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-655 dark:text-slate-200 rounded-xl transition-all shadow-sm flex items-center"
+            className="p-3 bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-655 dark:text-slate-200 rounded-xl transition-all shadow-sm flex items-center"
           >
             <ArrowLeft className="w-5 h-5 rotate-180" />
           </button>
           <div>
-            <h1 className="text-xl font-black text-slate-800 dark:text-slate-100 font-cairo">
+            <h1 className="text-2xl font-black text-slate-800 dark:text-slate-100 font-cairo">
               {editOrderId ? 'تعديل وتحديث فاتورة التخرج' : 'إنشاء فاتورة / طلبية تخرج جديدة'}
             </h1>
-            <p className="text-xs text-slate-450 dark:text-slate-555 font-bold font-tajawal mt-0.5">
+            <p className="text-sm text-slate-500 dark:text-slate-400 font-bold font-tajawal mt-1">
               {editOrderId ? 'تعديل بيانات الفاتورة الحالية والقطع والمبالغ والمدفوعات' : 'أدخل بيانات الزبون ثم أضف المنتجات المطلوبة بالتفصيل مع الحساب الآلي للقيم'}
             </p>
           </div>
@@ -545,7 +543,7 @@ export const Orders: React.FC<OrdersProps> = ({ onNavigate, activeEmployee, page
             <h1 className="text-2xl font-black text-slate-850 dark:text-slate-100 font-cairo">
               إدارة الطلبات والفواتير
             </h1>
-            <p className="text-xs text-slate-400 dark:text-slate-500 font-semibold font-tajawal mt-1">
+            <p className="text-sm text-slate-550 dark:text-slate-400 font-semibold font-tajawal mt-1.5">
               إدخال طلبيات بيع وإيجار كابات وقبعات التخرج وتعديل حالتها
             </p>
           </div>
@@ -555,7 +553,8 @@ export const Orders: React.FC<OrdersProps> = ({ onNavigate, activeEmployee, page
               setFormError('');
               handleAddItem(); // Add first item slot automatically
             }}
-            icon={<Plus className="w-4 h-4" />}
+            icon={<Plus className="w-5 h-5" />}
+            className="px-6 py-3 text-sm"
           >
             طلب / فاتورة جديدة
           </Button>
@@ -577,16 +576,17 @@ export const Orders: React.FC<OrdersProps> = ({ onNavigate, activeEmployee, page
                   placeholder="ابحث برقم الفاتورة، اسم الزبون، رقم الهاتف..."
                   value={search}
                   onChange={(e) => setSearch(e.target.value)}
+                  className="text-sm py-3"
                 />
               </div>
 
               {/* Status */}
               <div className="flex flex-col gap-1.5">
-                <label className="text-xs font-bold text-slate-450 dark:text-slate-500 font-tajawal">حالة الطلبية</label>
+                <label className="text-sm font-bold text-slate-500 dark:text-slate-400 font-tajawal">حالة الطلبية</label>
                 <select
                   value={statusFilter}
                   onChange={(e) => setStatusFilter(e.target.value)}
-                  className="px-3 py-2 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 text-xs font-bold focus:outline-none focus:ring-2 focus:ring-brand-500/20"
+                  className="px-3.5 py-3 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 text-sm font-bold focus:outline-none focus:ring-2 focus:ring-brand-500/20"
                 >
                   <option value="all">كل الحالات</option>
                   <option value="Pending">قيد الانتظار</option>
@@ -600,11 +600,11 @@ export const Orders: React.FC<OrdersProps> = ({ onNavigate, activeEmployee, page
 
               {/* Payment Status */}
               <div className="flex flex-col gap-1.5">
-                <label className="text-xs font-bold text-slate-450 dark:text-slate-500 font-tajawal">حالة الدفع</label>
+                <label className="text-sm font-bold text-slate-500 dark:text-slate-400 font-tajawal">حالة الدفع</label>
                 <select
                   value={paymentFilter}
                   onChange={(e) => setPaymentFilter(e.target.value)}
-                  className="px-3 py-2 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 text-xs font-bold focus:outline-none focus:ring-2 focus:ring-brand-500/20"
+                  className="px-3.5 py-3 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 text-sm font-bold focus:outline-none focus:ring-2 focus:ring-brand-500/20"
                 >
                   <option value="all">كل حالات الدفع</option>
                   <option value="Unpaid">غير مدفوع</option>
@@ -615,14 +615,14 @@ export const Orders: React.FC<OrdersProps> = ({ onNavigate, activeEmployee, page
               </div>
             </div>
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 pt-2 border-t border-slate-100 dark:border-slate-850/50">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 pt-3 border-t border-slate-100 dark:border-slate-850/50">
               {/* Delivery status */}
               <div className="flex flex-col gap-1.5">
-                <label className="text-xs font-bold text-slate-400 dark:text-slate-500 font-tajawal">حالة التسليم للمنتج</label>
+                <label className="text-sm font-bold text-slate-500 dark:text-slate-400 font-tajawal">حالة التسليم للمنتج</label>
                 <select
                   value={deliveryFilter}
                   onChange={(e) => setDeliveryFilter(e.target.value)}
-                  className="px-3 py-2 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 text-xs font-bold"
+                  className="px-3.5 py-3 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 text-sm font-bold"
                 >
                   <option value="all">كل حالات التسليم</option>
                   <option value="Waiting">قيد الانتظار</option>
@@ -634,11 +634,11 @@ export const Orders: React.FC<OrdersProps> = ({ onNavigate, activeEmployee, page
 
               {/* Date Filter */}
               <div className="flex flex-col gap-1.5">
-                <label className="text-xs font-bold text-slate-400 dark:text-slate-500 font-tajawal">تاريخ الطلب</label>
+                <label className="text-sm font-bold text-slate-500 dark:text-slate-400 font-tajawal">تاريخ الطلب</label>
                 <select
                   value={dateRangeFilter}
                   onChange={(e) => setDateRangeFilter(e.target.value)}
-                  className="px-3 py-2 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 text-xs font-bold"
+                  className="px-3.5 py-3 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 text-sm font-bold"
                 >
                   <option value="all">كل التواريخ</option>
                   <option value="today">اليوم</option>
@@ -651,11 +651,11 @@ export const Orders: React.FC<OrdersProps> = ({ onNavigate, activeEmployee, page
 
               {/* Operation type */}
               <div className="flex flex-col gap-1.5">
-                <label className="text-xs font-bold text-slate-400 dark:text-slate-500 font-tajawal">نوع المعاملة</label>
+                <label className="text-sm font-bold text-slate-500 dark:text-slate-400 font-tajawal">نوع المعاملة</label>
                 <select
                   value={operationFilter}
                   onChange={(e) => setOperationFilter(e.target.value)}
-                  className="px-3 py-2 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 text-xs font-bold"
+                  className="px-3.5 py-3 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 text-sm font-bold"
                 >
                   <option value="all">الكل (بيع وإيجار)</option>
                   <option value="Sale">بيع</option>
@@ -666,15 +666,15 @@ export const Orders: React.FC<OrdersProps> = ({ onNavigate, activeEmployee, page
 
               {/* Responsible employee */}
               <div className="flex flex-col gap-1.5">
-                <label className="text-xs font-bold text-slate-400 dark:text-slate-500 font-tajawal">الموظف المسؤول</label>
+                <label className="text-sm font-bold text-slate-500 dark:text-slate-400 font-tajawal">الموظف المسؤول</label>
                 <select
                   value={employeeFilter}
                   onChange={(e) => setEmployeeFilter(e.target.value)}
-                  className="px-3 py-2 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 text-xs font-bold"
+                  className="px-3.5 py-3 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 text-sm font-bold"
                 >
                   <option value="all">كل الموظفين</option>
-                  <option value="f3a479b1-e221-4f19-a1b7-d15764d2d46e">أنس</option>
-                  <option value="a98f5c9e-5b12-4c28-98e3-f8a183d2d2a4">طه</option>
+                  <option value="d46b9941-0586-4b1c-9b32-189d12da4b5d">طه</option>
+                  <option value="3200a174-c1cf-443f-8e6a-0361dc27b345">أنس</option>
                 </select>
               </div>
             </div>
@@ -690,35 +690,35 @@ export const Orders: React.FC<OrdersProps> = ({ onNavigate, activeEmployee, page
               </div>
             ) : (
               <div className="overflow-x-auto">
-                <table className="w-full text-right border-collapse text-xs">
+                <table className="w-full text-right border-collapse text-sm">
                   <thead>
                     <tr className="border-b border-slate-100 dark:border-slate-800/80 text-slate-400 dark:text-slate-555">
-                      <th className="py-3 px-4 font-bold font-tajawal">رقم الفاتورة</th>
-                      <th className="py-3 px-4 font-bold font-tajawal">اسم الزبون</th>
-                      <th className="py-3 px-4 font-bold font-tajawal">رقم الهاتف</th>
-                      <th className="py-3 px-4 font-bold font-tajawal">التاريخ</th>
-                      <th className="py-3 px-4 font-bold font-tajawal">المسؤول</th>
-                      <th className="py-3 px-4 font-bold font-tajawal">قيمة الفاتورة</th>
-                      <th className="py-3 px-4 font-bold font-tajawal">المدفوع</th>
-                      <th className="py-3 px-4 font-bold font-tajawal">المتبقي</th>
-                      <th className="py-3 px-4 font-bold font-tajawal">حالة الدفع</th>
-                      <th className="py-3 px-4 font-bold font-tajawal">حالة الطلب</th>
-                      <th className="py-3 px-4 font-bold font-tajawal">تفاصيل</th>
+                      <th className="py-3.5 px-4 font-bold font-tajawal">رقم الفاتورة</th>
+                      <th className="py-3.5 px-4 font-bold font-tajawal">اسم الزبون</th>
+                      <th className="py-3.5 px-4 font-bold font-tajawal">رقم الهاتف</th>
+                      <th className="py-3.5 px-4 font-bold font-tajawal">التاريخ</th>
+                      <th className="py-3.5 px-4 font-bold font-tajawal">المسؤول</th>
+                      <th className="py-3.5 px-4 font-bold font-tajawal">قيمة الفاتورة</th>
+                      <th className="py-3.5 px-4 font-bold font-tajawal">المدفوع</th>
+                      <th className="py-3.5 px-4 font-bold font-tajawal">المتبقي</th>
+                      <th className="py-3.5 px-4 font-bold font-tajawal">حالة الدفع</th>
+                      <th className="py-3.5 px-4 font-bold font-tajawal">حالة الطلب</th>
+                      <th className="py-3.5 px-4 font-bold font-tajawal text-center">الإجراءات والسحب</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-slate-50 dark:divide-slate-850">
                     {orders.map((o) => (
                       <tr key={o.id} className="hover:bg-slate-50/50 dark:hover:bg-slate-950/20 transition-all">
-                        <td className="py-3.5 px-4 font-black text-brand-600 dark:text-brand-400 font-tajawal">{o.orderNumber}</td>
-                        <td className="py-3.5 px-4 font-bold text-slate-800 dark:text-slate-200">{o.customer?.name}</td>
-                        <td className="py-3.5 px-4 font-semibold text-slate-500 dark:text-slate-455 font-tajawal">{o.customer?.phone}</td>
-                        <td className="py-3.5 px-4 font-semibold text-slate-500 font-tajawal">{formatDate(o.orderDate)}</td>
-                        <td className="py-3.5 px-4 font-bold text-slate-655 dark:text-slate-350">{o.employee?.name}</td>
-                        <td className="py-3.5 px-4 font-black text-slate-850 dark:text-slate-100 font-cairo">{formatCurrency(o.grandTotal)}</td>
-                        <td className="py-3.5 px-4 font-black text-emerald-650 font-cairo">{formatCurrency(o.totalPaid)}</td>
-                        <td className="py-3.5 px-4 font-black text-red-650 font-cairo">{formatCurrency(o.remainingBalance)}</td>
-                        <td className="py-3.5 px-4 font-semibold">
-                          <span className={`px-2 py-0.5 rounded-full text-[9px] font-bold ${
+                        <td className="py-4.5 px-4 font-black text-brand-600 dark:text-brand-400 font-tajawal">{o.orderNumber}</td>
+                        <td className="py-4.5 px-4 font-bold text-slate-800 dark:text-slate-200">{o.customer?.name}</td>
+                        <td className="py-4.5 px-4 font-semibold text-slate-600 dark:text-slate-455 font-tajawal">{o.customer?.phone}</td>
+                        <td className="py-4.5 px-4 font-semibold text-slate-500 font-tajawal">{formatDate(o.orderDate)}</td>
+                        <td className="py-4.5 px-4 font-bold text-slate-655 dark:text-slate-350">{o.employee?.name}</td>
+                        <td className="py-4.5 px-4 font-black text-slate-850 dark:text-slate-100 font-cairo">{formatCurrency(o.grandTotal)}</td>
+                        <td className="py-4.5 px-4 font-black text-emerald-650 font-cairo">{formatCurrency(o.totalPaid)}</td>
+                        <td className="py-4.5 px-4 font-black text-red-650 font-cairo">{formatCurrency(o.remainingBalance)}</td>
+                        <td className="py-4.5 px-4 font-semibold">
+                          <span className={`px-3 py-1 rounded-lg text-xs font-bold ${
                             o.paymentStatus === 'FullyPaid' ? 'bg-emerald-50 dark:bg-emerald-950/20 text-emerald-600' :
                             o.paymentStatus === 'PartiallyPaid' ? 'bg-blue-50 text-blue-650' :
                             o.paymentStatus === 'DepositPaid' ? 'bg-amber-50 text-amber-600' :
@@ -727,40 +727,40 @@ export const Orders: React.FC<OrdersProps> = ({ onNavigate, activeEmployee, page
                             {translatePaymentStatus(o.paymentStatus)}
                           </span>
                         </td>
-                        <td className="py-3.5 px-4 font-semibold">
-                          <span className={`px-2 py-0.5 rounded-full text-[9px] font-bold ${
+                        <td className="py-4.5 px-4 font-semibold">
+                          <span className={`px-3 py-1 rounded-lg text-xs font-bold ${
                             o.status === 'Completed' || o.status === 'Delivered' ? 'bg-emerald-50 text-emerald-600' :
                             o.status === 'Cancelled' ? 'bg-red-50 text-red-600' :
-                            o.status === 'Ready' ? 'bg-blue-50 text-blue-650' :
-                            'bg-orange-50 text-orange-650'
+                            o.status === 'Ready' ? 'bg-blue-50 text-blue-655' :
+                            'bg-orange-50 text-orange-655'
                           }`}>
                             {translateStatus(o.status)}
                           </span>
                         </td>
-                        <td className="py-3.5 px-4">
-                          <div className="flex items-center gap-1.5">
+                        <td className="py-4.5 px-4">
+                          <div className="flex items-center justify-center gap-1.5">
                             <button 
                               onClick={() => onNavigate('order-details', { id: o.id })}
-                              className="p-1 text-brand-600 hover:text-brand-700 dark:hover:text-brand-400 bg-brand-50 dark:bg-brand-950/20 rounded-lg transition-all"
+                              className="p-2 text-brand-600 hover:text-brand-700 dark:hover:text-brand-400 bg-brand-50 dark:bg-brand-950/20 rounded-lg transition-all"
                               title="عرض التفاصيل"
                             >
-                              <Eye className="w-4 h-4" />
+                              <Eye className="w-4.5 h-4.5" />
                             </button>
                             <button 
                               type="button"
                               onClick={() => onNavigate('orders', { editId: o.id })}
-                              className="p-1 text-blue-650 hover:text-blue-700 dark:hover:text-blue-400 bg-blue-50 dark:bg-blue-950/20 rounded-lg transition-all"
+                              className="p-2 text-blue-650 hover:text-blue-700 dark:hover:text-blue-400 bg-blue-50 dark:bg-blue-950/20 rounded-lg transition-all"
                               title="تعديل الفاتورة"
                             >
-                              <Edit className="w-4 h-4" />
+                              <Edit className="w-4.5 h-4.5" />
                             </button>
                             <button 
                               type="button"
                               onClick={() => handleDeleteOrder(o.id, o.orderNumber)}
-                              className="p-1 text-red-650 hover:text-red-700 dark:hover:text-red-400 bg-red-50 dark:bg-red-950/20 rounded-lg transition-all"
+                              className="p-2 text-red-650 hover:text-red-700 dark:hover:text-red-400 bg-red-50 dark:bg-red-950/20 rounded-lg transition-all"
                               title="حذف الفاتورة"
                             >
-                              <Trash2 className="w-4 h-4" />
+                              <Trash2 className="w-4.5 h-4.5" />
                             </button>
                           </div>
                         </td>
@@ -785,23 +785,23 @@ export const Orders: React.FC<OrdersProps> = ({ onNavigate, activeEmployee, page
           
           {/* Customer info card */}
           <div className="bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800/80 p-6 rounded-2xl shadow-sm space-y-4">
-            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-slate-100 dark:border-slate-800/60 pb-2">
-              <h3 className="text-sm font-bold text-slate-800 dark:text-slate-100">
+            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-slate-100 dark:border-slate-800/60 pb-3">
+              <h3 className="text-base font-bold text-slate-850 dark:text-slate-100">
                 المعلومات الأساسية وبيانات الزبون
               </h3>
-              <div className="flex items-center gap-2 bg-slate-50 dark:bg-slate-955/40 px-3 py-1.5 rounded-xl border border-slate-150 dark:border-slate-800 w-fit">
+              <div className="flex items-center gap-2 bg-slate-50 dark:bg-slate-955/40 px-3.5 py-2 rounded-xl border border-slate-150 dark:border-slate-800 w-fit">
                 <input
                   type="checkbox"
                   id="walkInCustomer"
                   checked={isWalkIn}
                   onChange={(e) => handleWalkInChange(e.target.checked)}
-                  className="w-4 h-4 text-brand-600 dark:text-brand-400 bg-white dark:bg-slate-950 border-2 border-slate-300 dark:border-slate-700 rounded focus:ring-brand-500 cursor-pointer"
+                  className="w-4.5 h-4.5 text-brand-600 dark:text-brand-400 bg-white dark:bg-slate-950 border-2 border-slate-300 dark:border-slate-700 rounded focus:ring-brand-500 cursor-pointer"
                 />
                 <label 
                   htmlFor="walkInCustomer" 
-                  className="text-xs font-bold text-slate-750 dark:text-slate-200 cursor-pointer select-none font-tajawal"
+                  className="text-sm font-bold text-slate-750 dark:text-slate-200 cursor-pointer select-none font-tajawal"
                 >
-                  لا يوجد
+                  لا يوجد (سحب مباشر بدون زبون)
                 </label>
               </div>
             </div>
@@ -814,6 +814,7 @@ export const Orders: React.FC<OrdersProps> = ({ onNavigate, activeEmployee, page
                 required
                 placeholder="صالح مسعود..."
                 disabled={isWalkIn}
+                className="text-sm py-2.5"
               />
               <Input
                 label="رقم هاتف الزبون"
@@ -822,6 +823,7 @@ export const Orders: React.FC<OrdersProps> = ({ onNavigate, activeEmployee, page
                 required
                 placeholder="0912345678"
                 disabled={isWalkIn}
+                className="text-sm py-2.5"
               />
               <Input
                 label="رقم الهاتف الاحتياطي (اختياري)"
@@ -829,6 +831,7 @@ export const Orders: React.FC<OrdersProps> = ({ onNavigate, activeEmployee, page
                 onChange={(e) => setCustBackupPhone(e.target.value)}
                 placeholder="0921234567"
                 disabled={isWalkIn}
+                className="text-sm py-2.5"
               />
               
               <Select
@@ -842,13 +845,14 @@ export const Orders: React.FC<OrdersProps> = ({ onNavigate, activeEmployee, page
               />
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 pt-3 border-t border-slate-100 dark:border-slate-800/60">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 pt-4 border-t border-slate-100 dark:border-slate-800/60">
               <Input
                 label="تاريخ الطلب"
                 type="date"
                 value={orderDate}
                 onChange={(e) => setOrderDate(e.target.value)}
                 required
+                className="text-sm py-2.5"
               />
               <Input
                 label="تاريخ التخرج"
@@ -856,6 +860,7 @@ export const Orders: React.FC<OrdersProps> = ({ onNavigate, activeEmployee, page
                 value={globalGraduationDate}
                 onChange={(e) => setGlobalGraduationDate(e.target.value)}
                 required
+                className="text-sm py-2.5"
               />
               <Input
                 label="تاريخ تسليم الطلب (موعد الاستلام)"
@@ -863,16 +868,16 @@ export const Orders: React.FC<OrdersProps> = ({ onNavigate, activeEmployee, page
                 value={globalDeliveryDate}
                 onChange={(e) => handleGlobalDeliveryDateChange(e.target.value)}
                 required
+                className="text-sm py-2.5"
               />
-              {items.some((item) => item.operationType === 'Rental') && (
-                <Input
-                  label="تاريخ الإرجاع (اليوم التالي)"
-                  type="date"
-                  value={globalReturnDate}
-                  onChange={(e) => setGlobalReturnDate(e.target.value)}
-                  required
-                />
-              )}
+              <Input
+                label="تاريخ الإرجاع المتوقع (للإيجار)"
+                type="date"
+                value={globalReturnDate}
+                onChange={(e) => setGlobalReturnDate(e.target.value)}
+                required={items.some((item) => item.operationType === 'Rental')}
+                className="text-sm py-2.5"
+              />
             </div>
 
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
@@ -903,15 +908,15 @@ export const Orders: React.FC<OrdersProps> = ({ onNavigate, activeEmployee, page
           {/* Products List Section */}
           <div className="bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800/80 p-6 rounded-2xl shadow-sm space-y-4">
             <div className="flex items-center justify-between border-b border-slate-100 dark:border-slate-800/60 pb-3">
-              <h3 className="text-sm font-bold text-slate-800 dark:text-slate-100">
+              <h3 className="text-base font-bold text-slate-850 dark:text-slate-100">
                 المنتجات والقطع المطلوبة في الفاتورة
               </h3>
               <button
                 type="button"
                 onClick={handleAddItem}
-                className="text-xs font-bold text-brand-600 hover:text-brand-700 dark:hover:text-brand-400 flex items-center gap-1.5 px-3 py-1.5 bg-brand-50 dark:bg-brand-950/20 rounded-xl transition-all border border-brand-100/30"
+                className="text-sm font-bold text-brand-600 hover:text-brand-700 dark:hover:text-brand-400 flex items-center gap-1.5 px-4 py-2 bg-brand-50 dark:bg-brand-950/20 rounded-xl transition-all border border-brand-100/30 shadow-sm"
               >
-                <PlusCircle className="w-4 h-4" />
+                <PlusCircle className="w-4.5 h-4.5" />
                 إضافة منتج جديد للطلب (+ Add Product)
               </button>
             </div>
@@ -920,21 +925,21 @@ export const Orders: React.FC<OrdersProps> = ({ onNavigate, activeEmployee, page
               {items.map((item, idx) => (
                 <div 
                   key={item.id} 
-                  className="p-5 bg-slate-50/50 dark:bg-slate-950/20 border border-slate-200/60 dark:border-slate-850 rounded-2xl space-y-4 relative"
+                  className="p-5 bg-slate-50/50 dark:bg-slate-955/20 border border-slate-200/60 dark:border-slate-850 rounded-2xl space-y-4 relative"
                 >
                   {/* Delete Item button */}
                   {items.length > 1 && (
                     <button
                       type="button"
                       onClick={() => handleRemoveItem(item.id)}
-                      className="absolute top-4 left-4 p-1.5 text-slate-400 hover:text-red-650 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg transition-all"
+                      className="absolute top-4 left-4 p-2 text-slate-400 hover:text-red-650 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg transition-all"
                     >
-                      <Trash2 className="w-4 h-4" />
+                      <Trash2 className="w-4.5 h-4.5" />
                     </button>
                   )}
 
                   {/* Header Item Count */}
-                  <span className="text-[11px] font-black text-slate-400 dark:text-slate-600 bg-slate-200/50 dark:bg-slate-800/60 px-2 py-0.5 rounded">
+                  <span className="text-xs font-black text-slate-500 dark:text-slate-400 bg-slate-200/50 dark:bg-slate-800/60 px-2.5 py-1 rounded">
                     المنتج رقم ({idx + 1})
                   </span>
 
@@ -1068,6 +1073,7 @@ export const Orders: React.FC<OrdersProps> = ({ onNavigate, activeEmployee, page
                         onChange={(e) => handleItemFieldChange(item.id, 'accessoryName', e.target.value)}
                         placeholder="مثال: شارة التخرج، مسبحة التخرج..."
                         required
+                        className="text-sm py-2.5"
                       />
                     )}
 
@@ -1079,6 +1085,7 @@ export const Orders: React.FC<OrdersProps> = ({ onNavigate, activeEmployee, page
                       value={item.quantity}
                       onChange={(e) => handleItemFieldChange(item.id, 'quantity', e.target.value)}
                       required
+                      className="text-sm py-2.5"
                     />
 
                     {/* Price field (label changes based on Operation type) */}
@@ -1090,6 +1097,7 @@ export const Orders: React.FC<OrdersProps> = ({ onNavigate, activeEmployee, page
                       value={item.unitPrice}
                       onChange={(e) => handleItemFieldChange(item.id, 'unitPrice', e.target.value)}
                       required
+                      className="text-sm py-2.5"
                     />
 
                     {/* Rental Details: Deposit */}
@@ -1102,6 +1110,7 @@ export const Orders: React.FC<OrdersProps> = ({ onNavigate, activeEmployee, page
                         value={item.depositAmount}
                         onChange={(e) => handleItemFieldChange(item.id, 'depositAmount', e.target.value)}
                         required
+                        className="text-sm py-2.5"
                       />
                     )}
                   </div>
@@ -1112,6 +1121,7 @@ export const Orders: React.FC<OrdersProps> = ({ onNavigate, activeEmployee, page
                     value={item.notes}
                     onChange={(e) => handleItemFieldChange(item.id, 'notes', e.target.value)}
                     placeholder="مثال: الاسم للتطريز: 'محمد'، مقاس الرأس للقبعة، إلخ..."
+                    className="text-sm py-2.5"
                   />
 
                 </div>
@@ -1121,14 +1131,14 @@ export const Orders: React.FC<OrdersProps> = ({ onNavigate, activeEmployee, page
 
           {/* Pricing Ledger summary card */}
           <div className="bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800/80 p-6 rounded-2xl shadow-sm space-y-4">
-            <h3 className="text-sm font-bold text-slate-800 dark:text-slate-100 border-b border-slate-100 dark:border-slate-800/60 pb-2">
+            <h3 className="text-base font-bold text-slate-850 dark:text-slate-100 border-b border-slate-100 dark:border-slate-800/60 pb-3">
               الحسابات المالية والتخفيض
             </h3>
 
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6 items-end">
               <div>
-                <span className="text-xs font-bold text-slate-400 dark:text-slate-500 block font-tajawal">المجموع الفرعي (قبل الخصم)</span>
-                <span className="text-lg font-black text-slate-800 dark:text-slate-100 font-cairo">
+                <span className="text-sm font-bold text-slate-500 dark:text-slate-400 block font-tajawal">المجموع الفرعي (قبل الخصم)</span>
+                <span className="text-xl font-black text-slate-800 dark:text-slate-100 font-cairo">
                   {formatCurrency(subtotal)}
                 </span>
               </div>
@@ -1140,11 +1150,12 @@ export const Orders: React.FC<OrdersProps> = ({ onNavigate, activeEmployee, page
                 step="0.01"
                 value={discount}
                 onChange={(e) => setDiscount(e.target.value)}
+                className="text-sm py-2.5"
               />
 
-              <div className="p-3 bg-brand-50 dark:bg-brand-950/30 rounded-xl flex items-center justify-between border border-brand-100/50">
-                <span className="text-xs font-black text-brand-700 dark:text-brand-400 font-tajawal">المجموع النهائي المستحق</span>
-                <h3 className="text-lg font-black text-brand-800 dark:text-brand-350 font-cairo">
+              <div className="p-4 bg-brand-50 dark:bg-brand-950/30 rounded-xl flex items-center justify-between border border-brand-100/50">
+                <span className="text-sm font-black text-brand-700 dark:text-brand-400 font-tajawal">المجموع النهائي المستحق</span>
+                <h3 className="text-xl font-black text-brand-800 dark:text-brand-350 font-cairo">
                   {formatCurrency(grandTotal)}
                 </h3>
               </div>
@@ -1158,13 +1169,15 @@ export const Orders: React.FC<OrdersProps> = ({ onNavigate, activeEmployee, page
                 variant="secondary"
                 onClick={() => setIsCreating(false)}
                 disabled={isSubmitting}
+                className="px-6 py-2.5 text-sm"
               >
                 إلغاء
               </Button>
               <Button
                 type="submit"
                 isLoading={isSubmitting}
-                icon={<Check className="w-4 h-4" />}
+                icon={<Check className="w-5 h-5" />}
+                className="px-6 py-2.5 text-sm"
               >
                 حفظ الفاتورة وتأكيد الطلب
               </Button>
