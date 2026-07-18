@@ -342,6 +342,7 @@ export const orderService = {
       customerName: (order as any).Customer?.name || 'مجهول',
       customerPhone: (order as any).Customer?.phone || 'مجهول',
       customer: (order as any).Customer,
+      employee: (order as any).Employee || null,
       employeeName: (order as any).Employee?.name || 'مجهول',
       items: formattedItems,
       payments: payments?.map((p) => ({
