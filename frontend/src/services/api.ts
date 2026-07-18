@@ -123,7 +123,7 @@ export const customerService = {
     // 2. Fetch their orders
     const { data: orders } = await supabase
       .from('Order')
-      .select('*, Employee!OrderEmployee(name)')
+      .select('*, Employee(name)')
       .eq('customerId', id)
       .order('createdAt', { ascending: false });
 
@@ -135,7 +135,7 @@ export const customerService = {
 
     // 4. Fetch all payments for these orders
     const { data: payments } = orderIds.length > 0
-      ? await supabase.from('Payment').select('*, Employee!PaymentEmployee(name)').in('orderId', orderIds)
+      ? await supabase.from('Payment').select('*, Employee(name)').in('orderId', orderIds)
       : { data: [] };
 
     const formattedOrders = orders?.map((o) => {
@@ -239,7 +239,7 @@ export const orderService = {
     // 1. Query orders join Customer and Employee
     const { data: orders } = await supabase
       .from('Order')
-      .select('*, Customer!OrderCustomer(name, phone), Employee!OrderEmployee(name)')
+      .select('*, Customer(name, phone), Employee(name)')
       .order('createdAt', { ascending: false });
 
     if (!orders) return [];
@@ -306,7 +306,7 @@ export const orderService = {
     // 1. Fetch order
     const { data: order } = await supabase
       .from('Order')
-      .select('*, Customer!OrderCustomer(*), Employee!OrderEmployee(name)')
+      .select('*, Customer(*), Employee(name)')
       .eq('id', id)
       .single();
 
@@ -315,13 +315,13 @@ export const orderService = {
     // 2. Fetch items
     const { data: items } = await supabase
       .from('OrderItem')
-      .select('*, ReturnLog!ReturnOrderItem(*)')
+      .select('*, ReturnLog(*)')
       .eq('orderId', id);
 
     // 3. Fetch payments
     const { data: payments } = await supabase
       .from('Payment')
-      .select('*, Employee!PaymentEmployee(name)')
+      .select('*, Employee(name)')
       .eq('orderId', id);
 
     const formattedItems = items?.map((item) => {
@@ -607,7 +607,7 @@ export const returnService = {
   getAll: async () => {
     const { data: returns } = await supabase
       .from('ReturnLog')
-      .select('*, OrderItem!ReturnOrderItem(*, Order!OrderItemOrder(invoiceNumber, Customer!OrderCustomer(name))), Employee!ReturnEmployee(name)')
+      .select('*, OrderItem(*, Order(orderNumber, Customer(name))), Employee(name)')
       .order('createdAt', { ascending: false });
 
     return returns?.map((r) => {
@@ -620,7 +620,7 @@ export const returnService = {
         employeeName: (r as any).Employee?.name || 'مجهول',
         productName: item.name || 'منتج مجهول',
         category: item.category || 'تصنيف مجهول',
-        invoiceNumber: order.invoiceNumber || 'مجهول',
+        invoiceNumber: order.orderNumber || 'مجهول',
         customerName: customer.name || 'مجهول',
       };
     }) || [];
