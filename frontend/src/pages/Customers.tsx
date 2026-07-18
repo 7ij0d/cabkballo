@@ -184,6 +184,23 @@ export const Customers: React.FC<CustomersProps> = ({ onNavigate, selectedId }) 
     }
   };
 
+  const handleDeleteCustomerFromList = async (id: string, name: string) => {
+    const confirmDelete = window.confirm(`هل أنت متأكد من حذف الزبون "${name}"؟ سيؤدي ذلك لحذف كافة فواتيره ومدفوعاته وعمليات الإيجار الخاصة به نهائياً!`);
+    if (!confirmDelete) return;
+
+    try {
+      setError('');
+      await customerService.delete(id);
+      if (selectedCustomerId === id) {
+        setSelectedCustomerId(null);
+      }
+      fetchCustomers();
+    } catch (err: any) {
+      console.error(err);
+      setError('فشل حذف الزبون. قد يكون مرتبطاً بعمليات أخرى.');
+    }
+  };
+
   return (
     <div className="space-y-6">
       {/* Profile Navigation Header */}
@@ -289,12 +306,19 @@ export const Customers: React.FC<CustomersProps> = ({ onNavigate, selectedId }) 
                           <span className="text-slate-450 dark:text-slate-600">0.00 د.ل</span>
                         )}
                       </td>
-                      <td className="py-3.5 px-4">
+                      <td className="py-3.5 px-4 flex items-center gap-2">
                         <button 
                           onClick={() => setSelectedCustomerId(c.id)}
                           className="px-3 py-1.5 bg-brand-50 hover:bg-brand-100 dark:bg-brand-950/20 dark:hover:bg-brand-900/30 text-brand-600 dark:text-brand-400 font-bold rounded-lg transition-all"
                         >
                           عرض الملف
+                        </button>
+                        <button 
+                          onClick={() => handleDeleteCustomerFromList(c.id, c.name)}
+                          className="p-1.5 text-slate-400 hover:text-red-650 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg transition-all"
+                          title="حذف الزبون"
+                        >
+                          <Trash2 className="w-4 h-4" />
                         </button>
                       </td>
                     </tr>
