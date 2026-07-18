@@ -45,6 +45,20 @@ export const Orders: React.FC<OrdersProps> = ({ onNavigate, activeEmployee }) =>
   const [formError, setFormError] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [employees, setEmployees] = useState<any[]>([]);
+  const [isWalkIn, setIsWalkIn] = useState(false);
+
+  const handleWalkInChange = (checked: boolean) => {
+    setIsWalkIn(checked);
+    if (checked) {
+      setCustName('زبون سفري');
+      setCustPhone('0000000000');
+      setCustNotes('زبون سفري عابر');
+    } else {
+      setCustName('');
+      setCustPhone('');
+      setCustNotes('');
+    }
+  };
 
   useEffect(() => {
     const loadEmployees = async () => {
@@ -131,8 +145,8 @@ export const Orders: React.FC<OrdersProps> = ({ onNavigate, activeEmployee }) =>
       customAccessoryName: '',
 
       quantity: '1',
-      unitPrice: '0',
-      depositAmount: '0',
+      unitPrice: '',
+      depositAmount: '',
       deliveryDate: '',
       returnDate: '',
       graduationDate: '',
@@ -151,31 +165,18 @@ export const Orders: React.FC<OrdersProps> = ({ onNavigate, activeEmployee }) =>
         if (item.id === id) {
           const updated = { ...item, [field]: value };
           
-          // Auto adjust prices based on categories & types (commercial styling default prices)
           if (field === 'category') {
-            if (value === 'Graduation Cap') {
-              updated.unitPrice = '50';
-              updated.operationType = 'Sale';
-            } else if (value === 'Graduation Hat') {
-              updated.unitPrice = '40';
-            } else if (value === 'Graduation Sash') {
-              updated.unitPrice = '30';
-            } else if (value === 'Graduation Brooch') {
-              updated.unitPrice = '15';
-              updated.operationType = 'Sale';
-            } else if (value === 'Graduation Accessories') {
-              updated.unitPrice = '20';
+            if (value === 'Graduation Cap' || value === 'Graduation Brooch' || value === 'Graduation Accessories') {
               updated.operationType = 'Sale';
             }
+            updated.unitPrice = '';
+            updated.depositAmount = '';
           }
 
           if (field === 'operationType') {
-            if (value === 'Rental') {
-              updated.unitPrice = '25'; // Rented price is usually cheaper
-              updated.depositAmount = '20'; // Requires deposit
-            } else if (value === 'Sale') {
-              updated.unitPrice = '40';
-              updated.depositAmount = '0';
+            updated.unitPrice = '';
+            updated.depositAmount = '';
+            if (value === 'Sale') {
               updated.returnDate = '';
             }
           }
@@ -497,9 +498,26 @@ export const Orders: React.FC<OrdersProps> = ({ onNavigate, activeEmployee }) =>
           
           {/* Customer info card */}
           <div className="bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800/80 p-6 rounded-2xl shadow-sm space-y-4">
-            <h3 className="text-sm font-bold text-slate-800 dark:text-slate-100 border-b border-slate-100 dark:border-slate-800/60 pb-2">
-              المعلومات الأساسية وبيانات الزبون
-            </h3>
+            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-slate-100 dark:border-slate-800/60 pb-2">
+              <h3 className="text-sm font-bold text-slate-800 dark:text-slate-100">
+                المعلومات الأساسية وبيانات الزبون
+              </h3>
+              <div className="flex items-center gap-2 bg-slate-50 dark:bg-slate-955/40 px-3 py-1.5 rounded-xl border border-slate-150 dark:border-slate-800 w-fit">
+                <input
+                  type="checkbox"
+                  id="walkInCustomer"
+                  checked={isWalkIn}
+                  onChange={(e) => handleWalkInChange(e.target.checked)}
+                  className="w-4 h-4 text-brand-600 dark:text-brand-400 bg-white dark:bg-slate-950 border-2 border-slate-300 dark:border-slate-700 rounded focus:ring-brand-500 cursor-pointer"
+                />
+                <label 
+                  htmlFor="walkInCustomer" 
+                  className="text-xs font-bold text-slate-750 dark:text-slate-200 cursor-pointer select-none font-tajawal"
+                >
+                  زبون سفري / عابر (لا يوجد اسم أو هاتف)
+                </label>
+              </div>
+            </div>
             
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
               <Input
@@ -508,6 +526,7 @@ export const Orders: React.FC<OrdersProps> = ({ onNavigate, activeEmployee }) =>
                 onChange={(e) => setCustName(e.target.value)}
                 required
                 placeholder="صالح مسعود..."
+                disabled={isWalkIn}
               />
               <Input
                 label="رقم هاتف الزبون"
@@ -515,6 +534,7 @@ export const Orders: React.FC<OrdersProps> = ({ onNavigate, activeEmployee }) =>
                 onChange={(e) => setCustPhone(e.target.value)}
                 required
                 placeholder="0912345678"
+                disabled={isWalkIn}
               />
               
               <Select
