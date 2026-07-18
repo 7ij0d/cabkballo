@@ -18,6 +18,7 @@ const createAuditLog = async (employeeId: string, action: string, details: strin
 
 export const authService = {
   login: async (credentials: { username: string; password: any }) => {
+    console.log('محاولة تسجيل الدخول:', credentials.username);
     // 1. Fetch employee
     const { data: employee, error } = await supabase
       .from('Employee')
@@ -25,12 +26,17 @@ export const authService = {
       .eq('username', credentials.username.toLowerCase().trim())
       .single();
 
+    console.log('بيانات الموظف المسترجعة من سوبابيز:', { employee, error });
+
     if (error || !employee) {
+      console.warn('لم يتم العثور على الموظف أو حدث خطأ في قاعدة البيانات');
       throw { response: { data: { error: 'اسم المستخدم أو كلمة المرور غير صحيحة' } } };
     }
 
     // 2. Match password hash
+    console.log('مقارنة كلمة المرور مع الهاش المسترجع...');
     const isPasswordValid = await bcrypt.compare(credentials.password, employee.passwordHash);
+    console.log('نتيجة التحقق من كلمة المرور:', isPasswordValid);
     if (!isPasswordValid) {
       throw { response: { data: { error: 'اسم المستخدم أو كلمة المرور غير صحيحة' } } };
     }
