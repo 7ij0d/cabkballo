@@ -285,6 +285,152 @@ export const Orders: React.FC<OrdersProps> = ({ onNavigate, activeEmployee, page
     return { subtotal, grandTotal };
   };
 
+  const addPresetTemplate = (type: 'full-set' | 'cap-rental' | 'cap-sale' | 'brooch') => {
+    if (type === 'full-set') {
+      setItems([
+        {
+          id: Math.random().toString(),
+          category: 'Graduation Cap',
+          customCategory: '',
+          capType: 'Long / Butterfly Cap',
+          customCapType: '',
+          capSize: '',
+          customCapSize: '',
+          capColor: '',
+          customCapColor: '',
+          operationType: 'Rental',
+          customOperation: '',
+          saleType: '',
+          customSaleType: '',
+          broochType: '',
+          customBroochType: '',
+          accessoryName: '',
+          customAccessoryName: '',
+          quantity: '1',
+          unitPrice: '50',
+          depositAmount: '30',
+          deliveryDate: globalDeliveryDate || '',
+          returnDate: globalReturnDate || '',
+          graduationDate: globalGraduationDate || '',
+          notes: 'طقم كاب تخرج فراشة كامل'
+        },
+        {
+          id: Math.random().toString(),
+          category: 'Graduation Brooch',
+          customCategory: '',
+          capType: '',
+          customCapType: '',
+          capSize: '',
+          customCapSize: '',
+          capColor: '',
+          customCapColor: '',
+          operationType: 'Sale',
+          customOperation: '',
+          saleType: '',
+          customSaleType: '',
+          broochType: 'Graduation Year Brooch',
+          customBroochType: '',
+          accessoryName: '',
+          customAccessoryName: '',
+          quantity: '1',
+          unitPrice: '15',
+          depositAmount: '',
+          deliveryDate: '',
+          returnDate: '',
+          graduationDate: '',
+          notes: 'بروش سنة التخرج'
+        }
+      ]);
+    } else if (type === 'cap-rental') {
+      setItems([
+        {
+          id: Math.random().toString(),
+          category: 'Graduation Cap',
+          customCategory: '',
+          capType: 'Long / Butterfly Cap',
+          customCapType: '',
+          capSize: '',
+          customCapSize: '',
+          capColor: '',
+          customCapColor: '',
+          operationType: 'Rental',
+          customOperation: '',
+          saleType: '',
+          customSaleType: '',
+          broochType: '',
+          customBroochType: '',
+          accessoryName: '',
+          customAccessoryName: '',
+          quantity: '1',
+          unitPrice: '50',
+          depositAmount: '30',
+          deliveryDate: globalDeliveryDate || '',
+          returnDate: globalReturnDate || '',
+          graduationDate: globalGraduationDate || '',
+          notes: ''
+        }
+      ]);
+    } else if (type === 'cap-sale') {
+      setItems([
+        {
+          id: Math.random().toString(),
+          category: 'Graduation Cap',
+          customCategory: '',
+          capType: 'American Cap',
+          customCapType: '',
+          capSize: '',
+          customCapSize: '',
+          capColor: '',
+          customCapColor: '',
+          operationType: 'Sale',
+          customOperation: '',
+          saleType: 'Embroidery',
+          customSaleType: '',
+          broochType: '',
+          customBroochType: '',
+          accessoryName: '',
+          customAccessoryName: '',
+          quantity: '1',
+          unitPrice: '75',
+          depositAmount: '',
+          deliveryDate: globalDeliveryDate || '',
+          returnDate: '',
+          graduationDate: globalGraduationDate || '',
+          notes: ''
+        }
+      ]);
+    } else if (type === 'brooch') {
+      setItems([
+        {
+          id: Math.random().toString(),
+          category: 'Graduation Brooch',
+          customCategory: '',
+          capType: '',
+          customCapType: '',
+          capSize: '',
+          customCapSize: '',
+          capColor: '',
+          customCapColor: '',
+          operationType: 'Sale',
+          customOperation: '',
+          saleType: '',
+          customSaleType: '',
+          broochType: 'Name Brooch',
+          customBroochType: '',
+          accessoryName: '',
+          customAccessoryName: '',
+          quantity: '1',
+          unitPrice: '20',
+          depositAmount: '',
+          deliveryDate: '',
+          returnDate: '',
+          graduationDate: '',
+          notes: ''
+        }
+      ]);
+    }
+  };
+
   const handleAddItem = () => {
     const defaultItem = {
       id: Math.random().toString(),
