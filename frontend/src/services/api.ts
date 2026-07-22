@@ -1047,4 +1047,210 @@ export const auditService = {
   },
 };
 
+export interface InternalNoteItem {
+  id: string;
+  title: string;
+  content: string;
+  priority: 'Normal' | 'Info' | 'Important' | 'Urgent' | 'Critical';
+  isPinned: boolean;
+  tags: string[];
+  employeeId: string;
+  employeeName: string;
+  createdAt: string;
+  updatedAt?: string;
+  editedBy?: string;
+}
+
+const DEFAULT_INITIAL_NOTES: InternalNoteItem[] = [
+  {
+    id: 'note-001',
+    title: 'تنبيه بشأن إرجاع إيجار كاب التخرج',
+    content: 'اتصلت الزبونة صفية اليوم وأفادت بطلب تمديد موعد إرجاع الكاب يوم إضافي وسيتم تحصيل باقي القيمة فور الحضور للمحل.',
+    priority: 'Important',
+    isPinned: true,
+    tags: ['إيجار', 'زبون', 'تأكيد'],
+    employeeId: 'emp-1',
+    employeeName: 'طه',
+    createdAt: new Date(Date.now() - 3600000 * 5).toISOString(),
+  },
+  {
+    id: 'note-002',
+    title: 'طلب كميات إضافية من أشرطة التخرج',
+    content: 'تم تواصل المورد وتحديد موعد تسليم الدفعة الجديدة من الأشرطة والبروشات المخصصة يوم الأحد القادم.',
+    priority: 'Normal',
+    isPinned: false,
+    tags: ['موردين', 'مخزن'],
+    employeeId: 'emp-2',
+    employeeName: 'أنس',
+    createdAt: new Date(Date.now() - 3600000 * 24).toISOString(),
+  }
+];
+
+function getLocalNotes(): InternalNoteItem[] {
+  const data = localStorage.getItem('internal_notes');
+  if (!data) {
+    localStorage.setItem('internal_notes', JSON.stringify(DEFAULT_INITIAL_NOTES));
+    return DEFAULT_INITIAL_NOTES;
+  }
+  try {
+    return JSON.parse(data);
+  } catch {
+    return DEFAULT_INITIAL_NOTES;
+  }
+}
+
+function saveLocalNotes(notes: InternalNoteItem[]) {
+  localStorage.setItem('internal_notes', JSON.stringify(notes));
+}
+
+export const noteService = {
+  getAll: async (): Promise<InternalNoteItem[]> => {
+    try {
+      const { data: notes, error } = await supabase
+        .from('InternalNote')
+        .select('*')
+        .order('isPinned', { ascending: false })
+        .order('createdAt', { ascending: false });
+
+      if (error || !notes || notes.length === 0) {
+        return getLocalNotes();
+      }
+      return notes;
+    } catch {
+      return getLocalNotes();
+    }
+  },
+
+  create: async (data: {
+    title?: string;
+    content: string;
+    priority?: 'Normal' | 'Info' | 'Important' | 'Urgent' | 'Critical';
+    isPinned?: boolean;
+    tags?: string[];
+    employeeId: string;
+    employeeName: string;
+  }): Promise<InternalNoteItem> => {
+    const newNote: InternalNoteItem = {
+      id: generateUUID(),
+      title: data.title?.trim() || 'ملاحظة إدارية',
+      content: data.content.trim(),
+      priority: data.priority || 'Normal',
+      isPinned: !!data.isPinned,
+      tags: data.tags || [],
+      employeeId: data.employeeId,
+      employeeName: data.employeeName,
+      createdAt: new Date().toISOString(),
+    };
+
+    try {
+      const { data: inserted, error } = await supabase
+        .from('InternalNote')
+        .insert(newNote)
+        .select()
+        .single();
+      if (!error && inserted) {
+        const local = getLocalNotes();
+        saveLocalNotes([inserted, ...local]);
+        return inserted;
+      }
+    } catch (e) {
+      console.warn('Supabase insert failed, saving locally:', e);
+    }
+
+    const local = getLocalNotes();
+    const updatedLocal = [newNote, ...local];
+    saveLocalNotes(updatedLocal);
+    return newNote;
+  },
+
+  update: async (
+    id: string,
+    data: {
+      title?: string;
+      content?: string;
+      priority?: 'Normal' | 'Info' | 'Important' | 'Urgent' | 'Critical';
+      isPinned?: boolean;
+      tags?: string[];
+      editedBy: string;
+    }
+  ): Promise<InternalNoteItem> => {
+    const updatePayload = {
+      ...data,
+      updatedAt: new Date().toISOString(),
+    };
+
+    try {
+      const { data: updated, error } = await supabase
+        .from('InternalNote')
+        .update(updatePayload)
+        .eq('id', id)
+        .select()
+        .single();
+      if (!error && updated) {
+        const local = getLocalNotes();
+        const next = local.map((n) => (n.id === id ? updated : n));
+        saveLocalNotes(next);
+        return updated;
+      }
+    } catch (e) {
+      console.warn('Supabase update failed, updating locally:', e);
+    }
+
+    const local = getLocalNotes();
+    let updatedNote: InternalNoteItem | null = null;
+    const next = local.map((n) => {
+      if (n.id === id) {
+        updatedNote = {
+          ...n,
+          ...updatePayload,
+        };
+        return updatedNote;
+      }
+      return n;
+    });
+    saveLocalNotes(next);
+    return updatedNote || local[0];
+  },
+
+  delete: async (id: string): Promise<boolean> => {
+    try {
+      await supabase.from('InternalNote').delete().eq('id', id);
+    } catch (e) {
+      console.warn('Supabase delete failed:', e);
+    }
+    const local = getLocalNotes();
+    const next = local.filter((n) => n.id !== id);
+    saveLocalNotes(next);
+    return true;
+  },
+
+  togglePin: async (id: string, currentPinStatus: boolean, employeeName: string): Promise<boolean> => {
+    const newStatus = !currentPinStatus;
+    const updatePayload = {
+      isPinned: newStatus,
+      editedBy: employeeName,
+      updatedAt: new Date().toISOString(),
+    };
+
+    try {
+      await supabase.from('InternalNote').update(updatePayload).eq('id', id);
+    } catch (e) {
+      console.warn('Supabase pin toggle failed:', e);
+    }
+
+    const local = getLocalNotes();
+    const next = local.map((n) => {
+      if (n.id === id) {
+        return {
+          ...n,
+          ...updatePayload,
+        };
+      }
+      return n;
+    });
+    saveLocalNotes(next);
+    return newStatus;
+  },
+};
+
 export default authService;

@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { 
   LayoutDashboard, Users, FileText, RotateCcw, TrendingUp, 
-  ClipboardList, LogOut, Sun, Moon, GraduationCap, Menu, X, ChevronLeft
+  ClipboardList, LogOut, Sun, Moon, GraduationCap, Menu, X, ChevronLeft, NotebookPen
 } from 'lucide-react';
 import Login from './pages/Login';
 import Dashboard from './pages/Dashboard';
@@ -11,6 +11,7 @@ import OrderDetails from './pages/OrderDetails';
 import Returns from './pages/Returns';
 import Reports from './pages/Reports';
 import AuditLogs from './pages/AuditLogs';
+import Notes from './pages/Notes';
 
 export const App: React.FC = () => {
   const [employee, setEmployee] = useState<{ id: string; username: string; name: string } | null>(null);
@@ -74,6 +75,7 @@ export const App: React.FC = () => {
     { id: 'dashboard', label: 'لوحة الإحصائيات', icon: <LayoutDashboard className="w-5 h-5" /> },
     { id: 'customers', label: 'إدارة الزبائن', icon: <Users className="w-5 h-5" /> },
     { id: 'orders', label: 'الطلبات والفواتير', icon: <FileText className="w-5 h-5" /> },
+    { id: 'notes', label: 'الملاحظات الداخلية', icon: <NotebookPen className="w-5 h-5" /> },
     { id: 'returns', label: 'سجل المرتجعات', icon: <RotateCcw className="w-5 h-5" /> },
     { id: 'reports', label: 'التقارير المكتملة', icon: <TrendingUp className="w-5 h-5" /> },
     { id: 'audit', label: 'سجل النظام', icon: <ClipboardList className="w-5 h-5" /> },
@@ -205,6 +207,7 @@ export const App: React.FC = () => {
             />
           )}
           {page === 'returns' && <Returns />}
+          {page === 'notes' && <Notes activeEmployee={employee} />}
           {page === 'reports' && <Reports />}
           {page === 'audit' && <AuditLogs />}
         </main>
