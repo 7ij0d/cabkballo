@@ -280,9 +280,9 @@ export const Customers: React.FC<CustomersProps> = ({ onNavigate, selectedId }) 
                       <th className="py-3 px-4 font-bold font-tajawal">إجراءات</th>
                     </tr>
                   </thead>
-                  <tbody className="divide-y divide-slate-100 dark:divide-slate-800/60">
+                  <tbody className="divide-y divide-[#F3F4F6] dark:divide-slate-800/60">
                     {filteredCustomers.map((c) => (
-                      <tr key={c.id} className="hover:bg-slate-50/60 dark:hover:bg-slate-850/40 transition-colors">
+                      <tr key={c.id} className="ui-table-row">
                         <td className="py-3.5 px-4 font-bold text-slate-900 dark:text-slate-100">{c.name}</td>
                         <td className="py-3.5 px-4 font-semibold text-slate-600 dark:text-slate-400 font-tajawal">
                           <div className="flex items-center gap-2">

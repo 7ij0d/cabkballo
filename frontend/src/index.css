@@ -4,7 +4,7 @@
 
 @layer base {
   body {
-    @apply font-cairo bg-[#F7F8FA] dark:bg-[#0B0F17] text-[#111827] dark:text-slate-100 antialiased selection:bg-emerald-500/20 selection:text-emerald-600;
+    @apply font-cairo bg-[#F8FAFC] dark:bg-[#0B0F17] text-[#111827] dark:text-slate-100 antialiased selection:bg-emerald-500/20 selection:text-emerald-600;
   }
 
   h1, h2, h3, h4 {
@@ -12,17 +12,22 @@
   }
 }
 
-/* ERP Premium UI Card Tokens */
+/* ERP Enterprise Refined UI Utility Tokens (8px Grid Standard) */
 .ui-card {
-  @apply bg-white dark:bg-[#111622] border border-[#ECEEF2] dark:border-slate-800/80 rounded-2xl shadow-[0_4px_20px_rgba(0,0,0,0.04)] p-6 transition-all duration-200;
+  @apply bg-white dark:bg-[#111622] border border-[#E5E7EB] dark:border-slate-800/80 rounded-2xl shadow-[0_2px_12px_rgba(0,0,0,0.03)] p-6 transition-all duration-150;
 }
 
 .ui-panel {
-  @apply bg-white dark:bg-[#111622] border border-[#ECEEF2] dark:border-slate-800/80 rounded-2xl p-6 shadow-[0_4px_20px_rgba(0,0,0,0.04)];
+  @apply bg-white dark:bg-[#111622] border border-[#E5E7EB] dark:border-slate-800/80 rounded-2xl p-6 shadow-[0_2px_12px_rgba(0,0,0,0.03)];
 }
 
 .ui-input {
-  @apply w-full h-12 px-4 rounded-2xl border border-[#E5E7EB] dark:border-slate-800 bg-white dark:bg-[#0B0F17] text-[#111827] dark:text-slate-100 text-sm font-semibold placeholder:text-[#9CA3AF] focus:outline-none focus:ring-2 focus:ring-[#16A34A]/20 focus:border-[#16A34A] transition-all duration-150 shadow-sm disabled:opacity-60 disabled:cursor-not-allowed;
+  @apply w-full h-12 px-4 rounded-2xl border border-[#E5E7EB] dark:border-slate-800 bg-white dark:bg-[#0B0F17] text-[#111827] dark:text-slate-100 text-sm font-semibold placeholder:text-[#9CA3AF] focus:outline-none focus:ring-2 focus:ring-[#16A34A]/20 focus:border-[#16A34A] transition-all duration-150 shadow-none disabled:opacity-60 disabled:cursor-not-allowed;
+}
+
+/* Table Refinements */
+.ui-table-row {
+  @apply h-14 border-b border-[#F3F4F6] dark:border-slate-800/60 transition-colors duration-150 hover:bg-[#F9FAFB]/80 dark:hover:bg-[#161C2C]/50 even:bg-[#FAFAFA]/40 dark:even:bg-[#0E131F]/30;
 }
 
 /* Modern Soft Pill Badges */

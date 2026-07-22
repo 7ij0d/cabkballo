@@ -692,9 +692,9 @@ export const Orders: React.FC<OrdersProps> = ({ onNavigate, activeEmployee, page
                       <th className="py-3 px-4 font-bold font-tajawal text-center">إجراءات</th>
                     </tr>
                   </thead>
-                  <tbody className="divide-y divide-slate-100 dark:divide-slate-800/60">
+                  <tbody className="divide-y divide-[#F3F4F6] dark:divide-slate-800/60">
                     {filteredOrders.map((o) => (
-                      <tr key={o.id} className="hover:bg-slate-50/60 dark:hover:bg-slate-850/40 transition-colors">
+                      <tr key={o.id} className="ui-table-row">
                         <td className="py-3.5 px-4 font-bold text-brand-600 dark:text-brand-400 font-tajawal">{o.orderNumber}</td>
                         <td className="py-3.5 px-4 font-bold text-slate-900 dark:text-slate-100">{o.customer?.name}</td>
                         <td className="py-3.5 px-4 font-semibold text-slate-600 dark:text-slate-400 font-tajawal">

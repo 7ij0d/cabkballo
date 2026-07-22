@@ -260,9 +260,9 @@ export const OrderDetails: React.FC<OrderDetailsProps> = ({
   if (error || !order) {
     return (
       <div className="ui-panel text-center py-12 space-y-4 max-w-md mx-auto mt-12">
-        <AlertCircle className="w-12 h-12 text-rose-500 mx-auto" />
-        <h3 className="text-xl font-bold text-slate-900 dark:text-white">حدث خطأ</h3>
-        <p className="text-sm text-slate-500 font-medium">{error}</p>
+        <AlertCircle className="w-10 h-10 text-[#EF4444] mx-auto" />
+        <h3 className="text-xl font-bold text-[#111827] dark:text-white font-cairo">حدث خطأ في الفاتورة</h3>
+        <p className="text-xs text-[#6B7280] font-medium font-tajawal">{error}</p>
         <Button variant="secondary" onClick={onBack}>الرجوع للفواتير</Button>
       </div>
     );
@@ -272,19 +272,19 @@ export const OrderDetails: React.FC<OrderDetailsProps> = ({
     <div className="space-y-8">
       <div className="no-print space-y-8">
         
-        {/* 1. VISUAL PRIORITY: HEADER (Invoice Number, Payment Status, Outstanding Balance) */}
+        {/* 1. VISUAL PRIORITY HEADER CARD */}
         <div className="ui-card p-6 md:p-8 flex flex-col md:flex-row md:items-center justify-between gap-6">
           <div className="space-y-2">
             <div className="flex items-center gap-3">
               <button 
                 onClick={onBack}
-                className="p-2.5 text-slate-400 hover:text-slate-700 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800 rounded-2xl transition-colors"
+                className="p-2.5 text-[#6B7280] hover:text-[#111827] dark:hover:text-white hover:bg-[#F3F4F6] dark:hover:bg-slate-800 rounded-2xl transition-colors cursor-pointer"
                 title="رجوع"
               >
-                <ArrowLeft className="w-5 h-5 rotate-180" />
+                <ArrowLeft className="w-[18px] h-[18px] rotate-180" />
               </button>
               
-              {/* Priority 1: Invoice Number */}
+              {/* Priority 1: Invoice Number (30px / 700) */}
               <h1 className="text-3xl font-bold font-cairo text-[#111827] dark:text-white tracking-tight">
                 فاتورة رقم {order.orderNumber}
               </h1>
@@ -304,8 +304,8 @@ export const OrderDetails: React.FC<OrderDetailsProps> = ({
             </p>
           </div>
 
-          {/* Priority 3: Outstanding Balance & Primary CTA */}
-          <div className="flex flex-col sm:flex-row items-start sm:items-center gap-6 pt-4 md:pt-0 border-t md:border-t-0 border-[#ECEEF2] dark:border-slate-800">
+          {/* Priority 3: Outstanding Balance & Dominant Primary Button */}
+          <div className="flex flex-col sm:flex-row items-start sm:items-center gap-6 pt-4 md:pt-0 border-t md:border-t-0 border-[#E5E7EB] dark:border-slate-800">
             <div className="text-right sm:text-left">
               <span className="text-xs font-medium text-[#6B7280] font-tajawal block">المتبقي بذمة الزبون</span>
               <h2 className={`text-2xl font-bold font-cairo mt-0.5 ${
@@ -315,11 +315,11 @@ export const OrderDetails: React.FC<OrderDetailsProps> = ({
               </h2>
             </div>
 
-            {/* DOMINANT PRIMARY BUTTON (Only ONE dominant button on the page) */}
+            {/* ONLY ONE DOMINANT PRIMARY BUTTON (Green #16A34A, 48px height) */}
             <Button 
               variant="primary" 
               size="md" 
-              icon={<Plus className="w-5 h-5" />} 
+              icon={<Plus className="w-[18px] h-[18px]" />} 
               onClick={() => { setPaymentFormError(''); setIsPaymentModalOpen(true); }}
             >
               تسجيل دفعة جديدة
@@ -330,18 +330,18 @@ export const OrderDetails: React.FC<OrderDetailsProps> = ({
         {/* Action Toolbar (Secondary Buttons Only) */}
         <div className="flex flex-wrap items-center justify-between gap-3">
           <div className="flex flex-wrap items-center gap-3">
-            <Button variant="secondary" size="sm" icon={<Printer className="w-4 h-4 text-[#6B7280]" />} onClick={() => triggerPrint('invoice')}>
+            <Button variant="secondary" size="md" icon={<Printer className="w-[18px] h-[18px] text-[#6B7280]" />} onClick={() => triggerPrint('invoice')}>
               طباعة الفاتورة
             </Button>
-            <Button variant="secondary" size="sm" icon={<Printer className="w-4 h-4 text-[#6B7280]" />} onClick={() => triggerPrint('rental')}>
+            <Button variant="secondary" size="md" icon={<Printer className="w-[18px] h-[18px] text-[#6B7280]" />} onClick={() => triggerPrint('rental')}>
               طباعة عقد الإيجار
             </Button>
-            <Button variant="secondary" size="sm" icon={<Edit className="w-4 h-4 text-[#6B7280]" />} onClick={() => onNavigate('orders', { editId: order.id })}>
+            <Button variant="secondary" size="md" icon={<Edit className="w-[18px] h-[18px] text-[#6B7280]" />} onClick={() => onNavigate('orders', { editId: order.id })}>
               تعديل بيانات الفاتورة
             </Button>
           </div>
 
-          <Button variant="danger" size="sm" icon={<Trash2 className="w-4 h-4" />} onClick={handleDeleteOrder}>
+          <Button variant="danger" size="md" icon={<Trash2 className="w-[18px] h-[18px]" />} onClick={handleDeleteOrder}>
             حذف الفاتورة
           </Button>
         </div>
@@ -352,20 +352,20 @@ export const OrderDetails: React.FC<OrderDetailsProps> = ({
           {/* LEFT COLUMN */}
           <div className="lg:col-span-2 space-y-8">
             
-            {/* Priority 5: PRODUCTS SECTION (Structured Cards) */}
+            {/* PRODUCTS SECTION (Structured Cards with Generous Spacing) */}
             <div className="space-y-4">
               <div className="flex items-center justify-between px-1">
-                <h2 className="text-22 font-bold font-cairo text-[#111827] dark:text-white">
+                <h2 className="text-xl font-bold font-cairo text-[#111827] dark:text-white">
                   القطع والمنتجات ({order.items.length})
                 </h2>
                 <div className="flex items-center gap-2">
-                  <span className="text-xs text-[#6B7280] font-medium font-tajawal">تغيير الحالة العامة:</span>
-                  <div className="flex items-center gap-1 bg-white dark:bg-slate-900 border border-[#ECEEF2] dark:border-slate-800 p-1 rounded-2xl">
+                  <span className="text-xs text-[#6B7280] font-medium font-tajawal">الحالة العامة:</span>
+                  <div className="flex items-center gap-1 bg-white dark:bg-[#111622] border border-[#E5E7EB] dark:border-slate-800 p-1 rounded-2xl">
                     {['Preparing', 'Ready', 'Delivered', 'Completed'].map((st) => (
                       <button
                         key={st}
                         onClick={() => handleUpdateOrderStatus(st)}
-                        className={`px-3 py-1 rounded-xl text-xs font-semibold font-tajawal transition-all ${
+                        className={`px-3 py-1 rounded-xl text-xs font-semibold font-tajawal transition-all cursor-pointer ${
                           order.status === st ? 'bg-[#16A34A] text-white shadow-xs' : 'text-[#6B7280] hover:text-[#111827]'
                         }`}
                       >
@@ -379,15 +379,15 @@ export const OrderDetails: React.FC<OrderDetailsProps> = ({
               {/* Product Cards List */}
               <div className="space-y-4">
                 {order.items.map((item: any) => (
-                  <div key={item.id} className="ui-card space-y-4">
-                    {/* Header: Name & Type */}
+                  <div key={item.id} className="ui-card space-y-5">
+                    {/* Header: Product Name & Type Badges */}
                     <div className="flex items-start justify-between gap-4">
                       <div>
                         <h3 className="text-lg font-bold text-[#111827] dark:text-white font-cairo">
                           {item.category === 'Other' ? (item.customCategory || 'أخرى') : item.category}
                         </h3>
                         
-                        {/* Small Metadata Chips */}
+                        {/* Small Metadata Chips (Clean Spacing) */}
                         <div className="flex flex-wrap items-center gap-2 mt-2">
                           {item.operationType && (
                             <span className="px-2.5 py-0.5 rounded-md text-xs font-semibold bg-[#F3F4F6] text-[#374151] dark:bg-slate-800 dark:text-slate-300">
@@ -423,7 +423,7 @@ export const OrderDetails: React.FC<OrderDetailsProps> = ({
                       </div>
 
                       {/* Status Badge */}
-                      <span className={`ui-badge text-xs px-3 py-1 rounded-full ${
+                      <span className={`ui-badge text-xs px-3.5 py-1 rounded-full ${
                         item.status === 'Delivered' ? 'bg-[#DCFCE7] text-[#15803D]' :
                         item.status === 'Ready' ? 'bg-[#E0F2FE] text-[#0369A1]' :
                         item.status === 'Returned' ? 'bg-[#F3E8FF] text-[#6B21A8]' :
@@ -433,13 +433,13 @@ export const OrderDetails: React.FC<OrderDetailsProps> = ({
                       </span>
                     </div>
 
-                    <div className="border-t border-[#ECEEF2] dark:border-slate-800" />
+                    <div className="border-t border-[#F3F4F6] dark:border-slate-800" />
 
-                    {/* Quantity, Unit Price & Subtotal */}
+                    {/* Quantity, Unit Price & Dates */}
                     <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 text-sm font-tajawal">
                       <div>
                         <span className="text-xs text-[#6B7280] font-medium block">الكمية والسعر</span>
-                        <span className="text-[17px] font-semibold font-cairo text-[#111827] dark:text-white mt-0.5 block">
+                        <span className="text-base font-semibold font-cairo text-[#111827] dark:text-white mt-0.5 block">
                           {item.quantity} × {formatCurrency(item.unitPrice)}
                         </span>
                       </div>
@@ -453,14 +453,14 @@ export const OrderDetails: React.FC<OrderDetailsProps> = ({
 
                       <div>
                         <span className="text-xs text-[#6B7280] font-medium block">إجمالي القطعة</span>
-                        <span className="text-[17px] font-semibold font-cairo text-[#16A34A] mt-0.5 block">
+                        <span className="text-base font-bold font-cairo text-[#16A34A] mt-0.5 block">
                           {formatCurrency(item.quantity * item.unitPrice)}
                         </span>
                       </div>
                     </div>
 
                     {item.operationType === 'Rental' && (
-                      <div className="p-3.5 bg-[#F9FAFB] dark:bg-[#0B0F17] rounded-xl border border-[#ECEEF2] dark:border-slate-800 flex items-center justify-between text-xs font-tajawal">
+                      <div className="p-3.5 bg-[#F9FAFB] dark:bg-[#0B0F17] rounded-xl border border-[#E5E7EB] dark:border-slate-800 flex items-center justify-between text-xs font-tajawal">
                         <span className="font-medium text-[#4B5563] dark:text-slate-300">
                           تأمين الإيجار: <strong className="text-[#111827] dark:text-white font-cairo">{formatCurrency(item.depositAmount * item.quantity)}</strong> (مسترد عند التسليم السليم)
                         </span>
@@ -473,7 +473,7 @@ export const OrderDetails: React.FC<OrderDetailsProps> = ({
                               setRetQty(item.quantity.toString());
                               setIsReturnModalOpen(true);
                             }}
-                            className="px-3.5 py-1.5 bg-[#F59E0B] hover:bg-[#D97706] text-white rounded-xl text-xs font-bold transition-all"
+                            className="px-3.5 py-1.5 bg-[#F59E0B] hover:bg-[#D97706] text-white rounded-xl text-xs font-bold transition-all cursor-pointer"
                           >
                             تسجيل إرجاع
                           </button>
@@ -485,7 +485,7 @@ export const OrderDetails: React.FC<OrderDetailsProps> = ({
                       </div>
                     )}
 
-                    <div className="border-t border-[#ECEEF2] dark:border-slate-800" />
+                    <div className="border-t border-[#F3F4F6] dark:border-slate-800" />
 
                     {/* Inline Delivery Action Trigger */}
                     <div className="flex items-center justify-between text-xs">
@@ -493,7 +493,7 @@ export const OrderDetails: React.FC<OrderDetailsProps> = ({
                       <div className="flex items-center gap-1.5">
                         <button
                           onClick={() => handleUpdateItemDeliveryStatus(item.id, 'Waiting')}
-                          className={`px-3 py-1 rounded-xl font-semibold transition-all ${
+                          className={`px-3 py-1 rounded-xl font-semibold transition-all cursor-pointer ${
                             item.status === 'Waiting' ? 'bg-[#374151] text-white' : 'bg-[#F3F4F6] text-[#4B5563] hover:bg-[#E5E7EB]'
                           }`}
                         >
@@ -501,7 +501,7 @@ export const OrderDetails: React.FC<OrderDetailsProps> = ({
                         </button>
                         <button
                           onClick={() => handleUpdateItemDeliveryStatus(item.id, 'Ready')}
-                          className={`px-3 py-1 rounded-xl font-semibold transition-all ${
+                          className={`px-3 py-1 rounded-xl font-semibold transition-all cursor-pointer ${
                             item.status === 'Ready' ? 'bg-[#0284C7] text-white' : 'bg-[#F3F4F6] text-[#4B5563] hover:bg-[#E5E7EB]'
                           }`}
                         >
@@ -509,7 +509,7 @@ export const OrderDetails: React.FC<OrderDetailsProps> = ({
                         </button>
                         <button
                           onClick={() => handleUpdateItemDeliveryStatus(item.id, 'Delivered')}
-                          className={`px-3 py-1 rounded-xl font-semibold transition-all ${
+                          className={`px-3 py-1 rounded-xl font-semibold transition-all cursor-pointer ${
                             item.status === 'Delivered' ? 'bg-[#16A34A] text-white' : 'bg-[#F3F4F6] text-[#4B5563] hover:bg-[#E5E7EB]'
                           }`}
                         >
@@ -522,16 +522,16 @@ export const OrderDetails: React.FC<OrderDetailsProps> = ({
               </div>
             </div>
 
-            {/* Priority 6: PAYMENTS TABLE */}
+            {/* PAYMENTS TABLE (Zebra Striped, High Row Height) */}
             <div className="ui-panel space-y-4">
-              <h2 className="text-22 font-bold font-cairo text-[#111827] dark:text-white pb-3 border-b border-[#ECEEF2] dark:border-slate-800">
+              <h2 className="text-xl font-bold font-cairo text-[#111827] dark:text-white pb-3 border-b border-[#E5E7EB] dark:border-slate-800">
                 سجل المقبوضات والدفعات
               </h2>
 
-              <div className="overflow-x-auto rounded-xl border border-[#ECEEF2] dark:border-slate-800">
+              <div className="overflow-x-auto rounded-2xl border border-[#E5E7EB] dark:border-slate-800">
                 <table className="w-full text-right border-collapse text-sm">
                   <thead>
-                    <tr className="border-b border-[#ECEEF2] dark:border-slate-800 bg-[#F9FAFB] dark:bg-[#0B0F17] text-[#6B7280]">
+                    <tr className="border-b border-[#E5E7EB] dark:border-slate-800 bg-[#F9FAFB] dark:bg-[#0B0F17] text-[#6B7280]">
                       <th className="py-3.5 px-4 font-bold font-tajawal">تاريخ الاستلام</th>
                       <th className="py-3.5 px-4 font-bold font-tajawal">الموظف المستلم</th>
                       <th className="py-3.5 px-4 font-bold font-tajawal">طريقة الدفع</th>
@@ -539,9 +539,9 @@ export const OrderDetails: React.FC<OrderDetailsProps> = ({
                       <th className="py-3.5 px-4 font-bold font-tajawal text-center">إجراءات</th>
                     </tr>
                   </thead>
-                  <tbody className="divide-y divide-[#ECEEF2] dark:divide-slate-800">
+                  <tbody>
                     {order.payments.map((p: any) => (
-                      <tr key={p.id} className="hover:bg-[#F9FAFB] dark:hover:bg-slate-800/40 transition-colors h-14">
+                      <tr key={p.id} className="ui-table-row">
                         <td className="py-4 px-4 font-medium text-[#374151] dark:text-slate-300 font-tajawal">{formatDate(p.paymentDate)}</td>
                         <td className="py-4 px-4 font-semibold text-[#111827] dark:text-white">{p.employee?.name || '---'}</td>
                         <td className="py-4 px-4 font-medium text-[#6B7280] font-tajawal">{p.paymentMethod}</td>
@@ -551,10 +551,10 @@ export const OrderDetails: React.FC<OrderDetailsProps> = ({
                             <button
                               type="button"
                               onClick={() => handleDeletePayment(p.id, p.amount)}
-                              className="p-1.5 text-[#9CA3AF] hover:text-[#EF4444] rounded-lg transition-colors"
+                              className="p-1.5 text-[#9CA3AF] hover:text-[#EF4444] rounded-lg transition-colors cursor-pointer"
                               title="حذف الدفعة"
                             >
-                              <Trash2 className="w-4 h-4" />
+                              <Trash2 className="w-[18px] h-[18px]" />
                             </button>
                           </div>
                         </td>
@@ -577,10 +577,10 @@ export const OrderDetails: React.FC<OrderDetailsProps> = ({
           {/* RIGHT COLUMN */}
           <div className="space-y-8">
             
-            {/* Priority 4: CUSTOMER CARD */}
+            {/* CUSTOMER CARD */}
             <div className="ui-card space-y-4">
-              <h3 className="text-lg font-bold text-[#111827] dark:text-white border-b border-[#ECEEF2] dark:border-slate-800 pb-3 flex items-center gap-2">
-                <User className="w-5 h-5 text-[#16A34A]" />
+              <h3 className="text-lg font-bold text-[#111827] dark:text-white border-b border-[#E5E7EB] dark:border-slate-800 pb-3 flex items-center gap-2">
+                <User className="w-[18px] h-[18px] text-[#16A34A]" />
                 بيانات الزبون
               </h3>
 
@@ -592,9 +592,9 @@ export const OrderDetails: React.FC<OrderDetailsProps> = ({
                   {order.customer?.name}
                 </h4>
                 
-                <div className="flex items-center justify-between gap-2 p-3 bg-[#F9FAFB] dark:bg-[#0B0F17] rounded-xl border border-[#ECEEF2] dark:border-slate-800 text-sm font-tajawal">
+                <div className="flex items-center justify-between gap-2 p-3 bg-[#F9FAFB] dark:bg-[#0B0F17] rounded-xl border border-[#E5E7EB] dark:border-slate-800 text-sm font-tajawal">
                   <div className="flex items-center gap-2">
-                    <Phone className="w-4 h-4 text-[#9CA3AF]" />
+                    <Phone className="w-[18px] h-[18px] text-[#9CA3AF]" />
                     <span className="font-semibold text-[#374151] dark:text-slate-200">{order.customer?.phone}</span>
                   </div>
                   {order.customer?.phone && order.customer?.phone !== '/' && (
@@ -604,14 +604,14 @@ export const OrderDetails: React.FC<OrderDetailsProps> = ({
                       rel="noopener noreferrer"
                       className="inline-flex items-center gap-1 px-3 py-1 bg-[#DCFCE7] text-[#15803D] rounded-xl text-xs font-bold hover:bg-[#BBF7D0] transition-colors"
                     >
-                      <MessageCircle className="w-3.5 h-3.5" />
+                      <MessageCircle className="w-[18px] h-[18px]" />
                       <span>تواصل</span>
                     </a>
                   )}
                 </div>
 
                 {order.customer?.notes && (
-                  <div className="p-3 bg-[#F9FAFB] dark:bg-[#0B0F17] rounded-xl text-xs text-[#6B7280] font-tajawal border border-[#ECEEF2] dark:border-slate-800">
+                  <div className="p-3 bg-[#F9FAFB] dark:bg-[#0B0F17] rounded-xl text-xs text-[#6B7280] font-tajawal border border-[#E5E7EB] dark:border-slate-800">
                     <span className="font-bold block text-[#374151] dark:text-slate-300">ملاحظات دائمية:</span>
                     <p className="mt-1 leading-relaxed">{order.customer.notes}</p>
                   </div>
@@ -619,36 +619,36 @@ export const OrderDetails: React.FC<OrderDetailsProps> = ({
               </div>
             </div>
 
-            {/* FINANCIAL PAYMENT WIDGET (Clean Separators, Highlighted Remaining Balance) */}
+            {/* PREMIUM FINANCE WIDGET (Highlight ONLY Remaining Balance) */}
             <div className="ui-card space-y-4">
-              <h3 className="text-lg font-bold text-[#111827] dark:text-white border-b border-[#ECEEF2] dark:border-slate-800 pb-3">
+              <h3 className="text-lg font-bold text-[#111827] dark:text-white border-b border-[#E5E7EB] dark:border-slate-800 pb-3">
                 الملخص المالي للفاتورة
               </h3>
 
               <div className="space-y-3.5 text-sm font-tajawal">
                 <div className="flex justify-between items-center">
                   <span className="text-[#6B7280] font-medium">المجموع الفرعي:</span>
-                  <span className="font-semibold text-[#111827] dark:text-white font-cairo text-[17px]">{formatCurrency(order.subtotal)}</span>
+                  <span className="font-semibold text-[#111827] dark:text-white font-cairo text-base">{formatCurrency(order.subtotal)}</span>
                 </div>
 
                 <div className="flex justify-between items-center text-[#EF4444]">
                   <span className="font-medium">الخصم:</span>
-                  <span className="font-semibold font-cairo text-[17px]">-{formatCurrency(order.discount)}</span>
+                  <span className="font-semibold font-cairo text-base">-{formatCurrency(order.discount)}</span>
                 </div>
 
-                <div className="border-t border-[#ECEEF2] dark:border-slate-800 pt-3 flex justify-between items-center">
+                <div className="border-t border-[#F3F4F6] dark:border-slate-800 pt-3 flex justify-between items-center">
                   <span className="font-bold text-[#111827] dark:text-white">الإجمالي المستحق:</span>
-                  <span className="font-bold font-cairo text-lg text-[#111827] dark:text-white">{formatCurrency(order.grandTotal)}</span>
+                  <span className="font-bold font-cairo text-base text-[#111827] dark:text-white">{formatCurrency(order.grandTotal)}</span>
                 </div>
 
                 <div className="flex justify-between items-center text-[#16A34A]">
                   <span className="font-medium">المدفوع:</span>
-                  <span className="font-semibold font-cairo text-[17px]">+{formatCurrency(order.totalPaid)}</span>
+                  <span className="font-semibold font-cairo text-base">+{formatCurrency(order.totalPaid)}</span>
                 </div>
 
-                {/* HIGHLIGHTED REMAINING BALANCE */}
-                <div className={`border-t-2 border-[#ECEEF2] dark:border-slate-800 pt-3.5 flex justify-between items-center p-3 rounded-xl ${
-                  order.remainingBalance > 0 ? 'bg-[#FEF2F2] dark:bg-rose-950/30' : 'bg-[#F0FDF4] dark:bg-emerald-950/30'
+                {/* HIGHLIGHT ONLY REMAINING BALANCE */}
+                <div className={`border-t border-[#E5E7EB] dark:border-slate-800 pt-3.5 flex justify-between items-center p-3.5 rounded-xl ${
+                  order.remainingBalance > 0 ? 'bg-[#FEF2F2] dark:bg-rose-950/30 border border-[#FCA5A5]/40' : 'bg-[#F0FDF4] dark:bg-emerald-950/30 border border-[#86EFAC]/40'
                 }`}>
                   <span className="font-bold text-sm">المتبقي المطلوب:</span>
                   <span className={`font-bold font-cairo text-xl ${
@@ -747,7 +747,7 @@ export const OrderDetails: React.FC<OrderDetailsProps> = ({
                 <button
                   type="button"
                   onClick={() => setPayAmount(order.remainingBalance.toString())}
-                  className="text-xs font-bold text-[#16A34A] bg-[#DCFCE7] px-2.5 py-1 rounded-lg"
+                  className="text-xs font-bold text-[#16A34A] bg-[#DCFCE7] px-2.5 py-1 rounded-lg cursor-pointer"
                 >
                   إدخال المتبقي كاملاً ({order.remainingBalance} د.ل)
                 </button>
