@@ -825,65 +825,95 @@ export const Orders: React.FC<OrdersProps> = ({ onNavigate, activeEmployee, page
                 <table className="w-full text-right border-collapse text-sm">
                   <thead>
                     <tr className="border-b border-slate-100 dark:border-slate-800/80 bg-slate-50/50 dark:bg-slate-900/50 text-slate-500 dark:text-slate-400">
-                      <th className="py-3 px-4 font-bold font-tajawal">الفاتورة</th>
-                      <th className="py-3 px-4 font-bold font-tajawal">الزبون</th>
-                      <th className="py-3 px-4 font-bold font-tajawal">الهاتف</th>
-                      <th className="py-3 px-4 font-bold font-tajawal">التاريخ</th>
-                      <th className="py-3 px-4 font-bold font-tajawal">المسؤول</th>
-                      <th className="py-3 px-4 font-bold font-tajawal">الإجمالي</th>
+                      <th className="py-3 px-4 font-bold font-tajawal">رقم الفاتورة</th>
+                      <th className="py-3 px-4 font-bold font-tajawal">اسم الزبون والهاتف</th>
+                      <th className="py-3 px-4 font-bold font-tajawal">نوع المعاملة</th>
+                      <th className="py-3 px-4 font-bold font-tajawal">امتى طلع (التسليم)</th>
+                      <th className="py-3 px-4 font-bold font-tajawal">امتى رجع (الإرجاع)</th>
+                      <th className="py-3 px-4 font-bold font-tajawal">امتى التخرج</th>
+                      <th className="py-3 px-4 font-bold font-tajawal">المستحق</th>
                       <th className="py-3 px-4 font-bold font-tajawal">المدفوع</th>
                       <th className="py-3 px-4 font-bold font-tajawal">المتبقي</th>
-                      <th className="py-3 px-4 font-bold font-tajawal">الدفع</th>
-                      <th className="py-3 px-4 font-bold font-tajawal">الحالة</th>
+                      <th className="py-3 px-4 font-bold font-tajawal">حالة التسليم</th>
                       <th className="py-3 px-4 font-bold font-tajawal text-center">إجراءات</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-[#F3F4F6] dark:divide-slate-800/60">
-                    {filteredOrders.map((o) => (
-                      <tr key={o.id} className="ui-table-row">
-                        <td className="py-3.5 px-4 font-bold text-brand-600 dark:text-brand-400 font-tajawal">{o.orderNumber}</td>
-                        <td className="py-3.5 px-4 font-bold text-slate-900 dark:text-slate-100">{o.customer?.name}</td>
-                        <td className="py-3.5 px-4 font-semibold text-slate-600 dark:text-slate-400 font-tajawal">
-                          <div className="flex items-center gap-2">
-                            <span>{o.customer?.phone}</span>
-                            {o.customer?.phone && o.customer?.phone !== '/' && (
-                              <a
-                                href={getWhatsAppLink(o.customer.phone)}
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                className="inline-flex items-center gap-1 px-2 py-0.5 bg-emerald-50 dark:bg-emerald-950/30 text-emerald-600 dark:text-emerald-400 rounded-md text-xs font-bold hover:bg-emerald-100 transition-colors"
-                              >
-                                <MessageCircle className="w-3.5 h-3.5" />
-                                <span>تواصل</span>
-                              </a>
-                            )}
-                          </div>
-                        </td>
-                        <td className="py-3.5 px-4 font-semibold text-slate-500 font-tajawal">{formatDate(o.orderDate)}</td>
-                        <td className="py-3.5 px-4 font-bold text-slate-700 dark:text-slate-300">{o.employee?.name}</td>
-                        <td className="py-3.5 px-4 font-black text-slate-900 dark:text-white font-cairo">{formatCurrency(o.grandTotal)}</td>
-                        <td className="py-3.5 px-4 font-black text-emerald-600 font-cairo">{formatCurrency(o.totalPaid)}</td>
-                        <td className="py-3.5 px-4 font-black text-rose-600 font-cairo">{formatCurrency(o.remainingBalance)}</td>
-                        <td className="py-3.5 px-4">
-                          <span className={`ui-badge ${
-                            o.paymentStatus === 'FullyPaid' ? 'bg-emerald-50 dark:bg-emerald-950/40 text-emerald-600 dark:text-emerald-400' :
-                            o.paymentStatus === 'PartiallyPaid' ? 'bg-sky-50 dark:bg-sky-950/40 text-sky-600 dark:text-sky-400' :
-                            o.paymentStatus === 'DepositPaid' ? 'bg-amber-50 dark:bg-amber-950/40 text-amber-600 dark:text-amber-400' :
-                            'bg-rose-50 dark:bg-rose-950/40 text-rose-600 dark:text-rose-400'
-                          }`}>
-                            {translatePaymentStatus(o.paymentStatus)}
-                          </span>
-                        </td>
-                        <td className="py-3.5 px-4">
-                          <span className={`ui-badge ${
-                            o.status === 'Completed' || o.status === 'Delivered' ? 'bg-emerald-50 dark:bg-emerald-950/40 text-emerald-600 dark:text-emerald-400' :
-                            o.status === 'Cancelled' ? 'bg-rose-50 dark:bg-rose-950/40 text-rose-600 dark:text-rose-400' :
-                            o.status === 'Ready' ? 'bg-sky-50 dark:bg-sky-950/40 text-sky-600 dark:text-sky-400' :
-                            'bg-amber-50 dark:bg-amber-950/40 text-amber-600 dark:text-amber-400'
-                          }`}>
-                            {translateStatus(o.status)}
-                          </span>
-                        </td>
+                    {filteredOrders.map((o) => {
+                      const firstItem = o.items?.[0] || {};
+                      const isRental = o.items?.some((i: any) => i.operationType === 'Rental');
+                      const delDate = firstItem.deliveryDate || o.orderDate;
+                      const retDate = firstItem.returnDate;
+                      const gradDate = firstItem.graduationDate;
+
+                      return (
+                        <tr key={o.id} className="ui-table-row">
+                          {/* 1. رقم الفاتورة */}
+                          <td className="py-3.5 px-4 font-bold text-[#16A34A] font-cairo">{o.orderNumber}</td>
+                          
+                          {/* 2. اسم الزبون والهاتف والواتساب */}
+                          <td className="py-3.5 px-4">
+                            <div className="font-bold text-[#111827] dark:text-white">{o.customer?.name}</div>
+                            <div className="flex items-center gap-1.5 mt-0.5 text-xs font-tajawal text-[#6B7280]">
+                              <span>{o.customer?.phone}</span>
+                              {o.customer?.phone && o.customer?.phone !== '/' && (
+                                <a
+                                  href={getWhatsAppLink(o.customer.phone)}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  className="inline-flex items-center gap-1 px-2 py-0.5 bg-[#DCFCE7] text-[#15803D] rounded-md text-xs font-bold hover:bg-[#BBF7D0] transition-colors"
+                                >
+                                  <MessageCircle className="w-3 h-3" />
+                                  <span>تواصل</span>
+                                </a>
+                              )}
+                            </div>
+                          </td>
+
+                          {/* 3. نوع المعاملة */}
+                          <td className="py-3.5 px-4 font-medium text-xs">
+                            <span className={`px-2.5 py-1 rounded-full font-bold ${
+                              isRental ? 'bg-[#E0F2FE] text-[#0369A1]' : 'bg-[#F3F4F6] text-[#374151]'
+                            }`}>
+                              {isRental ? 'إيجار' : 'بيع'}
+                            </span>
+                          </td>
+
+                          {/* 4. امتى طلع (التسليم) */}
+                          <td className="py-3.5 px-4 font-semibold text-xs text-[#374151] dark:text-slate-300 font-tajawal">
+                            {formatDate(delDate)}
+                          </td>
+
+                          {/* 5. امتى رجع (الإرجاع) */}
+                          <td className="py-3.5 px-4 font-semibold text-xs text-[#374151] dark:text-slate-300 font-tajawal">
+                            {retDate ? formatDate(retDate) : '---'}
+                          </td>
+
+                          {/* 6. امتى التخرج */}
+                          <td className="py-3.5 px-4 font-semibold text-xs text-[#374151] dark:text-slate-300 font-tajawal">
+                            {gradDate ? formatDate(gradDate) : '---'}
+                          </td>
+
+                          {/* 7. المستحق */}
+                          <td className="py-3.5 px-4 font-bold text-[#111827] dark:text-white font-cairo">{formatCurrency(o.grandTotal)}</td>
+                          
+                          {/* 8. المدفوع */}
+                          <td className="py-3.5 px-4 font-bold text-[#16A34A] font-cairo">+{formatCurrency(o.totalPaid)}</td>
+                          
+                          {/* 9. المتبقي */}
+                          <td className="py-3.5 px-4 font-bold text-[#EF4444] font-cairo">{formatCurrency(o.remainingBalance)}</td>
+
+                          {/* 10. حالة التسليم */}
+                          <td className="py-3.5 px-4">
+                            <span className={`ui-badge ${
+                              o.status === 'Completed' || o.status === 'Delivered' ? 'bg-[#DCFCE7] text-[#15803D]' :
+                              o.status === 'Cancelled' ? 'bg-[#FEF2F2] text-[#EF4444]' :
+                              o.status === 'Ready' ? 'bg-[#E0F2FE] text-[#0369A1]' :
+                              'bg-[#FEF3C7] text-[#B45309]'
+                            }`}>
+                              {translateStatus(o.status)}
+                            </span>
+                          </td>
                         <td className="py-3.5 px-4">
                           <div className="flex items-center justify-center gap-1.5">
                             <button 
@@ -912,7 +942,8 @@ export const Orders: React.FC<OrdersProps> = ({ onNavigate, activeEmployee, page
                           </div>
                         </td>
                       </tr>
-                    ))}
+                    );
+                  })}
                     {filteredOrders.length === 0 && (
                       <tr>
                         <td colSpan={11} className="py-16 text-center">
