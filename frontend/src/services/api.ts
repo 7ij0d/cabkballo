@@ -901,14 +901,14 @@ export const reportService = {
   },
 
   getSummary: async (start: string, end: string) => {
-    // Fetch all base records to accurately count completed & returned orders
+    // Fetch all base records using standard Supabase joins
     const { data: orders } = await supabase
       .from('Order')
-      .select('*, Customer!OrderCustomer(name, phone)');
+      .select('*, Customer(name, phone)');
 
     const { data: payments } = await supabase
       .from('Payment')
-      .select('*, Employee!PaymentEmployee(name)');
+      .select('*, Employee(name)');
 
     const { data: allItems } = await supabase.from('OrderItem').select('*');
     const { data: allReturns } = await supabase.from('ReturnLog').select('*');
@@ -916,12 +916,12 @@ export const reportService = {
 
     // Filter orders by date or fallback to all active
     const filteredOrders = orders?.filter((o) => {
-      const oDate = o.orderDate ? o.orderDate.split('T')[0] : '';
+      const oDate = o.orderDate ? o.orderDate.split('T')[0] : (o.createdAt ? o.createdAt.split('T')[0] : '');
       return !start || !end || (oDate >= start && oDate <= end);
     }) || orders || [];
 
     const filteredPayments = payments?.filter((p) => {
-      const pDate = p.paymentDate ? p.paymentDate.split('T')[0] : '';
+      const pDate = p.paymentDate ? p.paymentDate.split('T')[0] : (p.createdAt ? p.createdAt.split('T')[0] : '');
       return !start || !end || (pDate >= start && pDate <= end);
     }) || payments || [];
 
@@ -931,7 +931,7 @@ export const reportService = {
     const totalCustomers = customerIds.length;
 
     const filteredItems = allItems?.filter((i) => orderIds.includes(i.orderId)) || [];
-    const totalSales = filteredItems.filter((i) => i.type === 'Sale' || i.category !== 'Rental').reduce((sum, i) => sum + (i.quantity || 1), 0);
+    const totalSales = filteredItems.filter((i) => i.type === 'Sale' || i.operationType === 'Sale').reduce((sum, i) => sum + (i.quantity || 1), 0);
     const totalRentals = filteredItems.filter((i) => i.type === 'Rental' || i.operationType === 'Rental').reduce((sum, i) => sum + (i.quantity || 1), 0);
 
     // Calculate returned items accurately from both ReturnLog and OrderItem status ('Returned')
