@@ -394,7 +394,59 @@ export const OrderDetails: React.FC<OrderDetailsProps> = ({
           </div>
         </div>
 
-        {/* 2. PROMINENT DATES & DEPOSIT SUMMARY CARD (امتى طلعت، امتى تخرج، امتى رجعت، العربون والضمانة) */}
+        {/* 1.5 PROMINENT ORDER STATUS WORKFLOW BAR */}
+        <div className="ui-panel p-4 flex flex-col md:flex-row md:items-center justify-between gap-3 bg-white dark:bg-[#111622] border border-slate-200/80 dark:border-slate-800">
+          <div className="flex items-center gap-2 font-bold text-xs font-tajawal text-slate-700 dark:text-slate-300">
+            <span>مرحلة الطلبية الحالية:</span>
+            <span className="ui-badge bg-brand-50 text-brand-600 text-xs font-black font-cairo">
+              {translateStatus(order.status)}
+            </span>
+          </div>
+
+          <div className="flex flex-wrap items-center gap-2">
+            <button
+              type="button"
+              onClick={() => handleUpdateOrderStatus('Preparing')}
+              className={`px-3 py-1.5 rounded-xl text-xs font-bold font-tajawal transition-all cursor-pointer ${
+                order.status === 'Preparing' ? 'bg-amber-500 text-white shadow-xs' : 'bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-200'
+              }`}
+            >
+              ⏳ قيد التجهيز
+            </button>
+
+            <button
+              type="button"
+              onClick={() => handleUpdateOrderStatus('Ready')}
+              className={`px-3 py-1.5 rounded-xl text-xs font-bold font-tajawal transition-all cursor-pointer ${
+                order.status === 'Ready' ? 'bg-sky-600 text-white shadow-xs' : 'bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-200'
+              }`}
+            >
+              📦 جاهزة للاستلام
+            </button>
+
+            <button
+              type="button"
+              onClick={() => handleUpdateOrderStatus('Delivered')}
+              className={`px-3 py-1.5 rounded-xl text-xs font-bold font-tajawal transition-all cursor-pointer ${
+                order.status === 'Delivered' ? 'bg-emerald-600 text-white shadow-xs' : 'bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-200'
+              }`}
+            >
+              🚚 استلمها الزبون (تم التسليم)
+            </button>
+
+            <button
+              type="button"
+              onClick={() => handleUpdateOrderStatus('Completed')}
+              className={`px-3 py-1.5 rounded-xl text-xs font-bold font-tajawal transition-all cursor-pointer ${
+                order.status === 'Completed' ? 'bg-slate-900 text-white dark:bg-white dark:text-slate-900 shadow-xs' : 'bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-200'
+              }`}
+            >
+              ✅ اكتملت بالكامل
+            </button>
+          </div>
+        </div>
+
+        {/* 2. PROMINENT DATES & DEPOSIT SUMMARY CARD */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
           
           <div className="ui-card p-4 space-y-1">
@@ -414,7 +466,7 @@ export const OrderDetails: React.FC<OrderDetailsProps> = ({
           <div className="ui-card p-4 space-y-1">
             <span className="text-xs font-bold text-[#6B7280] font-tajawal block">تاريخ الرجوع (الإرجاع)</span>
             <div className="text-base font-bold text-[#D97706] font-cairo">
-              {returnDate ? formatDate(returnDate) : 'غير محدد'}
+              {hasRental ? (returnDate ? formatDate(returnDate) : 'غير محدد') : 'غير ينطبق (بيع نهائي)'}
             </div>
           </div>
 
