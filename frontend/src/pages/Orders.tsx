@@ -230,14 +230,21 @@ export const Orders: React.FC<OrdersProps> = ({ onNavigate, activeEmployee, page
         if (!hasOp) return false;
       }
       if (dateRangeFilter !== 'all') {
-        const now = new Date();
-        const start = new Date();
-        if (dateRangeFilter === 'today') start.setHours(0, 0, 0, 0);
-        else if (dateRangeFilter === 'yesterday') start.setDate(now.getDate() - 1);
-        else if (dateRangeFilter === 'week') start.setDate(now.getDate() - 7);
-        else if (dateRangeFilter === 'month') start.setMonth(now.getMonth() - 1);
-        else if (dateRangeFilter === 'year') start.setFullYear(now.getFullYear() - 1);
-        if (new Date(o.orderDate) < start) return false;
+        const todayStr = new Date().toISOString().split('T')[0];
+        const yesterdayStr = new Date(Date.now() - 86400000).toISOString().split('T')[0];
+        const orderDateStr = o.orderDate ? o.orderDate.split('T')[0] : (o.createdAt ? o.createdAt.split('T')[0] : '');
+
+        if (dateRangeFilter === 'today') {
+          if (orderDateStr !== todayStr) return false;
+        } else if (dateRangeFilter === 'yesterday') {
+          if (orderDateStr !== yesterdayStr) return false;
+        } else if (dateRangeFilter === 'week') {
+          const weekAgoStr = new Date(Date.now() - 7 * 86400000).toISOString().split('T')[0];
+          if (orderDateStr < weekAgoStr) return false;
+        } else if (dateRangeFilter === 'month') {
+          const monthAgoStr = new Date(Date.now() - 30 * 86400000).toISOString().split('T')[0];
+          if (orderDateStr < monthAgoStr) return false;
+        }
       }
       return true;
     });
