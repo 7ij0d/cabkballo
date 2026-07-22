@@ -700,7 +700,7 @@ export const returnService = {
       .select('*, OrderItem(*, Order(orderNumber, Customer(name))), Employee(name)')
       .order('createdAt', { ascending: false });
 
-    return returns?.map((r) => {
+    const formatted = returns?.map((r) => {
       const item = (r as any).OrderItem || {};
       const order = item.Order || {};
       const customer = order.Customer || {};
@@ -710,10 +710,31 @@ export const returnService = {
         employeeName: (r as any).Employee?.name || 'مجهول',
         productName: item.name || 'منتج مجهول',
         category: item.category || 'تصنيف مجهول',
+        orderNumber: order.orderNumber || 'مجهول',
         invoiceNumber: order.orderNumber || 'مجهول',
         customerName: customer.name || 'مجهول',
       };
     }) || [];
+
+    // Deduplicate duplicate logs for the same item, date, and condition
+    const uniqueMap = new Map();
+    formatted.forEach((item) => {
+      const key = item.id ? item.id : `${item.orderItemId}_${item.returnDate}_${item.quantityReturned}_${item.condition}`;
+      if (!uniqueMap.has(key)) {
+        uniqueMap.set(key, item);
+      }
+    });
+
+    // Also filter out pure duplicate content keys
+    const contentMap = new Map();
+    Array.from(uniqueMap.values()).forEach((item) => {
+      const contentKey = `${item.orderItemId}_${item.returnDate}_${item.quantityReturned}_${item.condition}`;
+      if (!contentMap.has(contentKey)) {
+        contentMap.set(contentKey, item);
+      }
+    });
+
+    return Array.from(contentMap.values());
   },
 
   create: async (data: {
