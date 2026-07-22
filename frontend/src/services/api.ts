@@ -120,15 +120,23 @@ export const customerService = {
     const { data: customer } = await supabase.from('Customer').select('*').eq('id', id).single();
     if (!customer) throw new Error('الزبون غير موجود');
 
-    // 2. Fetch their orders
-    const { data: orders } = await supabase
+    // 2. Fetch their orders (matching by customerId, name, or phone)
+    const { data: allOrders } = await supabase
       .from('Order')
-      .select('*, Employee(name)')
-      .eq('customerId', id)
+      .select('*, Employee(name), Customer(name, phone)')
       .order('createdAt', { ascending: false });
 
+    const cleanCustPhone = customer.phone ? customer.phone.replace(/\D/g, '') : '';
+    const orders = allOrders?.filter((o) => {
+      if (o.customerId === id) return true;
+      const cName = (o as any).Customer?.name;
+      const cPhone = (o as any).Customer?.phone;
+      const cleanOrderPhone = cPhone ? cPhone.replace(/\D/g, '') : '';
+      return (cName && cName === customer.name) || (cleanCustPhone && cleanOrderPhone && cleanCustPhone === cleanOrderPhone);
+    }) || [];
+
     // 3. Fetch all items for these orders
-    const orderIds = orders?.map((o) => o.id) || [];
+    const orderIds = orders.map((o) => o.id);
     const { data: items } = orderIds.length > 0
       ? await supabase.from('OrderItem').select('*').in('orderId', orderIds)
       : { data: [] };
@@ -138,14 +146,16 @@ export const customerService = {
       ? await supabase.from('Payment').select('*, Employee(name)').in('orderId', orderIds)
       : { data: [] };
 
-    const formattedOrders = orders?.map((o) => {
+    const formattedOrders = orders.map((o) => {
       const oItems = items?.filter((i) => i.orderId === o.id) || [];
       return {
         ...o,
+        orderNumber: o.orderNumber,
+        invoiceNumber: o.orderNumber,
         employeeName: (o as any).Employee?.name || 'مجهول',
         items: oItems,
       };
-    }) || [];
+    });
 
     const rentals = items?.filter((i) => i.type === 'Rental') || [];
 
