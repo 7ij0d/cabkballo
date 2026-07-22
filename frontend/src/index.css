@@ -4,68 +4,40 @@
 
 @layer base {
   body {
-    @apply font-cairo bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 transition-colors duration-200;
-    position: relative;
-    background-image: 
-      radial-gradient(at 5% 5%, rgba(49, 176, 129, 0.05) 0px, transparent 50%),
-      radial-gradient(at 95% 95%, rgba(212, 175, 55, 0.04) 0px, transparent 50%),
-      radial-gradient(at 95% 5%, rgba(59, 130, 246, 0.03) 0px, transparent 40%);
-    background-attachment: fixed;
-  }
-  
-  .dark body {
-    background-image: 
-      radial-gradient(at 5% 5%, rgba(49, 176, 129, 0.08) 0px, transparent 50%),
-      radial-gradient(at 95% 95%, rgba(212, 175, 55, 0.05) 0px, transparent 50%),
-      radial-gradient(at 95% 5%, rgba(59, 130, 246, 0.04) 0px, transparent 40%);
+    @apply font-cairo bg-[#F8FAFC] dark:bg-[#0B0F17] text-slate-900 dark:text-slate-100 antialiased selection:bg-brand-500/20 selection:text-brand-600;
   }
 }
 
-/* Glassmorphism card utilities */
-.glass-panel {
-  @apply bg-white/80 dark:bg-slate-900/70 backdrop-blur-md border border-slate-200/50 dark:border-slate-800/40;
+/* Modern Card & Panel Utilities */
+.ui-card {
+  @apply bg-white dark:bg-[#111622] border border-slate-200/80 dark:border-slate-800/80 rounded-2xl shadow-sm hover:border-slate-300 dark:hover:border-slate-700/80 transition-all duration-200;
 }
 
-.glass-panel-heavy {
-  @apply bg-white/95 dark:bg-slate-900/90 backdrop-blur-xl border border-slate-200/60 dark:border-slate-800/60;
+.ui-panel {
+  @apply bg-white dark:bg-[#111622] border border-slate-200/80 dark:border-slate-800/80 rounded-2xl p-5 md:p-6 shadow-sm;
 }
 
-/* Legendary floating orbs */
-.glow-orb {
-  position: absolute;
-  border-radius: 50%;
-  filter: blur(100px);
-  opacity: 0.12;
-  pointer-events: none;
-  z-index: 0;
+.ui-input {
+  @apply w-full px-4 py-2.5 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-[#0B0F17] text-slate-900 dark:text-slate-100 text-sm font-semibold placeholder:text-slate-400 dark:placeholder:text-slate-600 focus:outline-none focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500 transition-all duration-150 shadow-sm disabled:opacity-60 disabled:cursor-not-allowed;
 }
 
-.glow-orb-primary {
-  background: radial-gradient(circle, #31b081 0%, transparent 70%);
+.ui-badge {
+  @apply inline-flex items-center gap-1.5 px-3 py-1 rounded-lg text-xs font-bold font-tajawal transition-all duration-150;
 }
 
-.glow-orb-secondary {
-  background: radial-gradient(circle, #d4af37 0%, transparent 70%);
-}
-
-/* Custom premium hover effects */
-.hover-premium-glow {
-  @apply transition-all duration-300 hover:shadow-lg hover:shadow-brand-500/5 hover:border-brand-500/30;
-}
-
-/* Custom scrollbars */
+/* Custom crisp scrollbars */
 ::-webkit-scrollbar {
-  width: 8px;
-  height: 8px;
+  width: 6px;
+  height: 6px;
 }
 ::-webkit-scrollbar-track {
   @apply bg-transparent;
 }
 ::-webkit-scrollbar-thumb {
-  @apply bg-slate-200 dark:bg-slate-800 rounded-full hover:bg-slate-300 dark:hover:bg-slate-700;
+  @apply bg-slate-300/60 dark:bg-slate-800/80 rounded-full hover:bg-slate-400 dark:hover:bg-slate-700;
 }
 
-/* Print CSS Styles */
+/* Print Styles */
 @media print {
   body {
     background: white !important;

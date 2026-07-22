@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { 
   LayoutDashboard, Users, FileText, RotateCcw, TrendingUp, 
-  ClipboardList, LogOut, Sun, Moon, GraduationCap, Menu, X, Check 
+  ClipboardList, LogOut, Sun, Moon, GraduationCap, Menu, X, ChevronLeft
 } from 'lucide-react';
 import Login from './pages/Login';
 import Dashboard from './pages/Dashboard';
@@ -30,7 +30,6 @@ export const App: React.FC = () => {
     if (token && storedEmp) {
       setEmployee(JSON.parse(storedEmp));
     }
-    // Force light theme by default if no theme is set
     if (!localStorage.getItem('theme')) {
       localStorage.setItem('theme', 'light');
       setDarkMode(false);
@@ -67,144 +66,136 @@ export const App: React.FC = () => {
     window.scrollTo(0, 0);
   };
 
-  // If not logged in, render Login
   if (!employee) {
     return <Login onLoginSuccess={handleLoginSuccess} />;
   }
 
-  // Sidebar navigation items
   const navItems = [
-    { id: 'dashboard', label: 'لوحة التحكم', icon: <LayoutDashboard className="w-5 h-5" /> },
-    { id: 'customers', label: 'الزبائن', icon: <Users className="w-5 h-5" /> },
+    { id: 'dashboard', label: 'لوحة الإحصائيات', icon: <LayoutDashboard className="w-5 h-5" /> },
+    { id: 'customers', label: 'إدارة الزبائن', icon: <Users className="w-5 h-5" /> },
     { id: 'orders', label: 'الطلبات والفواتير', icon: <FileText className="w-5 h-5" /> },
-    { id: 'returns', label: 'عمليات الإرجاع', icon: <RotateCcw className="w-5 h-5" /> },
-    { id: 'reports', label: 'التقارير المالية', icon: <TrendingUp className="w-5 h-5" /> },
-    { id: 'audit', label: 'سجل العمليات', icon: <ClipboardList className="w-5 h-5" /> },
+    { id: 'returns', label: 'سجل المرتجعات', icon: <RotateCcw className="w-5 h-5" /> },
+    { id: 'reports', label: 'التقارير المكتملة', icon: <TrendingUp className="w-5 h-5" /> },
+    { id: 'audit', label: 'سجل النظام', icon: <ClipboardList className="w-5 h-5" /> },
   ];
 
   return (
-    <div className="min-h-screen flex bg-slate-50 dark:bg-slate-950 transition-colors duration-200">
+    <div className="min-h-screen flex bg-[#F8FAFC] dark:bg-[#0B0F17] text-slate-900 dark:text-slate-100 transition-colors duration-200">
       
-      {/* 1. SIDEBAR PANEL (RTL - Right Side) */}
+      {/* SIDEBAR */}
       <aside className={`
-        fixed inset-y-0 right-0 z-40 w-64 bg-slate-950/95 dark:bg-slate-900/95 backdrop-blur-md text-slate-100 border-l border-slate-800/80 shadow-2xl flex flex-col justify-between transition-transform duration-300 no-print
+        fixed inset-y-0 right-0 z-50 w-72 bg-white dark:bg-[#111622] text-slate-900 dark:text-slate-100 border-l border-slate-200/80 dark:border-slate-800/80 shadow-xl flex flex-col justify-between transition-transform duration-300 no-print
         lg:translate-x-0 lg:static
         ${mobileMenuOpen ? 'translate-x-0' : 'translate-x-full lg:translate-x-0'}
       `}>
-        {/* Sidebar Brand Header */}
-        <div className="p-6 border-b border-slate-850/80 flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <div className="w-11 h-11 bg-gradient-to-tr from-brand-600 to-brand-500 rounded-2xl flex items-center justify-center text-white shadow-lg shadow-brand-500/25 transform hover:rotate-6 transition-all duration-300">
-              <GraduationCap className="w-6 h-6" />
-            </div>
-            <div>
-              <h2 className="text-base font-black font-cairo text-white tracking-wide">متجر التخرج</h2>
-              <span className="text-xs text-slate-500 font-bold block font-tajawal">لوحة إدارة المعرض</span>
-            </div>
-          </div>
-          <button 
-            onClick={() => setMobileMenuOpen(false)}
-            className="p-2 lg:hidden text-slate-400 hover:text-white rounded-xl hover:bg-slate-800"
-          >
-            <X className="w-5 h-5" />
-          </button>
-        </div>
-
-        {/* Navigation items list */}
-        <nav className="flex-1 px-4 py-6 space-y-2 overflow-y-auto">
-          {navItems.map((item) => {
-            const isActive = page === item.id || (item.id === 'orders' && page === 'order-details');
-            return (
-              <button
-                key={item.id}
-                onClick={() => navigateTo(item.id)}
-                className={`
-                  w-full flex items-center gap-3.5 px-4.5 py-3 rounded-2xl text-sm font-bold font-cairo transition-all duration-200 transform
-                  ${isActive 
-                    ? 'bg-gradient-to-l from-brand-600 to-brand-500 text-white shadow-lg shadow-brand-600/20 scale-[1.02]' 
-                    : 'text-slate-400 hover:bg-slate-850 hover:text-white hover:translate-x-[-4px]'
-                  }
-                `}
-              >
-                <span className={`transition-transform duration-200 ${isActive ? 'scale-110' : 'text-slate-400'}`}>
-                  {item.icon}
-                </span>
-                <span>{item.label}</span>
-              </button>
-            );
-          })}
-        </nav>
-
-        {/* Sidebar Footer Controls */}
-        <div className="p-4 border-t border-slate-850/80 space-y-4">
-          
-          {/* Theme & Profile Panel */}
-          <div className="bg-slate-950/40 p-3.5 rounded-2xl space-y-4 border border-slate-850/50">
-            <div className="flex items-center justify-between text-sm">
-              <div className="flex items-center gap-2">
-                <div className="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse" />
-                <span className="font-bold text-slate-200 font-cairo">الموظف: {employee.name}</span>
+        <div>
+          {/* Header Logo */}
+          <div className="p-6 border-b border-slate-100 dark:border-slate-800/80 flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 bg-brand-600 text-white rounded-xl flex items-center justify-center shadow-md shadow-brand-600/20">
+                <GraduationCap className="w-6 h-6" />
               </div>
-              
-              <button
-                onClick={() => setDarkMode(!darkMode)}
-                className="p-2 bg-slate-850 hover:bg-slate-850 text-slate-400 hover:text-white rounded-xl transition-all border border-slate-800"
-                title="تبديل المظهر"
-              >
-                {darkMode ? <Sun className="w-4 h-4 text-amber-400" /> : <Moon className="w-4 h-4" />}
-              </button>
+              <div>
+                <h2 className="text-base font-black font-cairo text-slate-900 dark:text-white tracking-wide">متجر التخرج</h2>
+                <span className="text-xs text-slate-500 font-bold block font-tajawal">نظام المبيعات والإيجار</span>
+              </div>
             </div>
-            
-            <button
-              onClick={handleLogout}
-              className="w-full py-2.5 bg-slate-850 hover:bg-red-950/40 hover:text-red-400 text-slate-400 text-xs font-bold rounded-xl transition-all border border-slate-800 flex items-center justify-center gap-2"
+            <button 
+              onClick={() => setMobileMenuOpen(false)}
+              className="p-2 lg:hidden text-slate-400 hover:text-slate-700 dark:hover:text-white rounded-xl"
             >
-              <LogOut className="w-4 h-4" />
-              تسجيل الخروج
+              <X className="w-5 h-5" />
             </button>
           </div>
 
-          <div className="text-center">
-            <span className="text-[10px] text-slate-655 font-bold block font-tajawal select-none">
-              المطور: طه | نظام تجاري معتمد © 2026
-            </span>
+          {/* Navigation Items */}
+          <nav className="p-4 space-y-1.5">
+            {navItems.map((item) => {
+              const isActive = page === item.id || (item.id === 'orders' && page === 'order-details');
+              return (
+                <button
+                  key={item.id}
+                  onClick={() => navigateTo(item.id)}
+                  className={`
+                    w-full flex items-center justify-between px-4 py-3 rounded-xl text-sm font-bold font-cairo transition-all duration-150
+                    ${isActive 
+                      ? 'bg-brand-600 text-white shadow-md shadow-brand-600/20' 
+                      : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800/60 hover:text-slate-900 dark:hover:text-white'
+                    }
+                  `}
+                >
+                  <div className="flex items-center gap-3">
+                    <span className={isActive ? 'text-white' : 'text-slate-400 dark:text-slate-500'}>
+                      {item.icon}
+                    </span>
+                    <span>{item.label}</span>
+                  </div>
+                  {isActive && <ChevronLeft className="w-4 h-4 opacity-70 rotate-180" />}
+                </button>
+              );
+            })}
+          </nav>
+        </div>
+
+        {/* Footer User Info */}
+        <div className="p-4 border-t border-slate-100 dark:border-slate-800/80 space-y-3">
+          <div className="bg-slate-50 dark:bg-[#0B0F17] p-3.5 rounded-xl flex items-center justify-between border border-slate-200/60 dark:border-slate-800/60">
+            <div className="flex items-center gap-2.5">
+              <div className="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse" />
+              <div className="text-right">
+                <span className="text-xs font-bold text-slate-800 dark:text-slate-200 block font-cairo">
+                  {employee.name}
+                </span>
+                <span className="text-[10px] text-slate-400 font-semibold font-tajawal">موظف معتمد</span>
+              </div>
+            </div>
+            
+            <button
+              onClick={() => setDarkMode(!darkMode)}
+              className="p-2 bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-300 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-700 transition-all border border-slate-200 dark:border-slate-700"
+              title="تغيير المظهر"
+            >
+              {darkMode ? <Sun className="w-4 h-4 text-amber-400" /> : <Moon className="w-4 h-4 text-slate-600" />}
+            </button>
           </div>
+          
+          <button
+            onClick={handleLogout}
+            className="w-full py-2.5 bg-slate-100 hover:bg-red-50 dark:bg-slate-800/60 dark:hover:bg-red-950/30 text-slate-600 dark:text-slate-400 hover:text-red-600 dark:hover:text-red-400 text-xs font-bold rounded-xl transition-all border border-slate-200/60 dark:border-slate-800/60 flex items-center justify-center gap-2"
+          >
+            <LogOut className="w-4 h-4" />
+            تسجيل الخروج
+          </button>
         </div>
 
       </aside>
 
-      {/* 2. MAIN LAYOUT CONTAINER (Left Side) */}
-      <div className="flex-1 flex flex-col overflow-hidden w-full">
+      {/* MAIN CONTAINER */}
+      <div className="flex-1 flex flex-col min-w-0 overflow-hidden">
         
-        {/* Mobile Header Bar */}
-        <header className="bg-white dark:bg-slate-900 border-b border-slate-100 dark:border-slate-850 p-4 flex items-center justify-between lg:hidden no-print">
-          <div className="flex items-center gap-2">
-            <GraduationCap className="w-6 h-6 text-brand-600" />
-            <h1 className="text-sm font-black text-slate-800 dark:text-white">إدارة متجر التخرج</h1>
+        {/* Mobile Navbar */}
+        <header className="bg-white dark:bg-[#111622] border-b border-slate-200/80 dark:border-slate-800/80 p-4 flex items-center justify-between lg:hidden no-print">
+          <div className="flex items-center gap-2.5">
+            <div className="w-8 h-8 bg-brand-600 text-white rounded-lg flex items-center justify-center">
+              <GraduationCap className="w-5 h-5" />
+            </div>
+            <h1 className="text-sm font-black text-slate-900 dark:text-white font-cairo">متجر التخرج</h1>
           </div>
           
           <button 
             onClick={() => setMobileMenuOpen(true)}
-            className="p-1.5 text-slate-500 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg"
+            className="p-2 text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-xl"
           >
             <Menu className="w-6 h-6" />
           </button>
         </header>
 
-        {/* Dynamic Page Render Area */}
+        {/* Content View */}
         <main className="flex-1 p-4 md:p-6 lg:p-8 overflow-y-auto w-full max-w-[1600px] mx-auto print:p-0">
-          {page === 'dashboard' && (
-            <Dashboard onNavigate={navigateTo} />
-          )}
-          {page === 'customers' && (
-            <Customers onNavigate={navigateTo} />
-          )}
-          {page === 'customer-profile' && (
-            <Customers onNavigate={navigateTo} selectedId={pageParams.id} />
-          )}
-          {page === 'orders' && (
-            <Orders onNavigate={navigateTo} activeEmployee={employee} pageParams={pageParams} />
-          )}
+          {page === 'dashboard' && <Dashboard onNavigate={navigateTo} />}
+          {page === 'customers' && <Customers onNavigate={navigateTo} />}
+          {page === 'customer-profile' && <Customers onNavigate={navigateTo} selectedId={pageParams.id} />}
+          {page === 'orders' && <Orders onNavigate={navigateTo} activeEmployee={employee} pageParams={pageParams} />}
           {page === 'order-details' && (
             <OrderDetails 
               orderId={pageParams.id} 
@@ -213,15 +204,9 @@ export const App: React.FC = () => {
               activeEmployee={employee}
             />
           )}
-          {page === 'returns' && (
-            <Returns />
-          )}
-          {page === 'reports' && (
-            <Reports />
-          )}
-          {page === 'audit' && (
-            <AuditLogs />
-          )}
+          {page === 'returns' && <Returns />}
+          {page === 'reports' && <Reports />}
+          {page === 'audit' && <AuditLogs />}
         </main>
 
       </div>

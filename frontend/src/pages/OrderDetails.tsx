@@ -41,7 +41,6 @@ export const OrderDetails: React.FC<OrderDetailsProps> = ({
   const [error, setError] = useState('');
   const [employees, setEmployees] = useState<any[]>([]);
 
-  // Load employees list from database
   useEffect(() => {
     const loadEmployees = async () => {
       try {
@@ -56,12 +55,10 @@ export const OrderDetails: React.FC<OrderDetailsProps> = ({
     loadEmployees();
   }, []);
 
-  // Modal control
   const [isPaymentModalOpen, setIsPaymentModalOpen] = useState(false);
   const [isReturnModalOpen, setIsReturnModalOpen] = useState(false);
   const [selectedReturnItem, setSelectedReturnItem] = useState<any | null>(null);
 
-  // Add Payment Form
   const [payAmount, setPayAmount] = useState('');
   const [payDate, setPayDate] = useState(new Date().toISOString().split('T')[0]);
   const [payMethod, setPayMethod] = useState('');
@@ -72,7 +69,6 @@ export const OrderDetails: React.FC<OrderDetailsProps> = ({
   const [isPaymentSubmitting, setIsPaymentSubmitting] = useState(false);
   const [paymentFormError, setPaymentFormError] = useState('');
 
-  // Return Product Form
   const [retQty, setRetQty] = useState('');
   const [retDate, setRetDate] = useState(new Date().toISOString().split('T')[0]);
   const [retCondition, setRetCondition] = useState('');
@@ -83,7 +79,6 @@ export const OrderDetails: React.FC<OrderDetailsProps> = ({
   const [isReturnSubmitting, setIsReturnSubmitting] = useState(false);
   const [returnFormError, setReturnFormError] = useState('');
 
-  // Active print template details
   const [printType, setPrintType] = useState<'invoice' | 'receipt' | 'rental' | 'return' | null>(null);
   const [printPaymentData, setPrintPaymentData] = useState<any | null>(null);
   const [printReturnData, setPrintReturnData] = useState<any | null>(null);
@@ -105,35 +100,40 @@ export const OrderDetails: React.FC<OrderDetailsProps> = ({
     fetchOrderDetails();
   }, [orderId]);
 
-  // Set default employee receiver on opening modals
   useEffect(() => {
     if (activeEmployee) {
-      if (isPaymentModalOpen) {
-        setPayEmpId(activeEmployee.id);
-      }
-      if (isReturnModalOpen) {
-        setRetEmpId(activeEmployee.id);
-      }
+      if (isPaymentModalOpen) setPayEmpId(activeEmployee.id);
+      if (isReturnModalOpen) setRetEmpId(activeEmployee.id);
     }
   }, [isPaymentModalOpen, isReturnModalOpen, activeEmployee]);
 
+  // Instant 0ms Optimistic Order Status Update
   const handleUpdateOrderStatus = async (status: string) => {
+    setOrder((prev: any) => prev ? { ...prev, status } : null);
     try {
       await orderService.update(orderId, { status });
-      fetchOrderDetails();
     } catch (err) {
       console.error(err);
       alert('فشل تعديل حالة الطلب.');
+      fetchOrderDetails();
     }
   };
 
+  // Instant 0ms Optimistic Item Delivery Status Update
   const handleUpdateItemDeliveryStatus = async (itemId: string, status: string) => {
+    setOrder((prev: any) => {
+      if (!prev) return null;
+      return {
+        ...prev,
+        items: prev.items.map((item: any) => item.id === itemId ? { ...item, status } : item)
+      };
+    });
     try {
       await orderService.updateItemStatus(itemId, status);
-      fetchOrderDetails();
     } catch (err) {
       console.error(err);
       alert('فشل تعديل حالة تسليم المنتج.');
+      fetchOrderDetails();
     }
   };
 
@@ -162,7 +162,6 @@ export const OrderDetails: React.FC<OrderDetailsProps> = ({
         employeeId: payEmpId
       });
       setIsPaymentModalOpen(false);
-      // Reset Form
       setPayAmount('');
       setPayMethod('');
       setCustomPayMethod('');
@@ -216,7 +215,7 @@ export const OrderDetails: React.FC<OrderDetailsProps> = ({
   };
 
   const handleDeleteOrder = async () => {
-    if (window.confirm('هل أنت متأكد من رغبتك في حذف هذه الفاتورة بالكامل؟ لا يمكن التراجع عن هذا الإجراء.')) {
+    if (window.confirm('هل أنت متأكد من رغبتك في حذف هذه الفاتورة بالكامل؟')) {
       try {
         await orderService.delete(orderId);
         onBack();
@@ -228,8 +227,14 @@ export const OrderDetails: React.FC<OrderDetailsProps> = ({
   };
 
   const handleDeletePayment = async (id: string, amount: number) => {
-    if (window.confirm(`هل أنت متأكد من رغبتك في حذف دفعة العربون البالغة ${amount} د.ل؟`)) {
+    if (window.confirm(`هل أنت متأكد من حذف دفعة العربون البالغة ${amount} د.ل؟`)) {
       try {
+        setOrder((prev: any) => prev ? {
+          ...prev,
+          payments: prev.payments.filter((p: any) => p.id !== id),
+          totalPaid: Math.max(0, prev.totalPaid - amount),
+          remainingBalance: prev.remainingBalance + amount
+        } : null);
         await paymentService.delete(id, activeEmployee?.id || 'مجهول');
         fetchOrderDetails();
       } catch (err: any) {
@@ -243,8 +248,6 @@ export const OrderDetails: React.FC<OrderDetailsProps> = ({
     setPrintType(type);
     if (type === 'receipt') setPrintPaymentData(data);
     if (type === 'return') setPrintReturnData(data);
-    
-    // Give state time to update print layout, then print
     setTimeout(() => {
       window.print();
     }, 150);
@@ -252,7 +255,7 @@ export const OrderDetails: React.FC<OrderDetailsProps> = ({
 
   if (isLoading) {
     return (
-      <div className="space-y-6 animate-pulse py-6">
+      <div className="space-y-6 py-6 animate-pulse">
         <div className="h-10 bg-slate-200 dark:bg-slate-800 rounded-xl w-64" />
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           <div className="h-96 bg-slate-200 dark:bg-slate-800 rounded-2xl lg:col-span-2" />
@@ -264,13 +267,13 @@ export const OrderDetails: React.FC<OrderDetailsProps> = ({
 
   if (error || !order) {
     return (
-      <div className="bg-red-50 dark:bg-red-950/20 border border-red-200 dark:border-red-900/40 p-6 rounded-2xl text-center max-w-xl mx-auto space-y-3 mt-12">
-        <AlertCircle className="w-12 h-12 text-red-500 mx-auto" />
-        <h3 className="text-lg font-bold text-red-800 dark:text-red-400">حدث خطأ</h3>
-        <p className="text-sm text-red-655 dark:text-red-300 font-semibold">{error}</p>
+      <div className="bg-rose-50 dark:bg-rose-950/20 border border-rose-200 dark:border-rose-900/40 p-6 rounded-2xl text-center max-w-xl mx-auto space-y-3 mt-12">
+        <AlertCircle className="w-12 h-12 text-rose-500 mx-auto" />
+        <h3 className="text-lg font-bold text-rose-800 dark:text-rose-400">حدث خطأ</h3>
+        <p className="text-sm text-rose-600 dark:text-rose-300 font-semibold">{error}</p>
         <button 
           onClick={onBack}
-          className="px-6 py-3 bg-slate-200 hover:bg-slate-300 text-slate-800 rounded-xl text-sm font-bold transition-all"
+          className="px-6 py-2.5 bg-slate-200 text-slate-800 rounded-xl text-sm font-bold"
         >
           رجوع
         </button>
@@ -280,162 +283,106 @@ export const OrderDetails: React.FC<OrderDetailsProps> = ({
 
   return (
     <div className="space-y-6">
-      
-      {/* 1. Main UI (Hidden when printing via .no-print helper) */}
       <div className="no-print space-y-6">
         
         {/* Navigation & Header */}
-        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div className="flex items-center gap-3">
             <button 
               onClick={onBack}
-              className="p-3 bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-655 dark:text-slate-200 rounded-xl transition-all shadow-sm flex items-center"
+              className="p-2.5 bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 rounded-xl transition-colors"
             >
               <ArrowLeftRight className="w-5 h-5 rotate-180" />
             </button>
             <div>
               <div className="flex items-center gap-2">
-                <h1 className="text-2xl font-black text-slate-800 dark:text-slate-100 font-cairo">
-                  فاتورة تخرج: {order.orderNumber}
+                <h1 className="text-2xl font-black text-slate-900 dark:text-white font-cairo">
+                  فاتورة رقم {order.orderNumber}
                 </h1>
-                <span className={`px-3 py-1 rounded-lg text-xs font-bold ${
-                  order.paymentStatus === 'FullyPaid' ? 'bg-emerald-50 text-emerald-600' :
-                  order.paymentStatus === 'PartiallyPaid' ? 'bg-blue-50 text-blue-650' :
-                  'bg-orange-50 text-orange-655'
+                <span className={`ui-badge ${
+                  order.paymentStatus === 'FullyPaid' ? 'bg-emerald-50 dark:bg-emerald-950/40 text-emerald-600 dark:text-emerald-400' :
+                  order.paymentStatus === 'PartiallyPaid' ? 'bg-sky-50 dark:bg-sky-950/40 text-sky-600 dark:text-sky-400' :
+                  'bg-amber-50 dark:bg-amber-950/40 text-amber-600 dark:text-amber-400'
                 }`}>
                   {translatePaymentStatus(order.paymentStatus)}
                 </span>
               </div>
-              <p className="text-sm text-slate-500 dark:text-slate-400 font-bold font-tajawal mt-1">
-                تاريخ الطلب: {formatDate(order.orderDate)} | الموظف المسؤول: {order.employee.name}
+              <p className="text-xs text-slate-500 font-semibold font-tajawal mt-0.5">
+                تاريخ الطلب: {formatDate(order.orderDate)} | الموظف: {order.employee?.name || 'غير مخصص'}
               </p>
             </div>
           </div>
 
-          {/* Quick Actions Panel */}
-          <div className="flex flex-wrap gap-2.5">
-            <Button
-              variant="secondary"
-              icon={<Printer className="w-4 h-4" />}
-              onClick={() => triggerPrint('invoice')}
-              className="px-5 py-2.5 text-sm"
-            >
-              طباعة الفاتورة
+          <div className="flex flex-wrap items-center gap-2">
+            <Button variant="secondary" size="sm" icon={<Printer className="w-4 h-4" />} onClick={() => triggerPrint('invoice')}>
+              الفاتورة
             </Button>
-            <Button
-              variant="secondary"
-              icon={<Printer className="w-4 h-4" />}
-              onClick={() => triggerPrint('rental')}
-              className="px-5 py-2.5 text-sm"
-            >
-              طباعة عقد الإيجار
+            <Button variant="secondary" size="sm" icon={<Printer className="w-4 h-4" />} onClick={() => triggerPrint('rental')}>
+              عقد الإيجار
             </Button>
-            <Button
-              variant="secondary"
-              icon={<Edit className="w-4 h-4" />}
-              onClick={() => onNavigate('orders', { editId: order.id })}
-              className="px-5 py-2.5 text-sm"
-            >
-              تعديل الفاتورة
+            <Button variant="secondary" size="sm" icon={<Edit className="w-4 h-4" />} onClick={() => onNavigate('orders', { editId: order.id })}>
+              تعديل
             </Button>
-            <Button
-              variant="success"
-              icon={<Plus className="w-4 h-4" />}
-              onClick={() => {
-                setPaymentFormError('');
-                setIsPaymentModalOpen(true);
-              }}
-              className="px-5 py-2.5 text-sm"
-            >
-              تسجيل دفعة جديدة
+            <Button variant="success" size="sm" icon={<Plus className="w-4 h-4" />} onClick={() => { setPaymentFormError(''); setIsPaymentModalOpen(true); }}>
+              تسجيل دفعة
             </Button>
-            <button
-              onClick={handleDeleteOrder}
-              className="p-3.5 text-slate-400 hover:text-red-650 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-xl transition-all border border-slate-200/20"
-              title="حذف الفاتورة بالكامل"
-            >
+            <button onClick={handleDeleteOrder} className="p-2 text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/30 rounded-xl" title="حذف الفاتورة">
               <Trash2 className="w-5 h-5" />
             </button>
           </div>
         </div>
 
-        {/* General Details Grid */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          
-          {/* Main invoice table & products */}
           <div className="lg:col-span-2 space-y-6">
             
             {/* Products Table Card */}
-            <div className="bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800/80 p-5 rounded-2xl shadow-sm space-y-4">
-              <h3 className="text-base font-bold text-slate-800 dark:text-slate-100 pb-2 border-b border-slate-100 dark:border-slate-800/60 flex items-center justify-between">
-                <span>قائمة المنتجات والقطع الفردية</span>
-                <span className="text-xs text-slate-450 font-bold font-tajawal">عدد العناصر: {order.items.length}</span>
+            <div className="ui-panel space-y-4">
+              <h3 className="text-base font-bold text-slate-900 dark:text-white pb-3 border-b border-slate-100 dark:border-slate-800/80 flex items-center justify-between">
+                <span>منتجات الفاتورة</span>
+                <span className="text-xs text-slate-400 font-bold font-tajawal">عدد العناصر: {order.items.length}</span>
               </h3>
 
-              <div className="divide-y divide-slate-100 dark:divide-slate-850">
+              <div className="divide-y divide-slate-100 dark:divide-slate-800/60">
                 {order.items.map((item: any) => (
-                  <div key={item.id} className="py-4.5 space-y-3.5">
-                    
-                    {/* Item header */}
+                  <div key={item.id} className="py-4 space-y-3">
                     <div className="flex items-start justify-between">
                       <div>
-                        <h4 className="text-base font-black text-slate-850 dark:text-slate-100">
+                        <h4 className="text-base font-bold text-slate-900 dark:text-white">
                           {item.category === 'Other' ? (item.customCategory || 'أخرى') : item.category}
                         </h4>
                         
-                        {/* Sub attributes descriptions */}
-                        <div className="flex flex-wrap gap-x-4 gap-y-1.5 mt-2 text-sm text-slate-550 dark:text-slate-400 font-tajawal font-medium">
-                          {item.capType && (
-                            <span>النوع: {item.capType === 'Other' ? (item.customCapType || 'أخرى') : item.capType}</span>
-                          )}
-                          {item.capSize && (
-                            <span>القياس: {item.capSize === 'Other' ? (item.customCapSize || 'أخرى') : item.capSize}</span>
-                          )}
-                          {item.capColor && (
-                            <span>اللون: {item.capColor === 'Other' ? (item.customCapColor || 'أخرى') : item.capColor}</span>
-                          )}
+                        <div className="flex flex-wrap gap-x-4 gap-y-1 mt-1 text-xs text-slate-500 dark:text-slate-400 font-tajawal font-medium">
+                          {item.capType && <span>النوع: {item.capType === 'Other' ? (item.customCapType || 'أخرى') : item.capType}</span>}
+                          {item.capSize && <span>القياس: {item.capSize === 'Other' ? (item.customCapSize || 'أخرى') : item.capSize}</span>}
+                          {item.capColor && <span>اللون: {item.capColor === 'Other' ? (item.customCapColor || 'أخرى') : item.capColor}</span>}
                           {item.operationType && (
                             <span className="font-bold text-brand-600 dark:text-brand-400">
                               [{item.operationType === 'Rental' ? 'إيجار' : 'بيع'}]
                             </span>
                           )}
-                          {item.saleType && (
-                            <span>ستايل: {item.saleType === 'Other' ? (item.customSaleType || 'أخرى') : item.saleType}</span>
-                          )}
-                          {item.broochType && (
-                            <span>نوع البروش: {item.broochType === 'Other' ? (item.customBroochType || 'أخرى') : item.broochType}</span>
-                          )}
-                          {item.accessoryName && (
-                            <span>إكسسوار: {item.accessoryName}</span>
-                          )}
-                          {item.deliveryDate && (
-                            <span>تسليم: {formatDate(item.deliveryDate)}</span>
-                          )}
-                          {item.returnDate && (
-                            <span>إرجاع متوقع: {formatDate(item.returnDate)}</span>
-                          )}
-                          {item.graduationDate && (
-                            <span>التخرج: {formatDate(item.graduationDate)}</span>
-                          )}
+                          {item.saleType && <span>ستايل: {item.saleType === 'Other' ? (item.customSaleType || 'أخرى') : item.saleType}</span>}
+                          {item.broochType && <span>بروش: {item.broochType === 'Other' ? (item.customBroochType || 'أخرى') : item.broochType}</span>}
+                          {item.accessoryName && <span>إكسسوار: {item.accessoryName}</span>}
+                          {item.deliveryDate && <span>تسليم: {formatDate(item.deliveryDate)}</span>}
+                          {item.returnDate && <span>إرجاع متوقع: {formatDate(item.returnDate)}</span>}
+                          {item.graduationDate && <span>التخرج: {formatDate(item.graduationDate)}</span>}
                         </div>
                       </div>
 
-                      {/* Prices & Subtotals */}
                       <div className="text-left font-cairo">
-                        <span className="text-sm font-bold text-slate-750 dark:text-slate-350">
+                        <span className="text-xs font-bold text-slate-500">
                           {item.quantity} × {formatCurrency(item.unitPrice)}
                         </span>
-                        <div className="text-base font-black text-slate-850 dark:text-slate-100 mt-0.5">
+                        <div className="text-base font-black text-slate-900 dark:text-white mt-0.5">
                           {formatCurrency(item.quantity * item.unitPrice)}
                         </div>
                       </div>
                     </div>
 
-                    {/* Rented deposit & Return buttons */}
                     {item.operationType === 'Rental' && (
-                      <div className="flex flex-wrap items-center justify-between gap-3 bg-slate-50 dark:bg-slate-950/40 p-3.5 rounded-xl border border-slate-150/40 dark:border-slate-850/50">
-                        <span className="text-xs font-bold text-slate-655 dark:text-slate-400 font-tajawal">
-                          تأمين الإيجار: {formatCurrency(item.depositAmount * item.quantity)} (مسترد بالكامل عند الإرجاع السليم)
+                      <div className="flex flex-wrap items-center justify-between gap-3 bg-slate-50 dark:bg-[#0B0F17] p-3 rounded-xl border border-slate-200/60 dark:border-slate-800/60">
+                        <span className="text-xs font-bold text-slate-600 dark:text-slate-400 font-tajawal">
+                          تأمين الإيجار: {formatCurrency(item.depositAmount * item.quantity)} (مسترد عند الإرجاع السليم)
                         </span>
                         
                         {item.status !== 'Returned' ? (
@@ -446,40 +393,38 @@ export const OrderDetails: React.FC<OrderDetailsProps> = ({
                               setRetQty(item.quantity.toString());
                               setIsReturnModalOpen(true);
                             }}
-                            className="px-4 py-2 bg-amber-500 hover:bg-amber-600 text-white rounded-xl text-xs font-bold transition-all shadow-sm"
+                            className="px-3 py-1.5 bg-amber-500 hover:bg-amber-600 text-white rounded-lg text-xs font-bold transition-colors"
                           >
-                            تسجيل إرجاع المنتج (Return Product)
+                            تسجيل إرجاع
                           </button>
                         ) : (
-                          <span className="text-xs font-black text-emerald-600 dark:text-emerald-500 flex items-center gap-1">
-                            <Check className="w-4 h-4" />
-                            تم إرجاع المنتج بالكامل
+                          <span className="text-xs font-bold text-emerald-600 dark:text-emerald-400 flex items-center gap-1">
+                            <Check className="w-4 h-4" /> تم الإرجاع بالكامل
                           </span>
                         )}
                       </div>
                     )}
 
-                    {/* Delivery Status Controllers */}
-                    <div className="flex items-center justify-between pt-2">
-                      <div className="flex items-center gap-1.5 text-sm">
-                        <span className="text-slate-550 dark:text-slate-400 font-bold font-tajawal">حالة تسليم القطعة:</span>
-                        <span className={`px-3 py-1 rounded-lg text-xs font-bold ${
-                          item.status === 'Delivered' ? 'bg-emerald-50 text-emerald-600' :
-                          item.status === 'Ready' ? 'bg-blue-50 text-blue-650' :
-                          item.status === 'Returned' ? 'bg-purple-50 text-purple-650' :
-                          'bg-orange-50 text-orange-655'
+                    {/* Instant Status Toggles */}
+                    <div className="flex items-center justify-between pt-1">
+                      <div className="flex items-center gap-2 text-xs">
+                        <span className="text-slate-500 font-bold font-tajawal">تسليم القطعة:</span>
+                        <span className={`ui-badge ${
+                          item.status === 'Delivered' ? 'bg-emerald-50 dark:bg-emerald-950/40 text-emerald-600 dark:text-emerald-400' :
+                          item.status === 'Ready' ? 'bg-sky-50 dark:bg-sky-950/40 text-sky-600 dark:text-sky-400' :
+                          item.status === 'Returned' ? 'bg-purple-50 dark:bg-purple-950/40 text-purple-600 dark:text-purple-400' :
+                          'bg-amber-50 dark:bg-amber-950/40 text-amber-600 dark:text-amber-400'
                         }`}>
                           {translateDeliveryStatus(item.status)}
                         </span>
                       </div>
 
-                      {/* Dropdown status update for employee convenience */}
                       {item.status !== 'Returned' && (
-                        <div className="flex items-center gap-1.5 bg-slate-50 dark:bg-slate-800 p-1 rounded-xl">
+                        <div className="flex items-center gap-1 bg-slate-100 dark:bg-slate-800/80 p-1 rounded-xl">
                           <button
                             onClick={() => handleUpdateItemDeliveryStatus(item.id, 'Waiting')}
                             className={`px-3 py-1 rounded-lg text-xs font-bold transition-all ${
-                              item.status === 'Waiting' ? 'bg-white dark:bg-slate-700 text-slate-800 dark:text-white shadow-sm' : 'text-slate-400 hover:text-slate-650'
+                              item.status === 'Waiting' ? 'bg-white dark:bg-slate-700 text-slate-900 dark:text-white shadow-sm' : 'text-slate-500 hover:text-slate-900'
                             }`}
                           >
                             انتظار
@@ -487,7 +432,7 @@ export const OrderDetails: React.FC<OrderDetailsProps> = ({
                           <button
                             onClick={() => handleUpdateItemDeliveryStatus(item.id, 'Ready')}
                             className={`px-3 py-1 rounded-lg text-xs font-bold transition-all ${
-                              item.status === 'Ready' ? 'bg-white dark:bg-slate-700 text-slate-800 dark:text-white shadow-sm' : 'text-slate-400 hover:text-slate-655'
+                              item.status === 'Ready' ? 'bg-white dark:bg-slate-700 text-slate-900 dark:text-white shadow-sm' : 'text-slate-500 hover:text-slate-900'
                             }`}
                           >
                             جاهز
@@ -495,7 +440,7 @@ export const OrderDetails: React.FC<OrderDetailsProps> = ({
                           <button
                             onClick={() => handleUpdateItemDeliveryStatus(item.id, 'Delivered')}
                             className={`px-3 py-1 rounded-lg text-xs font-bold transition-all ${
-                              item.status === 'Delivered' ? 'bg-white dark:bg-slate-700 text-slate-800 dark:text-white shadow-sm' : 'text-slate-400 hover:text-emerald-600'
+                              item.status === 'Delivered' ? 'bg-white dark:bg-slate-700 text-emerald-600 dark:text-emerald-400 shadow-sm' : 'text-slate-500 hover:text-emerald-600'
                             }`}
                           >
                             تسليم
@@ -505,59 +450,58 @@ export const OrderDetails: React.FC<OrderDetailsProps> = ({
                     </div>
 
                     {item.notes && (
-                      <p className="text-xs text-slate-450 bg-slate-50/40 p-2.5 rounded-lg border border-dashed border-slate-200 mt-2 font-tajawal">
-                        ملاحظات السطر: {item.notes}
+                      <p className="text-xs text-slate-500 bg-slate-50 dark:bg-[#0B0F17] p-2.5 rounded-lg border border-slate-200/50 dark:border-slate-800/50 font-tajawal">
+                        ملاحظات: {item.notes}
                       </p>
                     )}
-
                   </div>
                 ))}
               </div>
             </div>
 
             {/* Payments Ledger Sub-table */}
-            <div className="bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800/80 p-5 rounded-2xl shadow-sm space-y-4">
-              <h3 className="text-base font-bold text-slate-800 dark:text-slate-100 pb-2 border-b border-slate-100 dark:border-slate-800/60">
-                سجل دفعات العربون والمدفوعات
+            <div className="ui-panel space-y-4">
+              <h3 className="text-base font-bold text-slate-900 dark:text-white pb-3 border-b border-slate-100 dark:border-slate-800/80">
+                سجل الدفعات المقبوضة
               </h3>
 
               <div className="overflow-x-auto">
                 <table className="w-full text-right border-collapse text-sm">
                   <thead>
                     <tr className="border-b border-slate-100 dark:border-slate-800/80 text-slate-400">
-                      <th className="py-3 px-4 font-bold font-tajawal">التاريخ</th>
-                      <th className="py-3 px-4 font-bold font-tajawal">الموظف المستلم</th>
-                      <th className="py-3 px-4 font-bold font-tajawal">طريقة الدفع</th>
-                      <th className="py-3 px-4 font-bold font-tajawal">ملاحظات</th>
-                      <th className="py-3 px-4 font-bold font-tajawal">القيمة</th>
-                      <th className="py-3 px-4 font-bold font-tajawal">الإجراءات</th>
+                      <th className="py-2.5 px-3 font-bold font-tajawal">التاريخ</th>
+                      <th className="py-2.5 px-3 font-bold font-tajawal">الموظف</th>
+                      <th className="py-2.5 px-3 font-bold font-tajawal">طريقة الدفع</th>
+                      <th className="py-2.5 px-3 font-bold font-tajawal">ملاحظات</th>
+                      <th className="py-2.5 px-3 font-bold font-tajawal">القيمة</th>
+                      <th className="py-2.5 px-3 font-bold font-tajawal text-center">إجراء</th>
                     </tr>
                   </thead>
-                  <tbody className="divide-y divide-slate-50 dark:divide-slate-850">
+                  <tbody className="divide-y divide-slate-100 dark:divide-slate-800/60">
                     {order.payments.map((p: any) => (
-                      <tr key={p.id} className="hover:bg-slate-50/50 dark:hover:bg-slate-950/20 transition-all">
-                        <td className="py-4.5 px-4 font-semibold text-slate-500 font-tajawal">{formatDate(p.paymentDate)}</td>
-                        <td className="py-4.5 px-4 font-semibold text-slate-655 dark:text-slate-400">{p.employee?.name || '---'}</td>
-                        <td className="py-4.5 px-4 font-semibold text-slate-600 dark:text-slate-350 font-tajawal">{p.paymentMethod}</td>
-                        <td className="py-4.5 px-4 font-semibold text-slate-400 dark:text-slate-500 font-tajawal">{p.notes || '---'}</td>
-                        <td className="py-4.5 px-4 font-black text-emerald-650 dark:text-emerald-450 font-cairo">{formatCurrency(p.amount)}</td>
-                        <td className="py-4.5 px-4">
-                          <div className="flex items-center gap-1.5 justify-end">
+                      <tr key={p.id} className="hover:bg-slate-50/60 dark:hover:bg-slate-850/40 transition-colors">
+                        <td className="py-3 px-3 font-semibold text-slate-600 dark:text-slate-400 font-tajawal">{formatDate(p.paymentDate)}</td>
+                        <td className="py-3 px-3 font-bold text-slate-700 dark:text-slate-300">{p.employee?.name || '---'}</td>
+                        <td className="py-3 px-3 font-semibold text-slate-600 dark:text-slate-400 font-tajawal">{p.paymentMethod}</td>
+                        <td className="py-3 px-3 font-semibold text-slate-400 font-tajawal">{p.notes || '---'}</td>
+                        <td className="py-3 px-3 font-black text-emerald-600 dark:text-emerald-400 font-cairo">{formatCurrency(p.amount)}</td>
+                        <td className="py-3 px-3 text-center">
+                          <div className="flex items-center gap-1 justify-center">
                             <button
                               type="button"
                               onClick={() => triggerPrint('receipt', p)}
-                              className="p-2 text-slate-400 hover:text-brand-600 hover:bg-slate-100 dark:hover:bg-slate-850 rounded-lg transition-all"
-                              title="طباعة إيصال الدفعة"
+                              className="p-1.5 text-slate-400 hover:text-brand-600 rounded-lg"
+                              title="طباعة إيصال"
                             >
-                              <Printer className="w-4.5 h-4.5" />
+                              <Printer className="w-4 h-4" />
                             </button>
                             <button
                               type="button"
                               onClick={() => handleDeletePayment(p.id, p.amount)}
-                              className="p-2 text-slate-400 hover:text-red-655 hover:bg-slate-100 dark:hover:bg-slate-850 rounded-lg transition-all"
+                              className="p-1.5 text-slate-400 hover:text-rose-600 rounded-lg"
                               title="حذف الدفعة"
                             >
-                              <Trash2 className="w-4.5 h-4.5" />
+                              <Trash2 className="w-4 h-4" />
                             </button>
                           </div>
                         </td>
@@ -565,8 +509,8 @@ export const OrderDetails: React.FC<OrderDetailsProps> = ({
                     ))}
                     {order.payments.length === 0 && (
                       <tr>
-                        <td colSpan={6} className="py-6 text-center text-slate-450 dark:text-slate-600 font-tajawal">
-                          لا يوجد دفعات عربون مسجلة لهذه الفاتورة حتى الآن.
+                        <td colSpan={6} className="py-6 text-center text-slate-400 font-tajawal">
+                          لا توجد دفعات مسجلة لهذه الفاتورة حتى الآن.
                         </td>
                       </tr>
                     )}
@@ -577,87 +521,85 @@ export const OrderDetails: React.FC<OrderDetailsProps> = ({
 
           </div>
 
-          {/* Sidebar calculations & customer info */}
+          {/* Sidebar Info */}
           <div className="space-y-6">
-            
-            {/* Customer Personal profile */}
-            <div className="bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800/80 p-5 rounded-2xl shadow-sm relative overflow-hidden">
-              <div className="absolute top-0 right-0 w-12 h-12 bg-gradient-to-bl from-luxury-gold/10 to-transparent rounded-full" />
-              <h3 className="text-base font-bold text-slate-800 dark:text-slate-100 border-b border-slate-100 dark:border-slate-800/60 pb-2 flex items-center gap-1.5">
+            <div className="ui-panel space-y-3">
+              <h3 className="text-base font-bold text-slate-900 dark:text-white pb-3 border-b border-slate-100 dark:border-slate-800/80 flex items-center gap-2">
                 <User className="w-5 h-5 text-brand-600" />
                 ملف الزبون
               </h3>
 
-              <div className="mt-3.5 space-y-2">
+              <div className="space-y-2.5">
                 <h4 
-                  className="text-base font-black text-brand-600 dark:text-brand-400 hover:underline cursor-pointer flex items-center gap-1"
+                  className="text-base font-bold text-brand-600 dark:text-brand-400 hover:underline cursor-pointer"
                   onClick={() => onNavigate('customer-profile', { id: order.customerId })}
                 >
-                  {order.customer.name}
+                  {order.customer?.name}
                 </h4>
-                <div className="flex items-center justify-between gap-1.5 bg-slate-50 dark:bg-slate-950/40 p-2.5 rounded-xl border border-slate-100 dark:border-slate-850 text-sm text-slate-550 dark:text-slate-400 font-tajawal">
+                
+                <div className="flex items-center justify-between gap-1.5 bg-slate-50 dark:bg-[#0B0F17] p-2.5 rounded-xl border border-slate-200/60 dark:border-slate-800/60 text-sm font-tajawal">
                   <div className="flex items-center gap-1.5">
                     <Phone className="w-4 h-4 text-slate-400" />
-                    <span>{order.customer.phone}</span>
+                    <span>{order.customer?.phone}</span>
                   </div>
-                  {order.customer.phone && order.customer.phone !== '/' && (
+                  {order.customer?.phone && order.customer?.phone !== '/' && (
                     <a
                       href={getWhatsAppLink(order.customer.phone)}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="inline-flex items-center gap-1 px-3 py-1 bg-emerald-50 dark:bg-emerald-950/20 text-emerald-600 dark:text-emerald-400 rounded-lg text-xs font-bold transition-all hover:bg-emerald-100/60 border border-emerald-100/30"
-                      title="تواصل عبر الواتساب"
+                      className="inline-flex items-center gap-1 px-3 py-1 bg-emerald-50 dark:bg-emerald-950/40 text-emerald-600 dark:text-emerald-400 rounded-lg text-xs font-bold hover:bg-emerald-100 transition-colors"
                     >
                       <MessageCircle className="w-3.5 h-3.5" />
                       <span>تواصل</span>
                     </a>
                   )}
                 </div>
-                {order.customer.notes && (
-                  <div className="bg-slate-50 dark:bg-slate-955/20 p-3 rounded-xl border border-slate-100 text-sm text-slate-550 font-tajawal mt-2">
-                    <span className="font-bold text-slate-455 block">عن الزبون:</span>
+
+                {order.customer?.notes && (
+                  <div className="bg-slate-50 dark:bg-[#0B0F17] p-3 rounded-xl text-xs text-slate-500 font-tajawal">
+                    <span className="font-bold block text-slate-700 dark:text-slate-300">ملاحظات الزبون:</span>
                     <p className="mt-1 leading-relaxed">{order.customer.notes}</p>
                   </div>
                 )}
               </div>
             </div>
 
-            {/* Financial Ledger totals details */}
-            <div className="bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800/80 p-5 rounded-2xl shadow-sm space-y-4">
-              <h3 className="text-base font-bold text-slate-800 dark:text-slate-100 pb-2 border-b border-slate-100 dark:border-slate-800/60">
-                الحسابات التفصيلية
+            {/* Calculations */}
+            <div className="ui-panel space-y-3">
+              <h3 className="text-base font-bold text-slate-900 dark:text-white pb-3 border-b border-slate-100 dark:border-slate-800/80">
+                الحسابات المالية
               </h3>
 
               <div className="space-y-3 text-sm font-bold text-slate-600 dark:text-slate-400 font-tajawal">
                 <div className="flex justify-between">
                   <span>المجموع الفرعي:</span>
-                  <span className="font-black text-slate-850 dark:text-slate-100 font-cairo">{formatCurrency(order.subtotal)}</span>
+                  <span className="font-black text-slate-900 dark:text-white font-cairo">{formatCurrency(order.subtotal)}</span>
                 </div>
-                <div className="flex justify-between text-red-500">
+                <div className="flex justify-between text-rose-500">
                   <span>الخصم:</span>
                   <span className="font-black font-cairo">-{formatCurrency(order.discount)}</span>
                 </div>
-                <div className="flex justify-between pt-2.5 border-t border-slate-100 dark:border-slate-850 text-slate-800 dark:text-slate-200">
-                  <span>المجموع الإجمالي المستحق:</span>
+                <div className="flex justify-between pt-2 border-t border-slate-100 dark:border-slate-800/80 text-slate-900 dark:text-white">
+                  <span>الإجمالي المستحق:</span>
                   <span className="font-black text-base font-cairo">{formatCurrency(order.grandTotal)}</span>
                 </div>
                 <div className="flex justify-between text-emerald-600">
-                  <span>العربون / المدفوع:</span>
+                  <span>المدفوع:</span>
                   <span className="font-black font-cairo">+{formatCurrency(order.totalPaid)}</span>
                 </div>
-                <div className={`flex justify-between pt-2.5 border-t border-slate-100 dark:border-slate-850 ${
-                  order.remainingBalance > 0 ? 'text-red-655 font-black text-base' : 'text-slate-400'
+                <div className={`flex justify-between pt-2 border-t border-slate-100 dark:border-slate-800/80 ${
+                  order.remainingBalance > 0 ? 'text-rose-600 font-black text-base' : 'text-slate-400'
                 }`}>
-                  <span>المتبقي المطلوب:</span>
+                  <span>المتبقي:</span>
                   <span className="font-black font-cairo">{formatCurrency(order.remainingBalance)}</span>
                 </div>
               </div>
             </div>
 
-            {/* Status updates router */}
-            <div className="bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800/80 p-5 rounded-2xl shadow-sm space-y-3.5">
-              <h3 className="text-base font-bold text-slate-800 dark:text-slate-100 pb-2 border-b border-slate-100 dark:border-slate-800/60">
-                إدارة حالة الفاتورة العامة
+            {/* General Status Switcher */}
+            <div className="ui-panel space-y-3">
+              <h3 className="text-base font-bold text-slate-900 dark:text-white pb-3 border-b border-slate-100 dark:border-slate-800/80">
+                تغيير حالة الفاتورة
               </h3>
 
               <div className="flex flex-wrap gap-1.5">
@@ -665,10 +607,10 @@ export const OrderDetails: React.FC<OrderDetailsProps> = ({
                   <button
                     key={st}
                     onClick={() => handleUpdateOrderStatus(st)}
-                    className={`px-3 py-2 rounded-xl text-xs font-bold transition-all border ${
+                    className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all border ${
                       order.status === st 
                         ? 'bg-brand-600 border-brand-600 text-white shadow-sm' 
-                        : 'bg-slate-50 border-slate-200/60 text-slate-600 hover:bg-slate-100 dark:bg-slate-800 dark:border-slate-700 dark:text-slate-300 dark:hover:bg-slate-700'
+                        : 'bg-slate-50 border-slate-200 text-slate-600 hover:bg-slate-100 dark:bg-slate-800 dark:border-slate-700 dark:text-slate-300'
                     }`}
                   >
                     {translateStatus(st)}
@@ -678,41 +620,33 @@ export const OrderDetails: React.FC<OrderDetailsProps> = ({
             </div>
 
           </div>
-
         </div>
 
       </div>
 
-      {/* 2. PRINT TEMPLATES (Shown ONLY when printing via print media styles) */}
+      {/* PRINT MEDIA TEMPLATES */}
       <div className="print-only block">
         {printType === 'invoice' && (
-          // A. INVOICE PRINT
           <div className="p-8 space-y-6 max-w-3xl mx-auto text-slate-900 leading-relaxed font-cairo select-text">
-            {/* Header info */}
             <div className="flex justify-between items-start border-b-2 border-slate-900 pb-4">
               <div>
-                <h1 className="text-2xl font-black tracking-wide">متجر التخرج للمستلزمات</h1>
+                <h1 className="text-2xl font-black">متجر التخرج للمستلزمات</h1>
                 <p className="text-xs text-slate-500 font-bold mt-1">طرابلس، ليبيا | هاتف: 0912345678</p>
-                <p className="text-xs text-slate-500 font-bold mt-0.5">تأجير وبيع ملابس ومستلزمات حفلات التخرج</p>
               </div>
               <div className="text-left">
-                <h2 className="text-lg font-bold text-brand-600">فاتورة حساب رقم: {order.orderNumber}</h2>
+                <h2 className="text-lg font-bold text-brand-600">فاتورة رقم: {order.orderNumber}</h2>
                 <p className="text-xs text-slate-500 mt-1">تاريخ الفاتورة: {formatDate(order.orderDate)}</p>
-                <p className="text-xs text-slate-500">الموظف: {order.employee.name}</p>
               </div>
             </div>
 
-            {/* Customer Details */}
             <div className="bg-slate-100 p-4 rounded-xl space-y-1">
-              <h3 className="text-xs font-bold text-slate-500">صادرة إلى السيد(ة):</h3>
-              <p className="text-sm font-black">{order.customer.name}</p>
-              <p className="text-xs font-bold text-slate-600 font-tajawal">هاتف الزبون: {order.customer.phone}</p>
+              <p className="text-sm font-black">الزبون: {order.customer?.name}</p>
+              <p className="text-xs font-bold text-slate-600">هاتف: {order.customer?.phone}</p>
             </div>
 
-            {/* Items List table */}
             <table className="w-full text-right border-collapse text-xs mt-4">
               <thead>
-                <tr className="border-b-2 border-slate-900 bg-slate-100 text-slate-700">
+                <tr className="border-b-2 border-slate-900 bg-slate-100">
                   <th className="py-2.5 px-3 font-bold">اسم المنتج وتفاصيله</th>
                   <th className="py-2.5 px-3 font-bold text-center">الكمية</th>
                   <th className="py-2.5 px-3 font-bold text-left">سعر القطعة</th>
@@ -722,18 +656,8 @@ export const OrderDetails: React.FC<OrderDetailsProps> = ({
               <tbody className="divide-y divide-slate-200">
                 {order.items.map((item: any, idx: number) => (
                   <tr key={idx}>
-                    <td className="py-3 px-3">
-                      <div className="font-bold">
-                        {item.category === 'Other' ? (item.customCategory || 'أخرى') : item.category}
-                      </div>
-                      <div className="text-[10px] text-slate-500 mt-0.5">
-                        {item.capType && `نوع: ${item.capType} `}
-                        {item.capSize && `قياس: ${item.capSize} `}
-                        {item.capColor && `لون: ${item.capColor} `}
-                        {item.operationType && `[${item.operationType === 'Rental' ? 'إيجار' : 'بيع'}] `}
-                        {item.saleType && `موديل: ${item.saleType} `}
-                        {item.notes && `(${item.notes})`}
-                      </div>
+                    <td className="py-3 px-3 font-bold">
+                      {item.category === 'Other' ? (item.customCategory || 'أخرى') : item.category}
                     </td>
                     <td className="py-3 px-3 text-center font-bold">{item.quantity}</td>
                     <td className="py-3 px-3 text-left font-bold">{formatCurrency(item.unitPrice)}</td>
@@ -743,189 +667,45 @@ export const OrderDetails: React.FC<OrderDetailsProps> = ({
               </tbody>
             </table>
 
-            {/* Totals */}
             <div className="w-1/2 mr-auto space-y-1.5 border-t border-slate-900 pt-3 text-xs">
               <div className="flex justify-between">
                 <span>المجموع الفرعي:</span>
                 <span className="font-bold">{formatCurrency(order.subtotal)}</span>
               </div>
-              <div className="flex justify-between text-red-650">
-                <span>خصم خاص:</span>
-                <span className="font-bold">-{formatCurrency(order.discount)}</span>
-              </div>
               <div className="flex justify-between border-t-2 border-slate-900 pt-1.5 font-black text-sm">
-                <span>المجموع الإجمالي المستحق:</span>
+                <span>المستحق:</span>
                 <span>{formatCurrency(order.grandTotal)}</span>
               </div>
               <div className="flex justify-between text-emerald-600 font-bold">
-                <span>العربون (المحصل):</span>
+                <span>المدفوع:</span>
                 <span>+{formatCurrency(order.totalPaid)}</span>
               </div>
-              <div className="flex justify-between border-t border-slate-300 pt-1.5 font-black text-red-600">
-                <span>المتبقي المطلوب:</span>
+              <div className="flex justify-between font-black text-rose-600">
+                <span>المتبقي:</span>
                 <span>{formatCurrency(order.remainingBalance)}</span>
               </div>
-            </div>
-
-            {/* Invoice footer terms */}
-            <div className="pt-8 text-center border-t border-slate-200 space-y-2">
-              <p className="text-[10px] text-slate-400 font-bold">
-                شكرًا لتعاملكم معنا. يرجى مراجعة القطع عند الاستلام مباشرة.
-              </p>
-              <div className="flex justify-around pt-6 text-[10px] font-bold text-slate-500">
-                <div className="border-t border-slate-900 w-24 pt-1">توقيع المستلم</div>
-                <div className="border-t border-slate-900 w-24 pt-1">توقيع إدارة المعرض</div>
-              </div>
-            </div>
-
-          </div>
-        )}
-
-        {printType === 'rental' && (
-          // B. RENTAL CONTRACT PRINT
-          <div className="p-8 space-y-6 max-w-3xl mx-auto text-slate-900 leading-relaxed font-cairo select-text">
-            <div className="text-center border-b-2 border-slate-900 pb-4">
-              <h1 className="text-2xl font-black">عقد وإيصال إيجار مستلزمات تخرج</h1>
-              <p className="text-xs text-slate-500 font-bold mt-1">متجر التخرج للمستلزمات | هاتف: 0912345678</p>
-              <p className="text-xs font-bold mt-0.5">الرقم المرجعي للفاتورة: {order.orderNumber}</p>
-            </div>
-
-            <div className="grid grid-cols-2 gap-4 text-xs">
-              <div className="bg-slate-100 p-3.5 rounded-xl space-y-1">
-                <span className="text-[10px] text-slate-500 font-bold">بيانات المستأجر:</span>
-                <p className="font-black text-sm">{order.customer.name}</p>
-                <p className="font-bold text-slate-655">الهاتف: {order.customer.phone}</p>
-              </div>
-              <div className="bg-slate-100 p-3.5 rounded-xl space-y-1">
-                <span className="text-[10px] text-slate-500 font-bold">بيانات العقد:</span>
-                <p className="font-bold">المسؤول: {order.employee.name}</p>
-                <p className="font-bold text-slate-655">تاريخ التحرير: {formatDate(new Date())}</p>
-              </div>
-            </div>
-
-            <h3 className="text-xs font-black bg-slate-900 text-white p-2 rounded">المنتجات المؤجرة والتأمين المستلم</h3>
-            
-            <table className="w-full text-right border-collapse text-xs">
-              <thead>
-                <tr className="border-b-2 border-slate-900 bg-slate-50">
-                  <th className="py-2.5 px-3 font-bold">المنتج المؤجر</th>
-                  <th className="py-2.5 px-3 font-bold text-center">الكمية</th>
-                  <th className="py-2.5 px-3 font-bold text-left">قيمة الإيجار</th>
-                  <th className="py-2.5 px-3 font-bold text-left">مبلغ التأمين للقطعة</th>
-                  <th className="py-2.5 px-3 font-bold">تاريخ الإرجاع المتوقع</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-slate-200">
-                {order.items.filter((item: any) => item.operationType === 'Rental').map((item: any, idx: number) => (
-                  <tr key={idx}>
-                    <td className="py-3 px-3">
-                      <div className="font-bold">
-                        {item.category === 'Other' ? (item.customCategory || 'أخرى') : item.category}
-                      </div>
-                      <div className="text-[10px] text-slate-500 mt-0.5">
-                        {item.capType && `نوع: ${item.capType} `}
-                        {item.capSize && `قياس: ${item.capSize} `}
-                        {item.notes && `(${item.notes})`}
-                      </div>
-                    </td>
-                    <td className="py-3 px-3 text-center font-bold">{item.quantity}</td>
-                    <td className="py-3 px-3 text-left font-bold">{formatCurrency(item.unitPrice)}</td>
-                    <td className="py-3 px-3 text-left font-bold">{formatCurrency(item.depositAmount)}</td>
-                    <td className="py-3 px-3 font-bold">{formatDate(item.returnDate)}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-
-            {/* Terms and conditions */}
-            <div className="border border-slate-200 p-4 rounded-xl text-[10px] text-slate-600 space-y-1.5 leading-relaxed font-tajawal">
-              <h4 className="font-black text-slate-900 text-xs">شروط التزام المستأجر:</h4>
-              <p>1. يلتزم المستأجر بإرجاع القطع المؤجرة في الموعد المحدد في العقد أعلاه.</p>
-              <p>2. يتم استرداد مبلغ التأمين بالكامل عند تسليم القطعة بحالتها السليمة الممتازة دون تلف أو حروق أو بقع غير قابلة للإزالة.</p>
-              <p>3. في حالة تأخر الإرجاع عن الموعد المحدد، يخصم مبلغ 10.00 د.ل عن كل يوم تأخير للقطعة الواحدة.</p>
-              <p>4. في حالة ضياع القطعة أو تلفها بالكامل، لا يحق للمستأجر المطالبة بمبلغ التأمين ويغرم قيمة التعويض عن شراء قطعة جديدة.</p>
-            </div>
-
-            <div className="flex justify-around pt-10 text-[10px] font-bold text-slate-500">
-              <div className="border-t border-slate-900 w-32 pt-1.5 text-center">توقيع المستأجر المقر بالشروط</div>
-              <div className="border-t border-slate-900 w-32 pt-1.5 text-center">توقيع موظف المعرض</div>
-            </div>
-          </div>
-        )}
-
-        {printType === 'receipt' && printPaymentData && (
-          // C. PAYMENT RECEIPT PRINT
-          <div className="p-8 space-y-6 max-w-md mx-auto text-slate-900 leading-relaxed font-cairo select-text border border-slate-200 rounded-2xl shadow-inner mt-12">
-            <div className="text-center border-b-2 border-slate-900 pb-3">
-              <h2 className="text-lg font-black">وصل استلام دفعة عربون</h2>
-              <p className="text-[10px] text-slate-500 font-bold">متجر التخرج للمستلزمات | هاتف: 0912345678</p>
-            </div>
-
-            <div className="space-y-2 text-xs">
-              <div className="flex justify-between">
-                <span>تاريخ استلام العربون:</span>
-                <span className="font-bold">{formatDate(printPaymentData.paymentDate)}</span>
-              </div>
-              <div className="flex justify-between">
-                <span>رقم الفاتورة الأصلي:</span>
-                <span className="font-bold">{order.orderNumber}</span>
-              </div>
-              <div className="flex justify-between">
-                <span>اسم الزبون:</span>
-                <span className="font-black text-brand-600">{order.customer.name}</span>
-              </div>
-              <div className="flex justify-between">
-                <span>طريقة الدفع:</span>
-                <span className="font-bold">{printPaymentData.paymentMethod}</span>
-              </div>
-              <div className="flex justify-between">
-                <span>الموظف المقر بالاستلام:</span>
-                <span className="font-bold">{printPaymentData.employee?.name}</span>
-              </div>
-              {printPaymentData.notes && (
-                <div className="flex justify-between border-t border-dashed border-slate-200 pt-1.5">
-                  <span>ملاحظات الدفعة:</span>
-                  <span className="font-medium text-slate-500">{printPaymentData.notes}</span>
-                </div>
-              )}
-            </div>
-
-            <div className="bg-emerald-50 dark:bg-emerald-950/20 border border-emerald-250 p-4 rounded-xl text-center">
-              <span className="text-[10px] font-bold text-emerald-600 block">قيمة العربون المستلم</span>
-              <h2 className="text-2xl font-black text-emerald-800 dark:text-emerald-350 mt-1">
-                {formatCurrency(printPaymentData.amount)}
-              </h2>
-            </div>
-
-            {/* Outstanding balances reminder */}
-            <div className="pt-2 text-center text-[10px] font-bold text-slate-400 font-tajawal">
-              المتبقي في ذمة الزبون لهذه الفاتورة: {formatCurrency(order.remainingBalance)}
-            </div>
-
-            <div className="flex justify-around pt-6 text-[10px] font-bold text-slate-500">
-              <div className="border-t border-slate-900 w-20 pt-1 text-center">توقيع المستلم</div>
             </div>
           </div>
         )}
       </div>
 
-      {/* Add Payment Modal Popup */}
+      {/* Payment Modal */}
       <Modal
         isOpen={isPaymentModalOpen}
         onClose={() => setIsPaymentModalOpen(false)}
-        title={`تسجيل دفعة عربون للفاتورة ${order.orderNumber}`}
+        title={`تسجيل دفعة للفاتورة ${order.orderNumber}`}
       >
         <form onSubmit={handleAddPaymentSubmit} className="space-y-4">
           <div className="flex flex-col gap-1.5 w-full">
             <div className="flex justify-between items-center">
-              <label className="text-sm font-bold text-slate-800 dark:text-slate-200 font-tajawal">
-                قيمة دفعة العربون (د.ل) <span className="text-red-500 mr-1">*</span>
+              <label className="text-xs font-bold text-slate-700 dark:text-slate-300">
+                مبلغ الدفعة (د.ل) <span className="text-rose-500">*</span>
               </label>
               {order.remainingBalance > 0 && (
                 <button
                   type="button"
                   onClick={() => setPayAmount(order.remainingBalance.toString())}
-                  className="text-xs font-tajawal font-black text-brand-600 hover:text-brand-700 bg-brand-50 hover:bg-brand-100 dark:bg-brand-950/20 dark:hover:bg-brand-950/40 px-3 py-1.5 rounded-xl transition-all shadow-sm"
+                  className="text-xs font-bold text-brand-600 dark:text-brand-400 bg-brand-50 dark:bg-brand-950/40 px-2.5 py-1 rounded-lg"
                 >
                   إدخال المتبقي كاملاً ({order.remainingBalance} د.ل)
                 </button>
@@ -938,171 +718,47 @@ export const OrderDetails: React.FC<OrderDetailsProps> = ({
               value={payAmount}
               onChange={(e) => setPayAmount(e.target.value)}
               required
-              placeholder="مثال: 150"
-              className="w-full px-3.5 py-2.5 rounded-xl border-2 border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-955 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500 text-sm font-bold transition-all shadow-sm"
+              className="ui-input"
             />
           </div>
 
-          <Input
-            label="تاريخ الاستلام"
-            type="date"
-            value={payDate}
-            onChange={(e) => setPayDate(e.target.value)}
-            required
-            className="text-sm py-2.5"
-          />
+          <Input label="تاريخ الاستلام" type="date" value={payDate} onChange={(e) => setPayDate(e.target.value)} required />
+          <Select label="طريقة الدفع" options={['Cash', 'Bank Transfer', 'Card']} value={payMethod} onChange={(val) => setPayMethod(val)} required />
+          <Select label="الموظف المستلم" options={employees} value={payEmpId} onChange={(val) => setPayEmpId(val)} required />
 
-          <Select
-            label="طريقة الدفع"
-            options={['Cash', 'Bank Transfer', 'Card']}
-            value={payMethod}
-            onChange={(val) => setPayMethod(val)}
-            customValue={customPayMethod}
-            onCustomChange={setCustomPayMethod}
-            required
-          />
-
-          <Select
-            label="الموظف المستلم للمبلغ"
-            options={employees}
-            value={payEmpId}
-            onChange={(val) => setPayEmpId(val)}
-            customValue={customPayEmp}
-            onCustomChange={setCustomPayEmp}
-            required
-          />
-
-          <div className="flex flex-col gap-1.5">
-            <label className="text-sm font-semibold text-slate-700 dark:text-slate-300">ملاحظات الدفعة</label>
-            <textarea
-              value={payNotes}
-              onChange={(e) => setPayNotes(e.target.value)}
-              rows={2}
-              placeholder="مثال: عربون الحفل، باقي الحساب نقداً، إلخ..."
-              className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 text-slate-850 dark:text-slate-100 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500/20 shadow-sm"
-            />
-          </div>
-
-          {paymentFormError && <p className="text-xs text-red-500">{paymentFormError}</p>}
+          {paymentFormError && <p className="text-xs text-rose-500 font-bold">{paymentFormError}</p>}
 
           <div className="flex gap-3 justify-end pt-2">
-            <Button
-              type="button"
-              variant="secondary"
-              onClick={() => setIsPaymentModalOpen(false)}
-              disabled={isPaymentSubmitting}
-              className="px-6 py-2.5 text-sm"
-            >
+            <Button type="button" variant="secondary" onClick={() => setIsPaymentModalOpen(false)} disabled={isPaymentSubmitting}>
               إلغاء
             </Button>
-            <Button
-              type="submit"
-              isLoading={isPaymentSubmitting}
-              className="px-6 py-2.5 text-sm"
-            >
+            <Button type="submit" isLoading={isPaymentSubmitting}>
               تسجيل العربون وحفظ
             </Button>
           </div>
         </form>
       </Modal>
 
-      {/* Return Product Modal Popup */}
+      {/* Return Modal */}
       <Modal
         isOpen={isReturnModalOpen}
-        onClose={() => {
-          setIsReturnModalOpen(false);
-          setSelectedReturnItem(null);
-        }}
-        title={`تسجيل إرجاع منتج مؤجر`}
+        onClose={() => { setIsReturnModalOpen(false); setSelectedReturnItem(null); }}
+        title="تسجيل إرجاع منتج"
       >
         {selectedReturnItem && (
           <form onSubmit={handleReturnSubmit} className="space-y-4">
-            <div className="bg-slate-50 dark:bg-slate-950/40 p-4 rounded-xl text-xs space-y-1.5 border border-slate-200/50 dark:border-slate-800/40">
-              <div>
-                <span className="font-bold text-slate-500 dark:text-slate-455">المنتج: </span>
-                <span className="font-black text-sm">{selectedReturnItem.category}</span>
-              </div>
-              <div>
-                <span className="font-bold text-slate-500 dark:text-slate-455">الكمية المؤجرة الأصلية: </span>
-                <span className="font-black text-sm">{selectedReturnItem.quantity} قطع</span>
-              </div>
-              <div>
-                <span className="font-bold text-slate-500 dark:text-slate-455">مبلغ تأمين القطعة: </span>
-                <span className="font-black text-sm">{formatCurrency(selectedReturnItem.depositAmount)}</span>
-              </div>
-            </div>
+            <Input label="الكمية المرجعة" type="number" min="1" max={selectedReturnItem.quantity} value={retQty} onChange={(e) => setRetQty(e.target.value)} required />
+            <Input label="تاريخ الإرجاع" type="date" value={retDate} onChange={(e) => setRetDate(e.target.value)} required />
+            <Select label="حالة القطعة" options={['Excellent', 'Good', 'Damaged']} value={retCondition} onChange={(val) => setRetCondition(val)} required />
+            <Select label="الموظف المستلم" options={employees} value={retEmpId} onChange={(val) => setRetEmpId(val)} required />
 
-            <Input
-              label="الكمية المرجعة الفعلية"
-              type="number"
-              min="1"
-              max={selectedReturnItem.quantity}
-              value={retQty}
-              onChange={(e) => setRetQty(e.target.value)}
-              required
-              className="text-sm py-2.5"
-            />
-
-            <Input
-              label="تاريخ الإرجاع الفعلي"
-              type="date"
-              value={retDate}
-              onChange={(e) => setRetDate(e.target.value)}
-              required
-              className="text-sm py-2.5"
-            />
-
-            <Select
-              label="حالة القطعة عند الاسترجاع"
-              options={['Excellent', 'Good', 'Damaged']}
-              value={retCondition}
-              onChange={(val) => setRetCondition(val)}
-              customValue={customCondition}
-              onCustomChange={setCustomCondition}
-              required
-            />
-
-            <Select
-              label="الموظف المستلم للمرتجع"
-              options={employees}
-              value={retEmpId}
-              onChange={(val) => setRetEmpId(val)}
-              customValue={customRetEmp}
-              onCustomChange={setCustomRetEmp}
-              required
-            />
-
-            <div className="flex flex-col gap-1.5">
-              <label className="text-sm font-semibold text-slate-700 dark:text-slate-350">ملاحظات الإرجاع</label>
-              <textarea
-                value={retNotes}
-                onChange={(e) => setRetNotes(e.target.value)}
-                rows={2}
-                placeholder="تفاصيل التلف إن وجد، استرداد التأمين للزبون..."
-                className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 text-slate-800 dark:text-slate-100 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500/20"
-              />
-            </div>
-
-            {returnFormError && <p className="text-xs text-red-500">{returnFormError}</p>}
+            {returnFormError && <p className="text-xs text-rose-500 font-bold">{returnFormError}</p>}
 
             <div className="flex gap-3 justify-end pt-2">
-              <Button
-                type="button"
-                variant="secondary"
-                onClick={() => {
-                  setIsReturnModalOpen(false);
-                  setSelectedReturnItem(null);
-                }}
-                disabled={isReturnSubmitting}
-                className="px-6 py-2.5 text-sm"
-              >
+              <Button type="button" variant="secondary" onClick={() => { setIsReturnModalOpen(false); setSelectedReturnItem(null); }} disabled={isReturnSubmitting}>
                 إلغاء
               </Button>
-              <Button
-                type="submit"
-                isLoading={isReturnSubmitting}
-                className="px-6 py-2.5 text-sm"
-              >
+              <Button type="submit" isLoading={isReturnSubmitting}>
                 حفظ وإرجاع القطعة
               </Button>
             </div>
