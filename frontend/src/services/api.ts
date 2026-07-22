@@ -956,22 +956,23 @@ export const reportService = {
       };
     }) || [];
 
-    // 2. Product breakdown
-    const categories = ['Cap', 'Hat', 'Sash', 'Brooch', 'Accessory'];
-    const categoryArabicNames: Record<string, string> = {
-      Cap: 'كاب التخرج',
-      Hat: 'قبعة التخرج',
-      Sash: 'الشال',
-      Brooch: 'البروش المخصص',
-      Accessory: 'إكسسوارات إضافية',
-    };
+    // 2. Product breakdown (supporting both full category names and short codes)
+    const categoryConfig = [
+      { key: 'Cap', name: 'كاب التخرج', match: ['Cap', 'Graduation Cap', 'كاب'] },
+      { key: 'Hat', name: 'قبعة التخرج', match: ['Hat', 'Graduation Hat', 'قبعة'] },
+      { key: 'Sash', name: 'الشال', match: ['Sash', 'Graduation Sash', 'شال'] },
+      { key: 'Brooch', name: 'البروش المخصص', match: ['Brooch', 'Graduation Brooch', 'بروش'] },
+      { key: 'Accessory', name: 'إكسسوارات إضافية', match: ['Accessory', 'Graduation Accessories', 'إكسسوارات'] },
+    ];
 
-    const productsBreakdown = categories.map((cat) => {
-      const catItems = filteredItems.filter((i) => i.category === cat);
-      const sales = catItems.filter((i) => i.type === 'Sale').reduce((sum, i) => sum + i.quantity, 0);
-      const rentals = catItems.filter((i) => i.type === 'Rental').reduce((sum, i) => sum + i.quantity, 0);
+    const productsBreakdown = categoryConfig.map((cat) => {
+      const catItems = filteredItems.filter((i) => 
+        cat.match.some((m) => i.category === m || (i.category && i.category.includes(m)))
+      );
+      const sales = catItems.filter((i) => i.type === 'Sale' || i.operationType === 'Sale').reduce((sum, i) => sum + (i.quantity || 1), 0);
+      const rentals = catItems.filter((i) => i.type === 'Rental' || i.operationType === 'Rental').reduce((sum, i) => sum + (i.quantity || 1), 0);
       return {
-        name: categoryArabicNames[cat] || cat,
+        name: cat.name,
         sales,
         rentals,
         total: sales + rentals,
