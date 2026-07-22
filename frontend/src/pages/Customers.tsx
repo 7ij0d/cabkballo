@@ -116,8 +116,8 @@ export const Customers: React.FC<CustomersProps> = ({ onNavigate, selectedId }) 
 
   const handleAddCustomerSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!custName || !custPhone) {
-      setFormError('يرجى تعبئة الحقول الأساسية (الاسم، الهاتف)');
+    if (!custName) {
+      setFormError('يرجى كتابة اسم الزبون');
       return;
     }
     try {
@@ -145,7 +145,7 @@ export const Customers: React.FC<CustomersProps> = ({ onNavigate, selectedId }) 
 
   const handleEditCustomerSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!selectedCustomerId || !custName || !custPhone) return;
+    if (!selectedCustomerId || !custName) return;
     try {
       setIsFormSubmitting(true);
       setFormError('');

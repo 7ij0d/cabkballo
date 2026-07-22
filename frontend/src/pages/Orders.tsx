@@ -510,8 +510,8 @@ export const Orders: React.FC<OrdersProps> = ({ onNavigate, activeEmployee, page
     e.preventDefault();
     setFormError('');
 
-    if (!custName || !custPhone || !empId) {
-      setFormError('يرجى تعبئة الحقول الأساسية (اسم الزبون، الهاتف، الموظف المسؤول)');
+    if (!custName || !empId) {
+      setFormError('يرجى تعبئة الحقول الأساسية (اسم الزبون، الموظف المسؤول)');
       return;
     }
 
@@ -1069,11 +1069,10 @@ export const Orders: React.FC<OrdersProps> = ({ onNavigate, activeEmployee, page
                 disabled={isWalkIn}
               />
               <Input
-                label="رقم الهاتف"
+                label="رقم الهاتف (اختياري)"
                 value={custPhone}
                 onChange={(e) => setCustPhone(e.target.value)}
-                required
-                placeholder="0912345678"
+                placeholder="اتركه فارغاً إذا لم يتوفر رقم هاتف"
                 disabled={isWalkIn}
               />
               <Input
@@ -1264,7 +1263,7 @@ export const Orders: React.FC<OrdersProps> = ({ onNavigate, activeEmployee, page
                           required
                         />
 
-                        {item.operationType === 'Sale' && (
+                        {item.operationType === 'Sale' && (item.category === 'Graduation Cap' || item.category === 'Graduation Hat') && (
                           <Select
                             label="نوع البيع"
                             options={[
@@ -1325,18 +1324,6 @@ export const Orders: React.FC<OrdersProps> = ({ onNavigate, activeEmployee, page
                       onChange={(e) => handleItemFieldChange(item.id, 'unitPrice', e.target.value)}
                       required
                     />
-
-                    {item.operationType === 'Rental' && (
-                      <Input
-                        label="مبلغ تأمين القطعة"
-                        type="number"
-                        min="0"
-                        step="0.01"
-                        value={item.depositAmount}
-                        onChange={(e) => handleItemFieldChange(item.id, 'depositAmount', e.target.value)}
-                        required
-                      />
-                    )}
                   </div>
 
                   <Input

@@ -180,13 +180,15 @@ export const customerService = {
     };
   },
 
-  create: async (data: { name: string; phone: string; backupPhone?: string; notes?: string }) => {
+  create: async (data: { name: string; phone?: string; backupPhone?: string; notes?: string }) => {
+    const cleanPhone = data.phone ? data.phone.trim() : '';
+    const hasValidPhone = cleanPhone && cleanPhone !== '/' && cleanPhone !== 'بدون هاتف' && !cleanPhone.startsWith('NO-PHONE-') && cleanPhone.length >= 3;
     const { data: newCust, error } = await supabase
       .from('Customer')
       .insert({
         id: generateUUID(),
         name: data.name,
-        phone: data.phone,
+        phone: hasValidPhone ? cleanPhone : `NO-PHONE-${generateUUID().substring(0, 6)}`,
         backupPhone: data.backupPhone || null,
         notes: data.notes || null,
         updatedAt: new Date().toISOString(),
@@ -198,16 +200,24 @@ export const customerService = {
     return newCust;
   },
 
-  update: async (id: string, data: { name: string; phone: string; backupPhone?: string; notes?: string }) => {
+  update: async (id: string, data: { name: string; phone?: string; backupPhone?: string; notes?: string }) => {
+    const cleanPhone = data.phone ? data.phone.trim() : '';
+    const hasValidPhone = cleanPhone && cleanPhone !== '/' && cleanPhone !== 'بدون هاتف' && !cleanPhone.startsWith('NO-PHONE-') && cleanPhone.length >= 3;
+
+    const updatePayload: any = {
+      name: data.name,
+      backupPhone: data.backupPhone || null,
+      notes: data.notes || null,
+      updatedAt: new Date().toISOString(),
+    };
+
+    if (hasValidPhone) {
+      updatePayload.phone = cleanPhone;
+    }
+
     const { data: updatedCust, error } = await supabase
       .from('Customer')
-      .update({
-        name: data.name,
-        phone: data.phone,
-        backupPhone: data.backupPhone || null,
-        notes: data.notes || null,
-        updatedAt: new Date().toISOString(),
-      })
+      .update(updatePayload)
       .eq('id', id)
       .select()
       .single();
@@ -374,18 +384,29 @@ export const orderService = {
     advancePaid?: number;
     items: any[];
   }) => {
-    // 1. Find or create customer
-    let { data: customer } = await supabase
-      .from('Customer')
-      .select('*')
-      .eq('phone', data.customerPhone)
-      .maybeSingle();
+    // 1. Find or create customer (safely handling optional phone numbers to prevent customer overwriting)
+    const cleanPhone = data.customerPhone ? data.customerPhone.trim() : '';
+    const cleanName = data.customerName ? data.customerName.trim() : 'زبون غير معرف';
+    const hasValidPhone = cleanPhone && cleanPhone !== '/' && cleanPhone !== 'بدون هاتف' && !cleanPhone.startsWith('NO-PHONE-') && cleanPhone.length >= 3;
 
-    if (!customer && data.customerName !== '/') {
+    let customer: any = null;
+
+    if (hasValidPhone) {
+      const { data: phoneCust } = await supabase
+        .from('Customer')
+        .select('*')
+        .eq('phone', cleanPhone)
+        .maybeSingle();
+      if (phoneCust) {
+        customer = phoneCust;
+      }
+    }
+
+    if (!customer && cleanName && cleanName !== '/') {
       const { data: nameCust } = await supabase
         .from('Customer')
         .select('*')
-        .eq('name', data.customerName)
+        .eq('name', cleanName)
         .maybeSingle();
       if (nameCust) {
         customer = nameCust;
@@ -397,15 +418,15 @@ export const orderService = {
         .from('Customer')
         .insert({
           id: generateUUID(),
-          name: data.customerName,
-          phone: data.customerPhone,
+          name: cleanName,
+          phone: hasValidPhone ? cleanPhone : `NO-PHONE-${generateUUID().substring(0, 6)}`,
           backupPhone: data.customerBackupPhone || null,
           notes: data.customerNotes || null,
           updatedAt: new Date().toISOString(),
         })
         .select()
         .single();
-      
+
       if (error) throw error;
       customer = newCust;
     }
