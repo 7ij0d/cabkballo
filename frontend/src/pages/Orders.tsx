@@ -54,6 +54,7 @@ export const Orders: React.FC<OrdersProps> = ({ onNavigate, activeEmployee, page
   const [deliveryFilter, setDeliveryFilter] = useState('all');
   const [dateRangeFilter, setDateRangeFilter] = useState('all');
   const [operationFilter, setOperationFilter] = useState('all');
+  const [showAdvancedFilters, setShowAdvancedFilters] = useState(false);
 
   // Form State for Create Order
   const [custName, setCustName] = useState('');
@@ -706,110 +707,147 @@ export const Orders: React.FC<OrdersProps> = ({ onNavigate, activeEmployee, page
       {!isCreating ? (
         <div className="space-y-4">
           
-          {/* Instant Filter Panel */}
-          <div className="ui-panel space-y-4">
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-              <div className="lg:col-span-2">
-                <Input
-                  label="بحث سريع"
-                  placeholder="رقم الفاتورة، اسم الزبون، رقم الهاتف..."
+          {/* Ultra Clean Search & Quick Filter Pills Bar */}
+          <div className="ui-panel p-4 space-y-4">
+            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+              {/* Single Main Search Bar */}
+              <div className="relative flex-1">
+                <Search className="w-5 h-5 text-[#9CA3AF] absolute right-3.5 top-1/2 -translate-y-1/2" />
+                <input
+                  type="text"
+                  placeholder="ابحث باسم الزبون، رقم الهاتف، أو رقم الفاتورة..."
                   value={search}
                   onChange={(e) => setSearch(e.target.value)}
+                  className="ui-input pr-11 text-sm font-semibold"
                 />
               </div>
 
-              <div className="flex flex-col gap-1.5">
-                <label className="text-xs font-bold text-slate-600 dark:text-slate-400 font-tajawal">حالة الطلبية</label>
-                <select
-                  value={statusFilter}
-                  onChange={(e) => setStatusFilter(e.target.value)}
-                  className="ui-input"
+              {/* Quick 1-Click Filter Chips */}
+              <div className="flex flex-wrap items-center gap-2">
+                <button
+                  type="button"
+                  onClick={() => { setOperationFilter('all'); setPaymentFilter('all'); setDeliveryFilter('all'); setStatusFilter('all'); setDateRangeFilter('all'); }}
+                  className={`px-3.5 py-2 rounded-xl text-xs font-bold font-tajawal transition-all cursor-pointer ${
+                    operationFilter === 'all' && paymentFilter === 'all' && deliveryFilter === 'all' && statusFilter === 'all'
+                      ? 'bg-[#16A34A] text-white shadow-xs'
+                      : 'bg-[#F3F4F6] text-[#4B5563] hover:bg-[#E5E7EB]'
+                  }`}
                 >
-                  <option value="all">كل الحالات</option>
-                  <option value="Pending">قيد الانتظار</option>
-                  <option value="Preparing">جاري التجهيز</option>
-                  <option value="Ready">جاهز للاستلام</option>
-                  <option value="Delivered">تم التوصيل</option>
-                  <option value="Completed">مكتملة</option>
-                  <option value="Cancelled">ملغية</option>
-                </select>
-              </div>
+                  الكل
+                </button>
 
-              <div className="flex flex-col gap-1.5">
-                <label className="text-xs font-bold text-slate-600 dark:text-slate-400 font-tajawal">حالة الدفع</label>
-                <select
-                  value={paymentFilter}
-                  onChange={(e) => setPaymentFilter(e.target.value)}
-                  className="ui-input"
+                <button
+                  type="button"
+                  onClick={() => { setOperationFilter('Rental'); setPaymentFilter('all'); setDeliveryFilter('all'); setStatusFilter('all'); }}
+                  className={`px-3.5 py-2 rounded-xl text-xs font-bold font-tajawal transition-all cursor-pointer ${
+                    operationFilter === 'Rental'
+                      ? 'bg-[#0284C7] text-white shadow-xs'
+                      : 'bg-[#F3F4F6] text-[#4B5563] hover:bg-[#E5E7EB]'
+                  }`}
                 >
-                  <option value="all">كل حالات الدفع</option>
-                  <option value="Unpaid">غير مدفوع</option>
-                  <option value="DepositPaid">تم دفع العربون</option>
-                  <option value="PartiallyPaid">مدفوع جزئياً</option>
-                  <option value="FullyPaid">مدفوع بالكامل</option>
-                </select>
+                  إيجارات
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => { setOperationFilter('Sale'); setPaymentFilter('all'); setDeliveryFilter('all'); setStatusFilter('all'); }}
+                  className={`px-3.5 py-2 rounded-xl text-xs font-bold font-tajawal transition-all cursor-pointer ${
+                    operationFilter === 'Sale'
+                      ? 'bg-[#374151] text-white shadow-xs'
+                      : 'bg-[#F3F4F6] text-[#4B5563] hover:bg-[#E5E7EB]'
+                  }`}
+                >
+                  مبيعات
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => { setPaymentFilter('Unpaid'); setOperationFilter('all'); }}
+                  className={`px-3.5 py-2 rounded-xl text-xs font-bold font-tajawal transition-all cursor-pointer ${
+                    paymentFilter === 'Unpaid'
+                      ? 'bg-[#EF4444] text-white shadow-xs'
+                      : 'bg-[#FEF2F2] text-[#EF4444] hover:bg-[#FEE2E2]'
+                  }`}
+                >
+                  المتبقي (غير مدفوع)
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => setShowAdvancedFilters(!showAdvancedFilters)}
+                  className="px-3 py-2 text-xs font-bold text-[#6B7280] hover:text-[#111827] flex items-center gap-1 transition-colors cursor-pointer"
+                >
+                  <Filter className="w-4 h-4" />
+                  <span>{showAdvancedFilters ? 'إخفاء الفلاتر' : 'فلاتر إضافية'}</span>
+                </button>
               </div>
             </div>
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 pt-3 border-t border-slate-100 dark:border-slate-800/80">
-              <div className="flex flex-col gap-1.5">
-                <label className="text-xs font-bold text-slate-600 dark:text-slate-400 font-tajawal">حالة التسليم</label>
-                <select
-                  value={deliveryFilter}
-                  onChange={(e) => setDeliveryFilter(e.target.value)}
-                  className="ui-input"
-                >
-                  <option value="all">كل حالات التسليم</option>
-                  <option value="Waiting">قيد الانتظار</option>
-                  <option value="Ready">جاهز للتسليم</option>
-                  <option value="Delivered">تم التسليم</option>
-                  <option value="Returned">تم الإرجاع</option>
-                </select>
-              </div>
+            {/* Collapsible Advanced Filters */}
+            {showAdvancedFilters && (
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 pt-4 border-t border-[#F3F4F6] dark:border-slate-800">
+                <div className="flex flex-col gap-1.5">
+                  <label className="text-xs font-bold text-[#6B7280] font-tajawal">حالة الطلبية</label>
+                  <select
+                    value={statusFilter}
+                    onChange={(e) => setStatusFilter(e.target.value)}
+                    className="ui-input"
+                  >
+                    <option value="all">كل الحالات</option>
+                    <option value="Pending">قيد الانتظار</option>
+                    <option value="Preparing">جاري التجهيز</option>
+                    <option value="Ready">جاهز للاستلام</option>
+                    <option value="Delivered">تم التوصيل</option>
+                    <option value="Completed">مكتملة</option>
+                    <option value="Cancelled">ملغية</option>
+                  </select>
+                </div>
 
-              <div className="flex flex-col gap-1.5">
-                <label className="text-xs font-bold text-slate-600 dark:text-slate-400 font-tajawal">تاريخ الطلب</label>
-                <select
-                  value={dateRangeFilter}
-                  onChange={(e) => setDateRangeFilter(e.target.value)}
-                  className="ui-input"
-                >
-                  <option value="all">كل التواريخ</option>
-                  <option value="today">اليوم</option>
-                  <option value="yesterday">أمس</option>
-                  <option value="week">هذا الأسبوع</option>
-                  <option value="month">هذا الشهر</option>
-                  <option value="year">هذا العام</option>
-                </select>
-              </div>
+                <div className="flex flex-col gap-1.5">
+                  <label className="text-xs font-bold text-[#6B7280] font-tajawal">حالة التسليم</label>
+                  <select
+                    value={deliveryFilter}
+                    onChange={(e) => setDeliveryFilter(e.target.value)}
+                    className="ui-input"
+                  >
+                    <option value="all">كل حالات التسليم</option>
+                    <option value="Waiting">قيد الانتظار</option>
+                    <option value="Ready">جاهز للتسليم</option>
+                    <option value="Delivered">تم التسليم</option>
+                    <option value="Returned">تم الإرجاع</option>
+                  </select>
+                </div>
 
-              <div className="flex flex-col gap-1.5">
-                <label className="text-xs font-bold text-slate-600 dark:text-slate-400 font-tajawal">نوع المعاملة</label>
-                <select
-                  value={operationFilter}
-                  onChange={(e) => setOperationFilter(e.target.value)}
-                  className="ui-input"
-                >
-                  <option value="all">الكل (بيع وإيجار)</option>
-                  <option value="Sale">بيع</option>
-                  <option value="Rental">إيجار</option>
-                </select>
-              </div>
+                <div className="flex flex-col gap-1.5">
+                  <label className="text-xs font-bold text-[#6B7280] font-tajawal">تاريخ الطلب</label>
+                  <select
+                    value={dateRangeFilter}
+                    onChange={(e) => setDateRangeFilter(e.target.value)}
+                    className="ui-input"
+                  >
+                    <option value="all">كل التواريخ</option>
+                    <option value="today">اليوم</option>
+                    <option value="yesterday">أمس</option>
+                    <option value="week">هذا الأسبوع</option>
+                    <option value="month">هذا الشهر</option>
+                  </select>
+                </div>
 
-              <div className="flex flex-col gap-1.5">
-                <label className="text-xs font-bold text-slate-600 dark:text-slate-400 font-tajawal">الموظف المسؤول</label>
-                <select
-                  value={employeeFilter}
-                  onChange={(e) => setEmployeeFilter(e.target.value)}
-                  className="ui-input"
-                >
-                  <option value="all">كل الموظفين</option>
-                  {employees.map(emp => (
-                    <option key={emp.value} value={emp.value}>{emp.label}</option>
-                  ))}
-                </select>
+                <div className="flex flex-col gap-1.5">
+                  <label className="text-xs font-bold text-[#6B7280] font-tajawal">الموظف المسؤول</label>
+                  <select
+                    value={employeeFilter}
+                    onChange={(e) => setEmployeeFilter(e.target.value)}
+                    className="ui-input"
+                  >
+                    <option value="all">كل الموظفين</option>
+                    {employees.map(emp => (
+                      <option key={emp.value} value={emp.value}>{emp.label}</option>
+                    ))}
+                  </select>
+                </div>
               </div>
-            </div>
+            )}
           </div>
 
           {/* Orders Table */}
