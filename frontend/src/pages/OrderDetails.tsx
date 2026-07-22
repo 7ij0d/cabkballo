@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { 
   FileText, Coins, ArrowLeftRight, User, Printer, Trash2, 
-  Plus, RotateCcw, AlertCircle, Calendar, Phone, Check, RefreshCw, EyeOff, Edit, MessageCircle, ArrowLeft
+  Plus, RotateCcw, AlertCircle, Calendar, Phone, Check, RefreshCw, EyeOff, Edit, MessageCircle, ArrowLeft, AlertTriangle
 } from 'lucide-react';
 import { orderService, paymentService, returnService } from '../services/api';
 import { formatCurrency, formatDate, translateStatus, translatePaymentStatus, translateDeliveryStatus, translateCondition } from '../utils/arabic';
@@ -57,11 +57,12 @@ export const OrderDetails: React.FC<OrderDetailsProps> = ({
 
   const [isPaymentModalOpen, setIsPaymentModalOpen] = useState(false);
   const [isReturnModalOpen, setIsReturnModalOpen] = useState(false);
+  const [isExceptionModalOpen, setIsExceptionModalOpen] = useState(false);
   const [selectedReturnItem, setSelectedReturnItem] = useState<any | null>(null);
 
   const [payAmount, setPayAmount] = useState('');
   const [payDate, setPayDate] = useState(new Date().toISOString().split('T')[0]);
-  const [payMethod, setPayMethod] = useState('');
+  const [payMethod, setPayMethod] = useState('Cash');
   const [customPayMethod, setCustomPayMethod] = useState('');
   const [payNotes, setPayNotes] = useState('');
   const [payEmpId, setPayEmpId] = useState('');
@@ -70,12 +71,15 @@ export const OrderDetails: React.FC<OrderDetailsProps> = ({
 
   const [retQty, setRetQty] = useState('');
   const [retDate, setRetDate] = useState(new Date().toISOString().split('T')[0]);
-  const [retCondition, setRetCondition] = useState('');
+  const [retCondition, setRetCondition] = useState('Excellent');
   const [customCondition, setCustomCondition] = useState('');
   const [retNotes, setRetNotes] = useState('');
   const [retEmpId, setRetEmpId] = useState('');
   const [isReturnSubmitting, setIsReturnSubmitting] = useState(false);
   const [returnFormError, setReturnFormError] = useState('');
+
+  const [exceptionNotes, setExceptionNotes] = useState('');
+  const [selectedExceptionItem, setSelectedExceptionItem] = useState<any | null>(null);
 
   const [printType, setPrintType] = useState<'invoice' | 'receipt' | 'rental' | 'return' | null>(null);
 
@@ -99,9 +103,9 @@ export const OrderDetails: React.FC<OrderDetailsProps> = ({
   useEffect(() => {
     if (activeEmployee) {
       if (isPaymentModalOpen) setPayEmpId(activeEmployee.id);
-      if (isReturnModalOpen) setRetEmpId(activeEmployee.id);
+      if (isReturnModalOpen || isExceptionModalOpen) setRetEmpId(activeEmployee.id);
     }
-  }, [isPaymentModalOpen, isReturnModalOpen, activeEmployee]);
+  }, [isPaymentModalOpen, isReturnModalOpen, isExceptionModalOpen, activeEmployee]);
 
   const handleUpdateOrderStatus = async (status: string) => {
     setOrder((prev: any) => prev ? { ...prev, status } : null);
@@ -131,6 +135,7 @@ export const OrderDetails: React.FC<OrderDetailsProps> = ({
     }
   };
 
+  // SMART PAYMENT GUARD: Cannot exceed remaining balance!
   const handleAddPaymentSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!payAmount || !payMethod || !payEmpId) {
@@ -140,6 +145,11 @@ export const OrderDetails: React.FC<OrderDetailsProps> = ({
     const amt = parseFloat(payAmount);
     if (isNaN(amt) || amt <= 0) {
       setPaymentFormError('قيمة الدفعة يجب أن تكون أكبر من الصفر');
+      return;
+    }
+
+    if (order && amt > order.remainingBalance + 0.01) {
+      setPaymentFormError(`عفواً! لا يمكن زيادة مال أكثر من المبلغ المتبقي المستحق وهو (${order.remainingBalance} د.ل).`);
       return;
     }
 
@@ -157,7 +167,7 @@ export const OrderDetails: React.FC<OrderDetailsProps> = ({
       });
       setIsPaymentModalOpen(false);
       setPayAmount('');
-      setPayMethod('');
+      setPayMethod('Cash');
       setCustomPayMethod('');
       setPayNotes('');
       fetchOrderDetails();
@@ -166,6 +176,28 @@ export const OrderDetails: React.FC<OrderDetailsProps> = ({
       setPaymentFormError(err.response?.data?.error || 'فشل إدخال الدفعة.');
     } finally {
       setIsPaymentSubmitting(false);
+    }
+  };
+
+  // 1-CLICK COMPLETE ORDER RETURN
+  const handleReturnAllItems = async () => {
+    if (!order) return;
+    if (window.confirm('هل أنت متأكد من الضغط على (تم إرجاع الطلبية بالكامل)؟ سيتم تحديث كافة القطع المؤجرة إلى حالة مرجعة.')) {
+      try {
+        setIsLoading(true);
+        for (const item of order.items) {
+          if (item.operationType === 'Rental' && item.status !== 'Returned') {
+            await orderService.updateItemStatus(item.id, 'Returned');
+          }
+        }
+        await orderService.update(orderId, { status: 'Completed' });
+        fetchOrderDetails();
+      } catch (err) {
+        console.error(err);
+        alert('حدث خطأ أثناء الإرجاع الكامل.');
+      } finally {
+        setIsLoading(false);
+      }
     }
   };
 
@@ -196,13 +228,33 @@ export const OrderDetails: React.FC<OrderDetailsProps> = ({
       setIsReturnModalOpen(false);
       setSelectedReturnItem(null);
       setRetQty('');
-      setRetCondition('');
-      setCustomCondition('');
       setRetNotes('');
       fetchOrderDetails();
     } catch (err: any) {
       console.error(err);
       setReturnFormError(err.response?.data?.error || 'فشل إرجاع المنتج.');
+    } finally {
+      setIsReturnSubmitting(false);
+    }
+  };
+
+  const handleSaveException = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!selectedExceptionItem || !exceptionNotes) {
+      alert('يرجى كتابة سبب الاستثناء أو تحديد القطعة التي لم ترجع.');
+      return;
+    }
+    try {
+      setIsReturnSubmitting(true);
+      await orderService.updateItemStatus(selectedExceptionItem.id, 'Waiting');
+      await orderService.update(orderId, { notes: (order.notes || '') + `\n[استثناء قطعة لم ترجع]: ${exceptionNotes}` });
+      setIsExceptionModalOpen(false);
+      setSelectedExceptionItem(null);
+      setExceptionNotes('');
+      fetchOrderDetails();
+    } catch (err) {
+      console.error(err);
+      alert('فشل حفظ الاستثناء.');
     } finally {
       setIsReturnSubmitting(false);
     }
@@ -268,11 +320,18 @@ export const OrderDetails: React.FC<OrderDetailsProps> = ({
     );
   }
 
+  const firstItem = order.items?.[0] || {};
+  const deliveryDate = firstItem.deliveryDate || order.orderDate;
+  const returnDate = firstItem.returnDate;
+  const graduationDate = firstItem.graduationDate;
+  const hasRental = order.items?.some((i: any) => i.operationType === 'Rental');
+  const allReturned = hasRental && order.items?.filter((i: any) => i.operationType === 'Rental').every((i: any) => i.status === 'Returned');
+
   return (
     <div className="space-y-8">
       <div className="no-print space-y-8">
         
-        {/* 1. VISUAL PRIORITY HEADER CARD */}
+        {/* 1. VISUAL HEADER CARD */}
         <div className="ui-card p-6 md:p-8 flex flex-col md:flex-row md:items-center justify-between gap-6">
           <div className="space-y-2">
             <div className="flex items-center gap-3">
@@ -284,12 +343,10 @@ export const OrderDetails: React.FC<OrderDetailsProps> = ({
                 <ArrowLeft className="w-[18px] h-[18px] rotate-180" />
               </button>
               
-              {/* Priority 1: Invoice Number (30px / 700) */}
               <h1 className="text-3xl font-bold font-cairo text-[#111827] dark:text-white tracking-tight">
                 فاتورة رقم {order.orderNumber}
               </h1>
 
-              {/* Priority 2: Payment Status Badge */}
               <span className={`ui-badge text-xs px-3.5 py-1 rounded-full ${
                 order.paymentStatus === 'FullyPaid' ? 'bg-[#DCFCE7] text-[#15803D]' :
                 order.paymentStatus === 'PartiallyPaid' ? 'bg-[#E0F2FE] text-[#0369A1]' :
@@ -300,14 +357,14 @@ export const OrderDetails: React.FC<OrderDetailsProps> = ({
             </div>
             
             <p className="text-xs text-[#6B7280] font-normal font-tajawal pr-11">
-              تاريخ الإنشاء: {formatDate(order.orderDate)} | الموظف المسؤول: {order.employee?.name || 'غير مخصص'}
+              تاريخ الفاتورة: {formatDate(order.orderDate)} | الموظف: {order.employee?.name || 'غير مخصص'}
             </p>
           </div>
 
-          {/* Priority 3: Outstanding Balance & Dominant Primary Button */}
-          <div className="flex flex-col sm:flex-row items-start sm:items-center gap-6 pt-4 md:pt-0 border-t md:border-t-0 border-[#E5E7EB] dark:border-slate-800">
+          {/* Action CTAs */}
+          <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4">
             <div className="text-right sm:text-left">
-              <span className="text-xs font-medium text-[#6B7280] font-tajawal block">المتبقي بذمة الزبون</span>
+              <span className="text-xs font-medium text-[#6B7280] font-tajawal block">المتبقي المطلوب دفعها</span>
               <h2 className={`text-2xl font-bold font-cairo mt-0.5 ${
                 order.remainingBalance > 0 ? 'text-[#EF4444]' : 'text-[#16A34A]'
               }`}>
@@ -315,19 +372,69 @@ export const OrderDetails: React.FC<OrderDetailsProps> = ({
               </h2>
             </div>
 
-            {/* ONLY ONE DOMINANT PRIMARY BUTTON (Green #16A34A, 48px height) */}
-            <Button 
-              variant="primary" 
-              size="md" 
-              icon={<Plus className="w-[18px] h-[18px]" />} 
-              onClick={() => { setPaymentFormError(''); setIsPaymentModalOpen(true); }}
-            >
-              تسجيل دفعة جديدة
-            </Button>
+            {/* Smart Payment Trigger */}
+            {order.remainingBalance > 0 ? (
+              <Button 
+                variant="primary" 
+                size="md" 
+                icon={<Plus className="w-[18px] h-[18px]" />} 
+                onClick={() => { 
+                  setPaymentFormError(''); 
+                  setPayAmount(order.remainingBalance.toString()); 
+                  setIsPaymentModalOpen(true); 
+                }}
+              >
+                إكمال الدفع ({order.remainingBalance} د.ل)
+              </Button>
+            ) : (
+              <span className="inline-flex items-center gap-1 px-4 py-2 bg-[#DCFCE7] text-[#15803D] rounded-2xl text-xs font-bold font-tajawal">
+                <Check className="w-4 h-4" /> خالية من الديون (خالصة)
+              </span>
+            )}
           </div>
         </div>
 
-        {/* Action Toolbar (Secondary Buttons Only) */}
+        {/* 2. PROMINENT DATES & DEPOSIT SUMMARY CARD (امتى طلعت، امتى تخرج، امتى رجعت، العربون والضمانة) */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
+          
+          <div className="ui-card p-4 space-y-1">
+            <span className="text-xs font-bold text-[#6B7280] font-tajawal block">تاريخ طلعت (التسليم)</span>
+            <div className="text-base font-bold text-[#111827] dark:text-white font-cairo">
+              {formatDate(deliveryDate)}
+            </div>
+          </div>
+
+          <div className="ui-card p-4 space-y-1">
+            <span className="text-xs font-bold text-[#6B7280] font-tajawal block">تاريخ التخرج</span>
+            <div className="text-base font-bold text-[#0284C7] font-cairo">
+              {graduationDate ? formatDate(graduationDate) : 'غير محدد'}
+            </div>
+          </div>
+
+          <div className="ui-card p-4 space-y-1">
+            <span className="text-xs font-bold text-[#6B7280] font-tajawal block">تاريخ الرجوع (الإرجاع)</span>
+            <div className="text-base font-bold text-[#D97706] font-cairo">
+              {returnDate ? formatDate(returnDate) : 'غير محدد'}
+            </div>
+          </div>
+
+          <div className="ui-card p-4 space-y-1">
+            <span className="text-xs font-bold text-[#6B7280] font-tajawal block">العربون المدفوع أولاً</span>
+            <div className="text-base font-bold text-[#16A34A] font-cairo">
+              {formatCurrency(order.totalPaid)}
+            </div>
+          </div>
+
+          <div className="ui-card p-4 space-y-1 bg-[#FEF2F2]/60 dark:bg-rose-950/20 border-[#FCA5A5]/40">
+            <span className="text-xs font-bold text-[#EF4444] font-tajawal block">المتبقي المطلوب دفعها</span>
+            <div className="text-base font-bold text-[#EF4444] font-cairo">
+              {formatCurrency(order.remainingBalance)}
+            </div>
+          </div>
+
+        </div>
+
+        {/* Action Toolbar */}
         <div className="flex flex-wrap items-center justify-between gap-3">
           <div className="flex flex-wrap items-center gap-3">
             <Button variant="secondary" size="md" icon={<Printer className="w-[18px] h-[18px] text-[#6B7280]" />} onClick={() => triggerPrint('invoice')}>
@@ -337,92 +444,88 @@ export const OrderDetails: React.FC<OrderDetailsProps> = ({
               طباعة عقد الإيجار
             </Button>
             <Button variant="secondary" size="md" icon={<Edit className="w-[18px] h-[18px] text-[#6B7280]" />} onClick={() => onNavigate('orders', { editId: order.id })}>
-              تعديل بيانات الفاتورة
+              تعديل الفاتورة
             </Button>
           </div>
+
+          {/* Quick Return Triggers */}
+          {hasRental && (
+            <div className="flex items-center gap-2">
+              {!allReturned ? (
+                <>
+                  <button
+                    onClick={handleReturnAllItems}
+                    className="px-4 py-2.5 bg-[#16A34A] hover:bg-[#15803D] text-white rounded-2xl text-xs font-bold transition-all shadow-xs flex items-center gap-1.5 cursor-pointer font-cairo"
+                  >
+                    <Check className="w-4 h-4" />
+                    تم إرجاع الطلبية بالكامل
+                  </button>
+
+                  <button
+                    onClick={() => {
+                      setSelectedExceptionItem(order.items.find((i: any) => i.operationType === 'Rental'));
+                      setIsExceptionModalOpen(true);
+                    }}
+                    className="px-4 py-2.5 bg-[#FFFBEB] hover:bg-[#FEF3C7] text-[#D97706] border border-[#FDE68A] rounded-2xl text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer font-cairo"
+                  >
+                    <AlertTriangle className="w-4 h-4" />
+                    إضافة استثناء (قطعة لم ترجع)
+                  </button>
+                </>
+              ) : (
+                <span className="px-4 py-2 bg-[#DCFCE7] text-[#15803D] rounded-2xl text-xs font-bold font-tajawal flex items-center gap-1.5">
+                  <Check className="w-4 h-4" /> تم إرجاع جميع القطع بالكامل
+                </span>
+              )}
+            </div>
+          )}
 
           <Button variant="danger" size="md" icon={<Trash2 className="w-[18px] h-[18px]" />} onClick={handleDeleteOrder}>
             حذف الفاتورة
           </Button>
         </div>
 
-        {/* Main Grid: Left Column (Products & Payments) | Right Column (Customer & Financial Summary) */}
+        {/* Main Grid */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           
           {/* LEFT COLUMN */}
           <div className="lg:col-span-2 space-y-8">
             
-            {/* PRODUCTS SECTION (Structured Cards with Generous Spacing) */}
+            {/* PRODUCTS LIST */}
             <div className="space-y-4">
               <div className="flex items-center justify-between px-1">
                 <h2 className="text-xl font-bold font-cairo text-[#111827] dark:text-white">
-                  القطع والمنتجات ({order.items.length})
+                  القطع والمنتجات المطلوبة ({order.items.length})
                 </h2>
-                <div className="flex items-center gap-2">
-                  <span className="text-xs text-[#6B7280] font-medium font-tajawal">الحالة العامة:</span>
-                  <div className="flex items-center gap-1 bg-white dark:bg-[#111622] border border-[#E5E7EB] dark:border-slate-800 p-1 rounded-2xl">
-                    {['Preparing', 'Ready', 'Delivered', 'Completed'].map((st) => (
-                      <button
-                        key={st}
-                        onClick={() => handleUpdateOrderStatus(st)}
-                        className={`px-3 py-1 rounded-xl text-xs font-semibold font-tajawal transition-all cursor-pointer ${
-                          order.status === st ? 'bg-[#16A34A] text-white shadow-xs' : 'text-[#6B7280] hover:text-[#111827]'
-                        }`}
-                      >
-                        {translateStatus(st)}
-                      </button>
-                    ))}
-                  </div>
-                </div>
               </div>
 
-              {/* Product Cards List */}
+              {/* Product Cards */}
               <div className="space-y-4">
                 {order.items.map((item: any) => (
-                  <div key={item.id} className="ui-card space-y-5">
-                    {/* Header: Product Name & Type Badges */}
+                  <div key={item.id} className="ui-card space-y-4">
                     <div className="flex items-start justify-between gap-4">
                       <div>
                         <h3 className="text-lg font-bold text-[#111827] dark:text-white font-cairo">
                           {item.category === 'Other' ? (item.customCategory || 'أخرى') : item.category}
                         </h3>
                         
-                        {/* Small Metadata Chips (Clean Spacing) */}
                         <div className="flex flex-wrap items-center gap-2 mt-2">
-                          {item.operationType && (
-                            <span className="px-2.5 py-0.5 rounded-md text-xs font-semibold bg-[#F3F4F6] text-[#374151] dark:bg-slate-800 dark:text-slate-300">
-                              {item.operationType === 'Rental' ? 'إيجار' : 'بيع'}
-                            </span>
-                          )}
+                          <span className="px-2.5 py-0.5 rounded-md text-xs font-semibold bg-[#F3F4F6] text-[#374151] dark:bg-slate-800 dark:text-slate-300">
+                            {item.operationType === 'Rental' ? 'إيجار' : 'بيع'}
+                          </span>
                           {item.capType && (
                             <span className="px-2.5 py-0.5 rounded-md text-xs font-medium bg-[#F3F4F6] text-[#4B5563] dark:bg-slate-800">
-                              النوع: {item.capType === 'Other' ? item.customCapType : item.capType}
-                            </span>
-                          )}
-                          {item.capSize && (
-                            <span className="px-2.5 py-0.5 rounded-md text-xs font-medium bg-[#F3F4F6] text-[#4B5563] dark:bg-slate-800">
-                              القياس: {item.capSize === 'Other' ? item.customCapSize : item.capSize}
-                            </span>
-                          )}
-                          {item.capColor && (
-                            <span className="px-2.5 py-0.5 rounded-md text-xs font-medium bg-[#F3F4F6] text-[#4B5563] dark:bg-slate-800">
-                              اللون: {item.capColor === 'Other' ? item.customCapColor : item.capColor}
-                            </span>
-                          )}
-                          {item.saleType && (
-                            <span className="px-2.5 py-0.5 rounded-md text-xs font-medium bg-[#F3F4F6] text-[#4B5563] dark:bg-slate-800">
-                              ستايل: {item.saleType}
+                              {item.capType}
                             </span>
                           )}
                           {item.broochType && (
                             <span className="px-2.5 py-0.5 rounded-md text-xs font-medium bg-[#F3F4F6] text-[#4B5563] dark:bg-slate-800">
-                              بروش: {item.broochType}
+                              {item.broochType}
                             </span>
                           )}
                         </div>
                       </div>
 
-                      {/* Status Badge */}
                       <span className={`ui-badge text-xs px-3.5 py-1 rounded-full ${
                         item.status === 'Delivered' ? 'bg-[#DCFCE7] text-[#15803D]' :
                         item.status === 'Ready' ? 'bg-[#E0F2FE] text-[#0369A1]' :
@@ -435,7 +538,6 @@ export const OrderDetails: React.FC<OrderDetailsProps> = ({
 
                     <div className="border-t border-[#F3F4F6] dark:border-slate-800" />
 
-                    {/* Quantity, Unit Price & Dates */}
                     <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 text-sm font-tajawal">
                       <div>
                         <span className="text-xs text-[#6B7280] font-medium block">الكمية والسعر</span>
@@ -445,9 +547,10 @@ export const OrderDetails: React.FC<OrderDetailsProps> = ({
                       </div>
 
                       <div>
-                        <span className="text-xs text-[#6B7280] font-medium block">تاريخ التسليم</span>
-                        <span className="text-sm font-semibold font-tajawal text-[#374151] dark:text-slate-200 mt-0.5 block">
-                          {formatDate(item.deliveryDate)}
+                        <span className="text-xs text-[#6B7280] font-medium block">تاريخ التسليم والعودة</span>
+                        <span className="text-xs font-semibold font-tajawal text-[#374151] dark:text-slate-200 mt-0.5 block">
+                          طلع: {formatDate(item.deliveryDate || order.orderDate)}
+                          {item.returnDate && ` | رجع: ${formatDate(item.returnDate)}`}
                         </span>
                       </div>
 
@@ -458,84 +561,25 @@ export const OrderDetails: React.FC<OrderDetailsProps> = ({
                         </span>
                       </div>
                     </div>
-
-                    {item.operationType === 'Rental' && (
-                      <div className="p-3.5 bg-[#F9FAFB] dark:bg-[#0B0F17] rounded-xl border border-[#E5E7EB] dark:border-slate-800 flex items-center justify-between text-xs font-tajawal">
-                        <span className="font-medium text-[#4B5563] dark:text-slate-300">
-                          تأمين الإيجار: <strong className="text-[#111827] dark:text-white font-cairo">{formatCurrency(item.depositAmount * item.quantity)}</strong> (مسترد عند التسليم السليم)
-                        </span>
-
-                        {item.status !== 'Returned' ? (
-                          <button
-                            onClick={() => {
-                              setSelectedReturnItem(item);
-                              setReturnFormError('');
-                              setRetQty(item.quantity.toString());
-                              setIsReturnModalOpen(true);
-                            }}
-                            className="px-3.5 py-1.5 bg-[#F59E0B] hover:bg-[#D97706] text-white rounded-xl text-xs font-bold transition-all cursor-pointer"
-                          >
-                            تسجيل إرجاع
-                          </button>
-                        ) : (
-                          <span className="font-bold text-[#16A34A] flex items-center gap-1">
-                            <Check className="w-4 h-4" /> تم الإرجاع بالكامل
-                          </span>
-                        )}
-                      </div>
-                    )}
-
-                    <div className="border-t border-[#F3F4F6] dark:border-slate-800" />
-
-                    {/* Inline Delivery Action Trigger */}
-                    <div className="flex items-center justify-between text-xs">
-                      <span className="text-[#6B7280] font-medium font-tajawal">تحديث تسليم القطعة:</span>
-                      <div className="flex items-center gap-1.5">
-                        <button
-                          onClick={() => handleUpdateItemDeliveryStatus(item.id, 'Waiting')}
-                          className={`px-3 py-1 rounded-xl font-semibold transition-all cursor-pointer ${
-                            item.status === 'Waiting' ? 'bg-[#374151] text-white' : 'bg-[#F3F4F6] text-[#4B5563] hover:bg-[#E5E7EB]'
-                          }`}
-                        >
-                          انتظار
-                        </button>
-                        <button
-                          onClick={() => handleUpdateItemDeliveryStatus(item.id, 'Ready')}
-                          className={`px-3 py-1 rounded-xl font-semibold transition-all cursor-pointer ${
-                            item.status === 'Ready' ? 'bg-[#0284C7] text-white' : 'bg-[#F3F4F6] text-[#4B5563] hover:bg-[#E5E7EB]'
-                          }`}
-                        >
-                          جاهز
-                        </button>
-                        <button
-                          onClick={() => handleUpdateItemDeliveryStatus(item.id, 'Delivered')}
-                          className={`px-3 py-1 rounded-xl font-semibold transition-all cursor-pointer ${
-                            item.status === 'Delivered' ? 'bg-[#16A34A] text-white' : 'bg-[#F3F4F6] text-[#4B5563] hover:bg-[#E5E7EB]'
-                          }`}
-                        >
-                          تسليم
-                        </button>
-                      </div>
-                    </div>
                   </div>
                 ))}
               </div>
             </div>
 
-            {/* PAYMENTS TABLE (Zebra Striped, High Row Height) */}
+            {/* PAYMENTS TABLE (امتى دفع باقي المبلغ) */}
             <div className="ui-panel space-y-4">
               <h2 className="text-xl font-bold font-cairo text-[#111827] dark:text-white pb-3 border-b border-[#E5E7EB] dark:border-slate-800">
-                سجل المقبوضات والدفعات
+                سجل المبالغ والدفعات التابعة للفاتورة
               </h2>
 
               <div className="overflow-x-auto rounded-2xl border border-[#E5E7EB] dark:border-slate-800">
                 <table className="w-full text-right border-collapse text-sm">
                   <thead>
                     <tr className="border-b border-[#E5E7EB] dark:border-slate-800 bg-[#F9FAFB] dark:bg-[#0B0F17] text-[#6B7280]">
-                      <th className="py-3.5 px-4 font-bold font-tajawal">تاريخ الاستلام</th>
+                      <th className="py-3.5 px-4 font-bold font-tajawal">تاريخ الدفع (امتى دفع)</th>
                       <th className="py-3.5 px-4 font-bold font-tajawal">الموظف المستلم</th>
                       <th className="py-3.5 px-4 font-bold font-tajawal">طريقة الدفع</th>
-                      <th className="py-3.5 px-4 font-bold font-tajawal">القيمة</th>
+                      <th className="py-3.5 px-4 font-bold font-tajawal">المبلغ المدفوع</th>
                       <th className="py-3.5 px-4 font-bold font-tajawal text-center">إجراءات</th>
                     </tr>
                   </thead>
@@ -545,18 +589,16 @@ export const OrderDetails: React.FC<OrderDetailsProps> = ({
                         <td className="py-4 px-4 font-medium text-[#374151] dark:text-slate-300 font-tajawal">{formatDate(p.paymentDate)}</td>
                         <td className="py-4 px-4 font-semibold text-[#111827] dark:text-white">{p.employee?.name || '---'}</td>
                         <td className="py-4 px-4 font-medium text-[#6B7280] font-tajawal">{p.paymentMethod}</td>
-                        <td className="py-4 px-4 font-bold text-[#16A34A] font-cairo">{formatCurrency(p.amount)}</td>
+                        <td className="py-4 px-4 font-bold text-[#16A34A] font-cairo">+{formatCurrency(p.amount)}</td>
                         <td className="py-4 px-4 text-center">
-                          <div className="flex items-center gap-2 justify-center">
-                            <button
-                              type="button"
-                              onClick={() => handleDeletePayment(p.id, p.amount)}
-                              className="p-1.5 text-[#9CA3AF] hover:text-[#EF4444] rounded-lg transition-colors cursor-pointer"
-                              title="حذف الدفعة"
-                            >
-                              <Trash2 className="w-[18px] h-[18px]" />
-                            </button>
-                          </div>
+                          <button
+                            type="button"
+                            onClick={() => handleDeletePayment(p.id, p.amount)}
+                            className="p-1.5 text-[#9CA3AF] hover:text-[#EF4444] rounded-lg transition-colors cursor-pointer"
+                            title="حذف الدفعة"
+                          >
+                            <Trash2 className="w-[18px] h-[18px]" />
+                          </button>
                         </td>
                       </tr>
                     ))}
@@ -609,48 +651,30 @@ export const OrderDetails: React.FC<OrderDetailsProps> = ({
                     </a>
                   )}
                 </div>
-
-                {order.customer?.notes && (
-                  <div className="p-3 bg-[#F9FAFB] dark:bg-[#0B0F17] rounded-xl text-xs text-[#6B7280] font-tajawal border border-[#E5E7EB] dark:border-slate-800">
-                    <span className="font-bold block text-[#374151] dark:text-slate-300">ملاحظات دائمية:</span>
-                    <p className="mt-1 leading-relaxed">{order.customer.notes}</p>
-                  </div>
-                )}
               </div>
             </div>
 
-            {/* PREMIUM FINANCE WIDGET (Highlight ONLY Remaining Balance) */}
+            {/* FINANCIAL SUMMARY WIDGET */}
             <div className="ui-card space-y-4">
               <h3 className="text-lg font-bold text-[#111827] dark:text-white border-b border-[#E5E7EB] dark:border-slate-800 pb-3">
-                الملخص المالي للفاتورة
+                الملخص المالي والمتبقي
               </h3>
 
               <div className="space-y-3.5 text-sm font-tajawal">
                 <div className="flex justify-between items-center">
-                  <span className="text-[#6B7280] font-medium">المجموع الفرعي:</span>
-                  <span className="font-semibold text-[#111827] dark:text-white font-cairo text-base">{formatCurrency(order.subtotal)}</span>
-                </div>
-
-                <div className="flex justify-between items-center text-[#EF4444]">
-                  <span className="font-medium">الخصم:</span>
-                  <span className="font-semibold font-cairo text-base">-{formatCurrency(order.discount)}</span>
-                </div>
-
-                <div className="border-t border-[#F3F4F6] dark:border-slate-800 pt-3 flex justify-between items-center">
-                  <span className="font-bold text-[#111827] dark:text-white">الإجمالي المستحق:</span>
-                  <span className="font-bold font-cairo text-base text-[#111827] dark:text-white">{formatCurrency(order.grandTotal)}</span>
+                  <span className="text-[#6B7280] font-medium">إجمالي الفاتورة:</span>
+                  <span className="font-bold text-[#111827] dark:text-white font-cairo text-base">{formatCurrency(order.grandTotal)}</span>
                 </div>
 
                 <div className="flex justify-between items-center text-[#16A34A]">
-                  <span className="font-medium">المدفوع:</span>
-                  <span className="font-semibold font-cairo text-base">+{formatCurrency(order.totalPaid)}</span>
+                  <span className="font-medium">المدفوع أولاً (العربون):</span>
+                  <span className="font-bold font-cairo text-base">+{formatCurrency(order.totalPaid)}</span>
                 </div>
 
-                {/* HIGHLIGHT ONLY REMAINING BALANCE */}
                 <div className={`border-t border-[#E5E7EB] dark:border-slate-800 pt-3.5 flex justify-between items-center p-3.5 rounded-xl ${
                   order.remainingBalance > 0 ? 'bg-[#FEF2F2] dark:bg-rose-950/30 border border-[#FCA5A5]/40' : 'bg-[#F0FDF4] dark:bg-emerald-950/30 border border-[#86EFAC]/40'
                 }`}>
-                  <span className="font-bold text-sm">المتبقي المطلوب:</span>
+                  <span className="font-bold text-sm">باقي القيمة المطلوب دفعها:</span>
                   <span className={`font-bold font-cairo text-xl ${
                     order.remainingBalance > 0 ? 'text-[#EF4444]' : 'text-[#16A34A]'
                   }`}>
@@ -731,11 +755,11 @@ export const OrderDetails: React.FC<OrderDetailsProps> = ({
         )}
       </div>
 
-      {/* Payment Modal */}
+      {/* Payment Modal with SMART GUARD (Cannot exceed remaining balance) */}
       <Modal
         isOpen={isPaymentModalOpen}
         onClose={() => setIsPaymentModalOpen(false)}
-        title={`تسجيل دفعة جديدة للفاتورة ${order.orderNumber}`}
+        title={`تسجيل إكمال دفع للفاتورة ${order.orderNumber}`}
       >
         <form onSubmit={handleAddPaymentSubmit} className="space-y-4">
           <div className="flex flex-col gap-1.5 w-full">
@@ -746,29 +770,44 @@ export const OrderDetails: React.FC<OrderDetailsProps> = ({
               {order.remainingBalance > 0 && (
                 <button
                   type="button"
-                  onClick={() => setPayAmount(order.remainingBalance.toString())}
-                  className="text-xs font-bold text-[#16A34A] bg-[#DCFCE7] px-2.5 py-1 rounded-lg cursor-pointer"
+                  onClick={() => {
+                    setPayAmount(order.remainingBalance.toString());
+                    setPaymentFormError('');
+                  }}
+                  className="text-xs font-bold text-[#16A34A] bg-[#DCFCE7] px-2.5 py-1 rounded-lg cursor-pointer hover:bg-[#BBF7D0] transition-colors"
                 >
-                  إدخال المتبقي كاملاً ({order.remainingBalance} د.ل)
+                  تعبئة الباقي كاملاً ({order.remainingBalance} د.ل)
                 </button>
               )}
             </div>
             <input
               type="number"
               min="0.01"
+              max={order.remainingBalance}
               step="0.01"
               value={payAmount}
-              onChange={(e) => setPayAmount(e.target.value)}
+              onChange={(e) => {
+                setPayAmount(e.target.value);
+                setPaymentFormError('');
+              }}
               required
               className="ui-input"
             />
+            <p className="text-xs text-[#6B7280] font-tajawal">
+              المبلغ المتبقي المطلوب دفعه هو: <strong className="text-[#EF4444]">{order.remainingBalance} د.ل</strong> (النظام ينبهك يمنع زيادة مال أكثر من الباقي).
+            </p>
           </div>
 
-          <Input label="تاريخ الاستلام" type="date" value={payDate} onChange={(e) => setPayDate(e.target.value)} required />
+          <Input label="تاريخ الدفع (امتى دفع)" type="date" value={payDate} onChange={(e) => setPayDate(e.target.value)} required />
           <Select label="طريقة الدفع" options={['Cash', 'Bank Transfer', 'Card']} value={payMethod} onChange={(val) => setPayMethod(val)} required />
           <Select label="الموظف المستلم" options={employees} value={payEmpId} onChange={(val) => setPayEmpId(val)} required />
 
-          {paymentFormError && <p className="text-xs text-[#EF4444] font-bold">{paymentFormError}</p>}
+          {paymentFormError && (
+            <div className="p-3 bg-[#FEF2F2] border border-[#FCA5A5] rounded-xl text-xs font-bold text-[#EF4444] flex items-center gap-2">
+              <AlertTriangle className="w-4 h-4 flex-shrink-0" />
+              <span>{paymentFormError}</span>
+            </div>
+          )}
 
           <div className="flex gap-3 justify-end pt-2">
             <Button type="button" variant="secondary" onClick={() => setIsPaymentModalOpen(false)} disabled={isPaymentSubmitting}>
@@ -781,31 +820,57 @@ export const OrderDetails: React.FC<OrderDetailsProps> = ({
         </form>
       </Modal>
 
-      {/* Return Modal */}
+      {/* Item Exception Modal (إضافة استثناء / قطعة لم ترجع) */}
       <Modal
-        isOpen={isReturnModalOpen}
-        onClose={() => { setIsReturnModalOpen(false); setSelectedReturnItem(null); }}
-        title="تسجيل إرجاع منتج"
+        isOpen={isExceptionModalOpen}
+        onClose={() => setIsExceptionModalOpen(false)}
+        title="إضافة استثناء (تحديد قطعة لم ترجع)"
       >
-        {selectedReturnItem && (
-          <form onSubmit={handleReturnSubmit} className="space-y-4">
-            <Input label="الكمية المرجعة" type="number" min="1" max={selectedReturnItem.quantity} value={retQty} onChange={(e) => setRetQty(e.target.value)} required />
-            <Input label="تاريخ الإرجاع" type="date" value={retDate} onChange={(e) => setRetDate(e.target.value)} required />
-            <Select label="حالة القطعة" options={['Excellent', 'Good', 'Damaged']} value={retCondition} onChange={(val) => setRetCondition(val)} required />
-            <Select label="الموظف المستلم" options={employees} value={retEmpId} onChange={(val) => setRetEmpId(val)} required />
+        <form onSubmit={handleSaveException} className="space-y-4">
+          <div className="flex flex-col gap-1.5">
+            <label className="text-xs font-bold text-[#374151] dark:text-slate-300">
+              اختر القطعة التي لم ترجع <span className="text-[#EF4444]">*</span>
+            </label>
+            <select
+              value={selectedExceptionItem?.id || ''}
+              onChange={(e) => {
+                const found = order.items.find((i: any) => i.id === e.target.value);
+                setSelectedExceptionItem(found || null);
+              }}
+              className="ui-input"
+              required
+            >
+              {order.items.map((i: any) => (
+                <option key={i.id} value={i.id}>
+                  {i.category} ({i.quantity} قطعة) - حالة التسليم: {translateDeliveryStatus(i.status)}
+                </option>
+              ))}
+            </select>
+          </div>
 
-            {returnFormError && <p className="text-xs text-[#EF4444] font-bold">{returnFormError}</p>}
+          <div className="flex flex-col gap-1.5">
+            <label className="text-xs font-bold text-[#374151] dark:text-slate-300">
+              ملاحظة الاستثناء (سبب عدم الإرجاع / التلف) <span className="text-[#EF4444]">*</span>
+            </label>
+            <textarea
+              value={exceptionNotes}
+              onChange={(e) => setExceptionNotes(e.target.value)}
+              rows={3}
+              required
+              placeholder="مثال: لم ترجع القبعة، أو ضاع البروش..."
+              className="ui-input h-24 p-3"
+            />
+          </div>
 
-            <div className="flex gap-3 justify-end pt-2">
-              <Button type="button" variant="secondary" onClick={() => { setIsReturnModalOpen(false); setSelectedReturnItem(null); }} disabled={isReturnSubmitting}>
-                إلغاء
-              </Button>
-              <Button type="submit" isLoading={isReturnSubmitting}>
-                حفظ وإرجاع القطعة
-              </Button>
-            </div>
-          </form>
-        )}
+          <div className="flex gap-3 justify-end pt-2">
+            <Button type="button" variant="secondary" onClick={() => setIsExceptionModalOpen(false)}>
+              إلغاء
+            </Button>
+            <Button type="submit" isLoading={isReturnSubmitting}>
+              حفظ الاستثناء
+            </Button>
+          </div>
+        </form>
       </Modal>
 
     </div>
