@@ -774,8 +774,8 @@ export const returnService = {
 
 export const reportService = {
   getDashboard: async () => {
-    // 1. Fetch statistics
-    const { data: orders } = await supabase.from('Order').select('*, Customer!OrderCustomer(name, phone)');
+    // 1. Fetch statistics using standard Supabase joins
+    const { data: orders } = await supabase.from('Order').select('*, Customer(name, phone)');
     const { data: payments } = await supabase.from('Payment').select('amount');
     const { data: customers } = await supabase.from('Customer').select('id');
     const { data: items } = await supabase.from('OrderItem').select('*');
@@ -783,11 +783,14 @@ export const reportService = {
 
     const totalOrders = orders?.length || 0;
     const totalCustomers = customers?.length || 0;
-    const totalSales = items?.filter((i) => i.type === 'Sale').reduce((sum, i) => sum + i.quantity, 0) || 0;
-    const totalRentals = items?.filter((i) => i.type === 'Rental').reduce((sum, i) => sum + i.quantity, 0) || 0;
-    const totalReturns = returns?.reduce((sum, r) => sum + r.quantityReturned, 0) || 0;
+    const totalSales = items?.filter((i) => i.type === 'Sale' || i.operationType === 'Sale').reduce((sum, i) => sum + (i.quantity || 1), 0) || 0;
+    const totalRentals = items?.filter((i) => i.type === 'Rental' || i.operationType === 'Rental').reduce((sum, i) => sum + (i.quantity || 1), 0) || 0;
+    const itemStatusReturns = items?.filter((i) => i.status === 'Returned').reduce((sum, i) => sum + (i.quantity || 1), 0) || 0;
+    const logReturns = returns?.reduce((sum, r) => sum + r.quantityReturned, 0) || 0;
+    const totalReturns = Math.max(logReturns, itemStatusReturns);
+
     const revenue = payments?.reduce((sum, p) => sum + p.amount, 0) || 0;
-    const totalDeposits = items?.filter((i) => i.type === 'Rental').reduce((sum, i) => sum + (i.depositAmount || 0) * i.quantity, 0) || 0;
+    const totalDeposits = items?.filter((i) => i.type === 'Rental' || i.operationType === 'Rental').reduce((sum, i) => sum + (parseFloat(i.depositAmount) || 0) * (i.quantity || 1), 0) || 0;
     const outstandingBalance = orders?.reduce((sum, o) => sum + o.remainingBalance, 0) || 0;
 
     // 2. Fetch upcoming deliveries / returns (today & tomorrow)
