@@ -553,68 +553,110 @@ export const OrderDetails: React.FC<OrderDetailsProps> = ({
 
               {/* Product Cards */}
               <div className="space-y-4">
-                {order.items.map((item: any) => (
-                  <div key={item.id} className="ui-card space-y-4">
-                    <div className="flex items-start justify-between gap-4">
-                      <div>
-                        <h3 className="text-lg font-bold text-[#111827] dark:text-white font-cairo">
-                          {item.category === 'Other' ? (item.customCategory || 'أخرى') : item.category}
-                        </h3>
-                        
-                        <div className="flex flex-wrap items-center gap-2 mt-2">
-                          <span className="px-2.5 py-0.5 rounded-md text-xs font-semibold bg-[#F3F4F6] text-[#374151] dark:bg-slate-800 dark:text-slate-300">
-                            {item.operationType === 'Rental' ? 'إيجار' : 'بيع'}
-                          </span>
-                          {item.capType && (
-                            <span className="px-2.5 py-0.5 rounded-md text-xs font-medium bg-[#F3F4F6] text-[#4B5563] dark:bg-slate-800">
-                              {item.capType}
+                {order.items.map((item: any) => {
+                  const arabicCategoryName = 
+                    item.category === 'Graduation Cap' || item.category === 'Cap' ? '🎓 كاب التخرج' :
+                    item.category === 'Graduation Hat' || item.category === 'Hat' ? '🎓 قبعة التخرج' :
+                    item.category === 'Graduation Sash' || item.category === 'Sash' ? '🎗️ الشال المخصص' :
+                    item.category === 'Graduation Brooch' || item.category === 'Brooch' ? '🏷️ البروش المخصص' :
+                    item.category === 'Graduation Accessories' || item.category === 'Accessory' ? '💎 إكسسوارات إضافية' :
+                    (item.customCategory || item.category || 'منتج مخصص');
+
+                  const isSale = item.operationType === 'Sale' || item.type === 'Sale';
+
+                  return (
+                    <div key={item.id} className="ui-panel p-5 space-y-4 bg-white dark:bg-[#111622] border border-slate-200/80 dark:border-slate-800 rounded-2xl shadow-xs">
+                      {/* Top Header */}
+                      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                        <div className="flex items-center gap-2.5 flex-wrap">
+                          <h3 className="text-lg font-black text-slate-900 dark:text-white font-cairo">
+                            {arabicCategoryName}
+                          </h3>
+
+                          {/* Operation Type Pill */}
+                          {isSale ? (
+                            <span className="px-3 py-1 rounded-xl text-xs font-bold bg-emerald-50 text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-800/60 flex items-center gap-1 font-tajawal">
+                              🛒 بيع نهائي (شراء)
                             </span>
-                          )}
-                          {item.broochType && (
-                            <span className="px-2.5 py-0.5 rounded-md text-xs font-medium bg-[#F3F4F6] text-[#4B5563] dark:bg-slate-800">
-                              {item.broochType}
+                          ) : (
+                            <span className="px-3 py-1 rounded-xl text-xs font-bold bg-purple-50 text-purple-700 dark:bg-purple-950/40 dark:text-purple-400 border border-purple-200 dark:border-purple-800/60 flex items-center gap-1 font-tajawal">
+                              🔄 إيجار مخصص
                             </span>
                           )}
                         </div>
+
+                        {/* Delivery Status Pill */}
+                        <span className={`ui-badge text-xs px-3.5 py-1 rounded-full font-bold font-tajawal self-start sm:self-auto ${
+                          item.status === 'Delivered' ? 'bg-[#DCFCE7] text-[#15803D]' :
+                          item.status === 'Ready' ? 'bg-[#E0F2FE] text-[#0369A1]' :
+                          item.status === 'Returned' ? 'bg-[#F3E8FF] text-[#6B21A8]' :
+                          'bg-[#FEF3C7] text-[#B45309]'
+                        }`}>
+                          {translateDeliveryStatus(item.status)}
+                        </span>
                       </div>
 
-                      <span className={`ui-badge text-xs px-3.5 py-1 rounded-full ${
-                        item.status === 'Delivered' ? 'bg-[#DCFCE7] text-[#15803D]' :
-                        item.status === 'Ready' ? 'bg-[#E0F2FE] text-[#0369A1]' :
-                        item.status === 'Returned' ? 'bg-[#F3E8FF] text-[#6B21A8]' :
-                        'bg-[#FEF3C7] text-[#B45309]'
-                      }`}>
-                        {translateDeliveryStatus(item.status)}
-                      </span>
+                      {/* Custom options badges if present */}
+                      {(item.capSize || item.capColor || item.broochType || item.accessoryName || item.customCapType || item.customCapColor) && (
+                        <div className="flex flex-wrap items-center gap-2 pt-1 text-xs font-tajawal">
+                          {item.capSize && (
+                            <span className="px-2.5 py-1 bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 rounded-lg font-bold">
+                              المقاس: {item.capSize}
+                            </span>
+                          )}
+                          {item.capColor && (
+                            <span className="px-2.5 py-1 bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 rounded-lg font-bold">
+                              اللون: {item.capColor}
+                            </span>
+                          )}
+                          {item.broochType && (
+                            <span className="px-2.5 py-1 bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 rounded-lg font-bold">
+                              نوع البروش: {item.broochType}
+                            </span>
+                          )}
+                          {item.accessoryName && (
+                            <span className="px-2.5 py-1 bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 rounded-lg font-bold">
+                              القطعة: {item.accessoryName}
+                            </span>
+                          )}
+                        </div>
+                      )}
+
+                      {/* Middle Info 3 Grid Cards */}
+                      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 pt-2">
+                        {/* Card 1: Quantity & Price */}
+                        <div className="p-3.5 bg-slate-50 dark:bg-[#0B0F17] rounded-xl border border-slate-200/60 dark:border-slate-800/60 space-y-1">
+                          <span className="text-xs font-bold text-slate-500 font-tajawal block">الكمية والسعر الفردي</span>
+                          <span className="text-sm font-black text-slate-900 dark:text-white font-cairo block">
+                            {item.quantity || 1} قطعة × {formatCurrency(item.unitPrice || item.salePrice || item.rentalPrice || 0)}
+                          </span>
+                        </div>
+
+                        {/* Card 2: Delivery & Return Dates */}
+                        <div className="p-3.5 bg-slate-50 dark:bg-[#0B0F17] rounded-xl border border-slate-200/60 dark:border-slate-800/60 space-y-1">
+                          <span className="text-xs font-bold text-slate-500 font-tajawal block">المواعيد والتواريخ</span>
+                          {isSale ? (
+                            <span className="text-xs font-bold text-emerald-600 block font-tajawal">
+                              🛒 بيع نهائي (شراء دائم - لا يوجد إرجاع)
+                            </span>
+                          ) : (
+                            <span className="text-xs font-bold text-slate-800 dark:text-slate-200 block font-tajawal">
+                              تسليم: {formatDate(item.deliveryDate || order.orderDate)} {item.expectedReturnDate ? `| إرجاع: ${formatDate(item.expectedReturnDate)}` : ''}
+                            </span>
+                          )}
+                        </div>
+
+                        {/* Card 3: Total Price */}
+                        <div className="p-3.5 bg-emerald-50/60 dark:bg-emerald-950/20 rounded-xl border border-emerald-200/60 dark:border-emerald-800/40 space-y-1">
+                          <span className="text-xs font-bold text-emerald-700 dark:text-emerald-400 font-tajawal block">إجمالي سعر القطعة</span>
+                          <span className="text-base font-black text-emerald-600 dark:text-emerald-400 font-cairo block">
+                            {formatCurrency((item.quantity || 1) * (item.unitPrice || item.salePrice || item.rentalPrice || 0))}
+                          </span>
+                        </div>
+                      </div>
                     </div>
-
-                    <div className="border-t border-[#F3F4F6] dark:border-slate-800" />
-
-                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 text-sm font-tajawal">
-                      <div>
-                        <span className="text-xs text-[#6B7280] font-medium block">الكمية والسعر</span>
-                        <span className="text-base font-semibold font-cairo text-[#111827] dark:text-white mt-0.5 block">
-                          {item.quantity} × {formatCurrency(item.unitPrice)}
-                        </span>
-                      </div>
-
-                      <div>
-                        <span className="text-xs text-[#6B7280] font-medium block">تاريخ التسليم والعودة</span>
-                        <span className="text-xs font-semibold font-tajawal text-[#374151] dark:text-slate-200 mt-0.5 block">
-                          طلع: {formatDate(item.deliveryDate || order.orderDate)}
-                          {item.returnDate && ` | رجع: ${formatDate(item.returnDate)}`}
-                        </span>
-                      </div>
-
-                      <div>
-                        <span className="text-xs text-[#6B7280] font-medium block">إجمالي القطعة</span>
-                        <span className="text-base font-bold font-cairo text-[#16A34A] mt-0.5 block">
-                          {formatCurrency(item.quantity * item.unitPrice)}
-                        </span>
-                      </div>
-                    </div>
-                  </div>
-                ))}
+                  );
+                })}
               </div>
             </div>
 
