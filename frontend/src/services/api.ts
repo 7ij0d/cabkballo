@@ -901,43 +901,53 @@ export const reportService = {
   },
 
   getSummary: async (start: string, end: string) => {
-    // Fetch base records
+    // Fetch all base records to accurately count completed & returned orders
     const { data: orders } = await supabase
       .from('Order')
-      .select('*, Customer!OrderCustomer(name, phone)')
-      .gte('orderDate', start)
-      .lte('orderDate', end);
+      .select('*, Customer!OrderCustomer(name, phone)');
 
     const { data: payments } = await supabase
       .from('Payment')
-      .select('*, Employee!PaymentEmployee(name)')
-      .gte('paymentDate', start)
-      .lte('paymentDate', end);
+      .select('*, Employee!PaymentEmployee(name)');
 
     const { data: allItems } = await supabase.from('OrderItem').select('*');
     const { data: allReturns } = await supabase.from('ReturnLog').select('*');
     const { data: allEmployees } = await supabase.from('Employee').select('*');
 
-    const totalOrders = orders?.length || 0;
-    const orderIds = orders?.map((o) => o.id) || [];
-    const customerIds = [...new Set(orders?.map((o) => o.customerId) || [])];
+    // Filter orders by date or fallback to all active
+    const filteredOrders = orders?.filter((o) => {
+      const oDate = o.orderDate ? o.orderDate.split('T')[0] : '';
+      return !start || !end || (oDate >= start && oDate <= end);
+    }) || orders || [];
+
+    const filteredPayments = payments?.filter((p) => {
+      const pDate = p.paymentDate ? p.paymentDate.split('T')[0] : '';
+      return !start || !end || (pDate >= start && pDate <= end);
+    }) || payments || [];
+
+    const totalOrders = filteredOrders.length;
+    const orderIds = filteredOrders.map((o) => o.id);
+    const customerIds = [...new Set(filteredOrders.map((o) => o.customerId))];
     const totalCustomers = customerIds.length;
 
     const filteredItems = allItems?.filter((i) => orderIds.includes(i.orderId)) || [];
-    const totalSales = filteredItems.filter((i) => i.type === 'Sale').reduce((sum, i) => sum + i.quantity, 0);
-    const totalRentals = filteredItems.filter((i) => i.type === 'Rental').reduce((sum, i) => sum + i.quantity, 0);
+    const totalSales = filteredItems.filter((i) => i.type === 'Sale' || i.category !== 'Rental').reduce((sum, i) => sum + (i.quantity || 1), 0);
+    const totalRentals = filteredItems.filter((i) => i.type === 'Rental' || i.operationType === 'Rental').reduce((sum, i) => sum + (i.quantity || 1), 0);
 
+    // Calculate returned items accurately from both ReturnLog and OrderItem status ('Returned')
     const itemIds = filteredItems.map((i) => i.id);
-    const totalReturns = allReturns?.filter((r) => itemIds.includes(r.orderItemId)).reduce((sum, r) => sum + r.quantityReturned, 0) || 0;
+    const logReturnsCount = allReturns?.filter((r) => itemIds.includes(r.orderItemId)).reduce((sum, r) => sum + r.quantityReturned, 0) || 0;
+    const itemStatusReturnsCount = filteredItems.filter((i) => i.status === 'Returned').reduce((sum, i) => sum + (i.quantity || 1), 0);
+    const totalReturns = Math.max(logReturnsCount, itemStatusReturnsCount);
 
-    const revenue = payments?.reduce((sum, p) => sum + p.amount, 0) || 0;
-    const grandTotalGenerated = orders?.reduce((sum, o) => sum + o.grandTotal, 0) || 0;
-    const remainingPayments = orders?.reduce((sum, o) => sum + o.remainingBalance, 0) || 0;
+    const revenue = filteredPayments.reduce((sum, p) => sum + p.amount, 0);
+    const grandTotalGenerated = filteredOrders.reduce((sum, o) => sum + o.grandTotal, 0);
+    const remainingPayments = filteredOrders.reduce((sum, o) => sum + o.remainingBalance, 0);
 
     // 1. Employee stats
     const employeeStats = allEmployees?.map((emp) => {
-      const empOrders = orders?.filter((o) => o.employeeId === emp.id) || [];
-      const empPayments = payments?.filter((p) => p.employeeId === emp.id) || [];
+      const empOrders = filteredOrders.filter((o) => o.employeeId === emp.id);
+      const empPayments = filteredPayments.filter((p) => p.employeeId === emp.id);
       const empRevenue = empPayments.reduce((sum, p) => sum + p.amount, 0);
       return {
         name: emp.name,
