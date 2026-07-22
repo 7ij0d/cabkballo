@@ -769,8 +769,43 @@ export const Orders: React.FC<OrdersProps> = ({ onNavigate, activeEmployee, page
                     ))}
                     {filteredOrders.length === 0 && (
                       <tr>
-                        <td colSpan={11} className="py-12 text-center text-slate-400 font-tajawal">
-                          لا توجد فواتير مطابقة لخيارات البحث والفلترة.
+                        <td colSpan={11} className="py-16 text-center">
+                          <div className="flex flex-col items-center justify-center space-y-3 max-w-sm mx-auto">
+                            <div className="w-12 h-12 bg-slate-100 dark:bg-slate-800 rounded-2xl flex items-center justify-center text-slate-400">
+                              <ShoppingBag className="w-6 h-6" />
+                            </div>
+                            <h3 className="text-base font-bold text-slate-900 dark:text-white font-cairo">لا توجد فواتير مطابقة</h3>
+                            <p className="text-xs text-slate-500 font-medium font-tajawal">
+                              لم نجد أي طلبية مطابقة لمعايير البحث أو الفلترة المحددة.
+                            </p>
+                            <div className="flex items-center gap-2 pt-2">
+                              <button
+                                onClick={() => {
+                                  setSearch('');
+                                  setStatusFilter('all');
+                                  setPaymentFilter('all');
+                                  setDeliveryFilter('all');
+                                  setDateRangeFilter('all');
+                                  setEmployeeFilter('all');
+                                  setOperationFilter('all');
+                                }}
+                                className="px-4 py-2 bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 text-xs font-bold rounded-xl transition-colors"
+                              >
+                                إعادة ضبط الفلاتر
+                              </button>
+                              <Button
+                                size="sm"
+                                onClick={() => {
+                                  setIsCreating(true);
+                                  setFormError('');
+                                  handleAddItem();
+                                }}
+                                icon={<Plus className="w-4 h-4" />}
+                              >
+                                إنشاء فاتورة جديدة
+                              </Button>
+                            </div>
+                          </div>
                         </td>
                       </tr>
                     )}
