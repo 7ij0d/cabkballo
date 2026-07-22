@@ -843,16 +843,21 @@ export const reportService = {
     }) || [];
 
     // 4. Recent orders
-    const recentOrders = orders?.slice().sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()).slice(0, 5).map((o) => ({
-      id: o.id,
-      invoiceNumber: o.invoiceNumber,
-      customerName: (o as any).Customer?.name || 'مجهول',
-      grandTotal: o.grandTotal,
-      remainingBalance: o.remainingBalance,
-      status: o.status,
-      paymentStatus: o.paymentStatus,
-      orderDate: o.orderDate,
-    })) || [];
+    const recentOrders = orders?.slice().sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()).slice(0, 6).map((o) => {
+      const custName = (o as any).Customer?.name || 'مجهول';
+      return {
+        id: o.id,
+        orderNumber: o.orderNumber,
+        invoiceNumber: o.orderNumber,
+        customerName: custName,
+        customer: { name: custName, phone: (o as any).Customer?.phone || '' },
+        grandTotal: o.grandTotal,
+        remainingBalance: o.remainingBalance,
+        status: o.status,
+        paymentStatus: o.paymentStatus,
+        orderDate: o.orderDate,
+      };
+    }) || [];
 
     // 5. Outstanding balance alerts near return deadlines
     const outstandingAlerts = items?.filter((i) => i.type === 'Rental' && i.status === 'Rented').map((i) => {
@@ -875,22 +880,27 @@ export const reportService = {
     const todayDeliveriesCount = todayDeliveries.length;
     const tomorrowDeliveriesCount = tomorrowDeliveries.length;
 
-    // Calculate mostSoldProducts
-    const categoryArabicNames: Record<string, string> = {
-      Cap: 'كاب التخرج',
-      Hat: 'قبعة التخرج',
-      Sash: 'الشال',
-      Brooch: 'البروش المخصص',
-      Accessory: 'إكسسوارات إضافية',
-    };
-    const categories = ['Cap', 'Hat', 'Sash', 'Brooch', 'Accessory'];
-    const mostSoldProducts = categories.map((cat) => {
-      const qty = items?.filter((i) => i.category === cat).reduce((sum, i) => sum + i.quantity, 0) || 0;
+    // Calculate mostSoldProducts in Arabic
+    const categoryConfig = [
+      { name: 'كاب التخرج', match: ['Cap', 'Graduation Cap', 'كاب'] },
+      { name: 'قبعة التخرج', match: ['Hat', 'Graduation Hat', 'قبعة'] },
+      { name: 'الشال المخصص', match: ['Sash', 'Graduation Sash', 'شال'] },
+      { name: 'البروش المخصص', match: ['Brooch', 'Graduation Brooch', 'بروش'] },
+      { name: 'إكسسوارات إضافية', match: ['Accessory', 'Graduation Accessories', 'إكسسوارات'] },
+    ];
+
+    const mostSoldProducts = categoryConfig.map((cat) => {
+      const catItems = items?.filter((i) =>
+        cat.match.some((m) => i.category === m || (i.category && i.category.includes(m)))
+      ) || [];
+      const qty = catItems.reduce((sum, i) => sum + (i.quantity || 1), 0);
       return {
-        name: categoryArabicNames[cat] || cat,
+        name: cat.name,
+        productName: cat.name,
         quantity: qty,
+        count: qty,
       };
-    }).sort((a, b) => b.quantity - a.quantity).slice(0, 3);
+    }).sort((a, b) => b.count - a.count);
 
     return {
       totalOrders,

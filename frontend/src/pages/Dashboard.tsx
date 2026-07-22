@@ -158,8 +158,8 @@ export const Dashboard: React.FC<DashboardProps> = ({ onNavigate }) => {
               <tbody className="divide-y divide-slate-100 dark:divide-slate-800/60">
                 {data.latestOrders.slice(0, 6).map((o) => (
                   <tr key={o.id} className="hover:bg-slate-50/60 dark:hover:bg-slate-850/40 transition-colors">
-                    <td className="py-3 px-4 font-bold text-brand-600 dark:text-brand-400 font-tajawal">{o.orderNumber}</td>
-                    <td className="py-3 px-4 font-bold text-slate-900 dark:text-slate-100">{o.customer?.name}</td>
+                    <td className="py-3 px-4 font-bold text-brand-600 dark:text-brand-400 font-tajawal">{o.orderNumber || o.invoiceNumber}</td>
+                    <td className="py-3 px-4 font-bold text-slate-900 dark:text-slate-100">{o.customer?.name || o.customerName || 'مجهول'}</td>
                     <td className="py-3 px-4 font-black text-slate-900 dark:text-white font-cairo">{formatCurrency(o.grandTotal)}</td>
                     <td className="py-3 px-4">
                       <span className="ui-badge bg-emerald-50 dark:bg-emerald-950/40 text-emerald-600 dark:text-emerald-400">
@@ -191,9 +191,9 @@ export const Dashboard: React.FC<DashboardProps> = ({ onNavigate }) => {
           <div className="space-y-3">
             {data.mostSoldProducts.slice(0, 5).map((p, i) => (
               <div key={i} className="flex items-center justify-between p-3 bg-slate-50 dark:bg-[#0B0F17] rounded-xl border border-slate-200/60 dark:border-slate-800/60">
-                <span className="text-xs font-bold text-slate-800 dark:text-slate-200 font-cairo">{p.productName}</span>
+                <span className="text-xs font-bold text-slate-800 dark:text-slate-200 font-cairo">{p.productName || p.name}</span>
                 <span className="ui-badge bg-brand-50 dark:bg-brand-950/40 text-brand-600 dark:text-brand-400 font-cairo">
-                  {p.count} قطعة
+                  {p.count ?? p.quantity ?? 0} قطعة
                 </span>
               </div>
             ))}
