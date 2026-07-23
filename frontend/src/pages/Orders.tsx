@@ -54,6 +54,7 @@ export const Orders: React.FC<OrdersProps> = ({ onNavigate, activeEmployee, page
   const [deliveryFilter, setDeliveryFilter] = useState('all');
   const [dateRangeFilter, setDateRangeFilter] = useState('all');
   const [operationFilter, setOperationFilter] = useState('all');
+  const [sortBy, setSortBy] = useState<string>('newest');
   const [showAdvancedFilters, setShowAdvancedFilters] = useState(false);
 
   // Form State for Create Order
@@ -115,7 +116,6 @@ export const Orders: React.FC<OrdersProps> = ({ onNavigate, activeEmployee, page
     return `${yyyy}-${mm}-${dd}`;
   };
 
-  // Initial fetch of orders once
   const fetchOrders = async () => {
     try {
       setIsLoading(true);
@@ -123,7 +123,7 @@ export const Orders: React.FC<OrdersProps> = ({ onNavigate, activeEmployee, page
       setRawOrders(data);
     } catch (err: any) {
       console.error(err);
-      setError('فشل تحميل قائمة الطلبات.');
+      setError('فشل تحميل الفواتير.');
     } finally {
       setIsLoading(false);
     }
@@ -139,24 +139,25 @@ export const Orders: React.FC<OrdersProps> = ({ onNavigate, activeEmployee, page
       if (!editOrderId) return;
       try {
         setIsLoading(true);
+        setIsCreating(true);
         const orderToEdit = await orderService.getById(editOrderId);
         if (orderToEdit) {
-          setIsCreating(true);
-          setCustName(orderToEdit.customerName);
-          setCustPhone(orderToEdit.customerPhone);
+          setCustName(orderToEdit.customer?.name || '');
+          setCustPhone(orderToEdit.customer?.phone || '');
           setCustBackupPhone(orderToEdit.customer?.backupPhone || '');
           setCustNotes(orderToEdit.customer?.notes || '');
-          setEmpId(orderToEdit.employeeId);
-          setOrderDate(orderToEdit.orderDate.split('T')[0]);
+          setEmpId(orderToEdit.employeeId || '');
+          setOrderDate(orderToEdit.orderDate || new Date().toISOString().split('T')[0]);
           setGeneralNotes(orderToEdit.notes || '');
-          setDiscount(String(orderToEdit.discount));
+          setDiscount(String(orderToEdit.discount || 0));
           setAdvancePaid(String(orderToEdit.totalPaid || 0));
-          setIsWalkIn(orderToEdit.customerName === '/' && orderToEdit.customerPhone === '/');
-          
-          const firstItem = orderToEdit.items[0];
-          setGlobalDeliveryDate(firstItem?.deliveryDate?.split('T')[0] || '');
-          setGlobalReturnDate(firstItem?.returnDate?.split('T')[0] || '');
-          setGlobalGraduationDate(firstItem?.graduationDate?.split('T')[0] || '');
+
+          if (orderToEdit.items && orderToEdit.items.length > 0) {
+            const first = orderToEdit.items[0];
+            setGlobalDeliveryDate(first.deliveryDate || '');
+            setGlobalReturnDate(first.expectedReturnDate || first.returnDate || '');
+            setGlobalGraduationDate(first.graduationDate || '');
+          }
 
           setItems(
             orderToEdit.items.map((item: any) => ({
@@ -204,16 +205,16 @@ export const Orders: React.FC<OrdersProps> = ({ onNavigate, activeEmployee, page
         if (data) {
           setEmployees(data.map(e => ({ value: e.id, label: e.name })));
         }
-      } catch (err) {
+      } catch (err: any) {
         console.error('Failed to load employees:', err);
       }
     };
     loadEmployees();
   }, []);
 
-  // Instant 0ms In-Memory Filtering
+  // Instant 0ms In-Memory Filtering & Sorting
   const filteredOrders = useMemo(() => {
-    return rawOrders.filter((o) => {
+    const list = rawOrders.filter((o) => {
       if (search) {
         const term = search.toLowerCase().trim();
         const matchNum = o.orderNumber?.toLowerCase().includes(term);
@@ -248,7 +249,47 @@ export const Orders: React.FC<OrdersProps> = ({ onNavigate, activeEmployee, page
       }
       return true;
     });
-  }, [rawOrders, search, statusFilter, paymentFilter, deliveryFilter, employeeFilter, operationFilter, dateRangeFilter]);
+
+    // Multi-criteria sorting
+    return list.sort((a, b) => {
+      const getItemDate = (order: any, field: 'deliveryDate' | 'graduationDate' | 'expectedReturnDate') => {
+        const item = order.items?.[0];
+        if (item) {
+          if (field === 'expectedReturnDate') {
+            const val = item.expectedReturnDate || item.returnDate;
+            if (val) return new Date(val).getTime();
+          } else if (item[field]) {
+            return new Date(item[field]).getTime();
+          }
+        }
+        if (field === 'deliveryDate') return new Date(order.orderDate || order.createdAt).getTime();
+        return 9999999999999;
+      };
+
+      if (sortBy === 'newest') {
+        return new Date(b.createdAt || b.orderDate).getTime() - new Date(a.createdAt || a.orderDate).getTime();
+      }
+      if (sortBy === 'oldest') {
+        return new Date(a.createdAt || a.orderDate).getTime() - new Date(b.createdAt || b.orderDate).getTime();
+      }
+      if (sortBy === 'delivery_asc') {
+        return getItemDate(a, 'deliveryDate') - getItemDate(b, 'deliveryDate');
+      }
+      if (sortBy === 'delivery_desc') {
+        return getItemDate(b, 'deliveryDate') - getItemDate(a, 'deliveryDate');
+      }
+      if (sortBy === 'graduation_asc') {
+        return getItemDate(a, 'graduationDate') - getItemDate(b, 'graduationDate');
+      }
+      if (sortBy === 'graduation_desc') {
+        return getItemDate(b, 'graduationDate') - getItemDate(a, 'graduationDate');
+      }
+      if (sortBy === 'return_asc') {
+        return getItemDate(a, 'expectedReturnDate') - getItemDate(b, 'expectedReturnDate');
+      }
+      return 0;
+    });
+  }, [rawOrders, search, statusFilter, paymentFilter, deliveryFilter, employeeFilter, operationFilter, dateRangeFilter, sortBy]);
 
   // Optimistic Instant Delete
   const handleDeleteOrder = async (id: string, orderNumber: string) => {
@@ -779,20 +820,64 @@ export const Orders: React.FC<OrdersProps> = ({ onNavigate, activeEmployee, page
                   المتبقي (غير مدفوع)
                 </button>
 
+                {/* Quick Sort Pills */}
+                <button
+                  type="button"
+                  onClick={() => setSortBy('delivery_asc')}
+                  className={`px-3.5 py-2 rounded-xl text-xs font-bold font-tajawal transition-all cursor-pointer ${
+                    sortBy === 'delivery_asc'
+                      ? 'bg-amber-500 text-white shadow-xs'
+                      : 'bg-amber-50 dark:bg-amber-950/30 text-amber-700 dark:text-amber-300 hover:bg-amber-100'
+                  }`}
+                  title="الطلبيات الأقرب في موعد تسليمها واستلام الزبون لها"
+                >
+                  🚚 الأقرب استلاماً
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => setSortBy('graduation_asc')}
+                  className={`px-3.5 py-2 rounded-xl text-xs font-bold font-tajawal transition-all cursor-pointer ${
+                    sortBy === 'graduation_asc'
+                      ? 'bg-purple-600 text-white shadow-xs'
+                      : 'bg-purple-50 dark:bg-purple-950/30 text-purple-700 dark:text-purple-300 hover:bg-purple-100'
+                  }`}
+                  title="الطلبيات التي يقترب حفل تخرجها أولاً"
+                >
+                  🎓 الأقرب تخرجاً
+                </button>
+
                 <button
                   type="button"
                   onClick={() => setShowAdvancedFilters(!showAdvancedFilters)}
                   className="px-3 py-2 text-xs font-bold text-[#6B7280] hover:text-[#111827] flex items-center gap-1 transition-colors cursor-pointer"
                 >
                   <Filter className="w-4 h-4" />
-                  <span>{showAdvancedFilters ? 'إخفاء الفلاتر' : 'فلاتر إضافية'}</span>
+                  <span>{showAdvancedFilters ? 'إخفاء الفلاتر' : 'فلاتر وترتيب إضافي'}</span>
                 </button>
               </div>
             </div>
 
-            {/* Collapsible Advanced Filters */}
+            {/* Collapsible Advanced Filters & Sorting */}
             {showAdvancedFilters && (
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 pt-4 border-t border-[#F3F4F6] dark:border-slate-800">
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4 pt-4 border-t border-[#F3F4F6] dark:border-slate-800">
+                <div className="flex flex-col gap-1.5">
+                  <label className="text-xs font-bold text-brand-600 dark:text-brand-400 font-tajawal">⚡ ترتيب القائمة حسب</label>
+                  <select
+                    value={sortBy}
+                    onChange={(e) => setSortBy(e.target.value)}
+                    className="ui-input font-bold border-brand-300 dark:border-brand-800 bg-brand-50/40 dark:bg-brand-950/20 text-slate-900 dark:text-white"
+                  >
+                    <option value="newest">⚡ الأحدث جيةً وتسجيلاً (اللي جو الأولين)</option>
+                    <option value="oldest">⏳ الأقدم تسجيلاً في النظام</option>
+                    <option value="delivery_asc">🚚 الأقرب موعد استليم وتسليم للزبون</option>
+                    <option value="delivery_desc">🚚 الأبعد موعد تسليم واستلام</option>
+                    <option value="graduation_asc">🎓 الأقرب تاريخ حفل تخرج</option>
+                    <option value="graduation_desc">🎓 الأبعد تاريخ حفل تخرج</option>
+                    <option value="return_asc">🔄 الأقرب موعد إرجاع للمحل</option>
+                  </select>
+                </div>
+
                 <div className="flex flex-col gap-1.5">
                   <label className="text-xs font-bold text-[#6B7280] font-tajawal">حالة الطلبية</label>
                   <select
