@@ -154,38 +154,48 @@ export const Orders: React.FC<OrdersProps> = ({ onNavigate, activeEmployee, page
 
           if (orderToEdit.items && orderToEdit.items.length > 0) {
             const first = orderToEdit.items[0];
-            setGlobalDeliveryDate(first.deliveryDate || '');
-            setGlobalReturnDate(first.expectedReturnDate || first.returnDate || '');
-            setGlobalGraduationDate(first.graduationDate || '');
+            const delDate = first.deliveryDate ? first.deliveryDate.split('T')[0] : '';
+            const retDate = first.expectedReturnDate ? first.expectedReturnDate.split('T')[0] : (first.returnDate ? first.returnDate.split('T')[0] : '');
+            const gradDate = first.graduationDate ? first.graduationDate.split('T')[0] : '';
+            
+            setGlobalDeliveryDate(delDate);
+            setGlobalReturnDate(retDate);
+            setGlobalGraduationDate(gradDate);
           }
 
           setItems(
-            orderToEdit.items.map((item: any) => ({
-              id: item.id,
-              category: item.category,
-              customCategory: item.customCategory || '',
-              capType: item.capType || '',
-              customCapType: item.customCapType || '',
-              capSize: item.capSize || '',
-              customCapSize: item.customCapSize || '',
-              capColor: item.capColor || '',
-              customCapColor: item.customCapColor || '',
-              operationType: item.operationType || 'Sale',
-              customOperation: item.customOperation || '',
-              saleType: item.saleType || '',
-              customSaleType: item.customSaleType || '',
-              broochType: item.broochType || '',
-              customBroochType: item.customBroochType || '',
-              accessoryName: item.accessoryName || '',
-              customAccessoryName: item.customAccessoryName || '',
-              quantity: String(item.quantity),
-              unitPrice: String(item.unitPrice || ''),
-              depositAmount: String(item.depositAmount || ''),
-              deliveryDate: item.deliveryDate || '',
-              returnDate: item.returnDate || '',
-              graduationDate: item.graduationDate || '',
-              notes: item.notes || ''
-            }))
+            orderToEdit.items.map((item: any) => {
+              const itemDelDate = item.deliveryDate ? item.deliveryDate.split('T')[0] : '';
+              const itemRetDate = item.expectedReturnDate ? item.expectedReturnDate.split('T')[0] : (item.returnDate ? item.returnDate.split('T')[0] : '');
+              const itemGradDate = item.graduationDate ? item.graduationDate.split('T')[0] : '';
+
+              return {
+                id: item.id,
+                category: item.category,
+                customCategory: item.customCategory || '',
+                capType: item.capType || '',
+                customCapType: item.customCapType || '',
+                capSize: item.capSize || '',
+                customCapSize: item.customCapSize || '',
+                capColor: item.capColor || '',
+                customCapColor: item.customCapColor || '',
+                operationType: item.operationType || 'Sale',
+                customOperation: item.customOperation || '',
+                saleType: item.saleType || '',
+                customSaleType: item.customSaleType || '',
+                broochType: item.broochType || '',
+                customBroochType: item.customBroochType || '',
+                accessoryName: item.accessoryName || '',
+                customAccessoryName: item.customAccessoryName || '',
+                quantity: String(item.quantity),
+                unitPrice: String(item.unitPrice || ''),
+                depositAmount: String(item.depositAmount || ''),
+                deliveryDate: itemDelDate,
+                returnDate: itemRetDate,
+                graduationDate: itemGradDate,
+                notes: item.notes || ''
+              };
+            })
           );
         }
       } catch (err) {
@@ -631,9 +641,9 @@ export const Orders: React.FC<OrdersProps> = ({ onNavigate, activeEmployee, page
             quantity: parseInt(item.quantity) || 1,
             unitPrice: unitPriceVal,
             depositAmount: item.operationType === 'Rental' ? depositVal : 0,
-            deliveryDate: globalDeliveryDate || null,
-            returnDate: globalReturnDate || null,
-            graduationDate: globalGraduationDate || null,
+            deliveryDate: item.deliveryDate || globalDeliveryDate || null,
+            returnDate: item.returnDate || globalReturnDate || null,
+            graduationDate: item.graduationDate || globalGraduationDate || null,
             notes: item.notes || null,
             status: 'Waiting',
             updatedAt: new Date().toISOString(),
