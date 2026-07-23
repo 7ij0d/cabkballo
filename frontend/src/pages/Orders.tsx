@@ -578,12 +578,31 @@ export const Orders: React.FC<OrdersProps> = ({ onNavigate, activeEmployee, page
       if (editOrderId) {
         const { data: orderObj } = await supabase.from('Order').select('customerId, totalPaid').eq('id', editOrderId).single();
         if (orderObj) {
-          await customerService.update((orderObj as any).customerId, {
-            name: custName,
-            phone: custPhone,
-            backupPhone: custBackupPhone,
-            notes: custNotes
-          });
+          const currentCustId = (orderObj as any).customerId;
+          const { count } = await supabase.from('Order').select('id', { count: 'exact', head: true }).eq('customerId', currentCustId);
+          const cleanP = custPhone ? custPhone.trim() : '';
+          const hasValidP = cleanP && cleanP !== '/' && cleanP !== 'بدون هاتف' && !cleanP.startsWith('NO-PHONE-') && cleanP.length >= 3;
+
+          if ((count || 0) > 1 || !hasValidP) {
+            // Create dedicated Customer record for this order to ensure 100% isolation
+            const newCustId = generateUUID();
+            await supabase.from('Customer').insert({
+              id: newCustId,
+              name: custName,
+              phone: hasValidP ? cleanP : `NO-PHONE-${generateUUID().substring(0, 8)}`,
+              backupPhone: custBackupPhone || null,
+              notes: custNotes || null,
+              updatedAt: new Date().toISOString(),
+            });
+            await supabase.from('Order').update({ customerId: newCustId }).eq('id', editOrderId);
+          } else {
+            await customerService.update(currentCustId, {
+              name: custName,
+              phone: cleanP,
+              backupPhone: custBackupPhone,
+              notes: custNotes
+            });
+          }
         }
         await supabase.from('OrderItem').delete().eq('orderId', editOrderId);
 

@@ -391,6 +391,7 @@ export const orderService = {
 
     let customer: any = null;
 
+    // Only reuse customer record if a valid, unique phone number is provided
     if (hasValidPhone) {
       const { data: phoneCust } = await supabase
         .from('Customer')
@@ -402,24 +403,14 @@ export const orderService = {
       }
     }
 
-    if (!customer && cleanName && cleanName !== '/') {
-      const { data: nameCust } = await supabase
-        .from('Customer')
-        .select('*')
-        .eq('name', cleanName)
-        .maybeSingle();
-      if (nameCust) {
-        customer = nameCust;
-      }
-    }
-
+    // If no valid phone matched or no phone provided, create a dedicated unique customer record
     if (!customer) {
       const { data: newCust, error } = await supabase
         .from('Customer')
         .insert({
           id: generateUUID(),
           name: cleanName,
-          phone: hasValidPhone ? cleanPhone : `NO-PHONE-${generateUUID().substring(0, 6)}`,
+          phone: hasValidPhone ? cleanPhone : `NO-PHONE-${generateUUID().substring(0, 8)}`,
           backupPhone: data.customerBackupPhone || null,
           notes: data.customerNotes || null,
           updatedAt: new Date().toISOString(),
